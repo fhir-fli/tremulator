@@ -84,3 +84,47 @@ policy. The UK Information Commissioner's Office reprimand of NHS Lanarkshire
 turned on the absence of policy, guidance and risk assessment, not on the
 choice of app. Gate 0 has to ask the Miami group which of the four they need
 before any of this gets built.
+
+## What replacing the AGPL code would actually cost
+
+Measured 2026-09-20 from the published package archives, not estimated.
+
+| Piece | Hand-written | Machine-generated |
+|---|---|---|
+| `dart-vodozemac`, the AGPL crypto binding | 682 Dart + 1,167 Rust lines | 10,949 Dart + 7,281 Rust lines |
+| Matrix client encryption logic (`lib/encryption`, 17 files) | 7,087 lines | — |
+| Matrix HTTP API layer | — | 14,261 lines, generated from the published spec |
+| Whole `matrix` package | — | 55,782 lines across 184 files |
+
+Replacing the crypto binding is small, roughly 1,850 hand-written lines plus
+generator runs. Replacing the encryption logic is not: 7,087 lines covering Olm
+and Megolm sessions, key backup, secret storage, cross-signing and device
+verification, every line security-relevant, needing its own tests and an
+outside review.
+
+## Correction on atsign, 2026-09-20
+
+`at_chops` 3.7.0 is **not** pure Dart. Pull request 2039, merged 2026-07-09,
+added an OpenSSL-backed AES-256-GCM implementation through `dart:ffi`, tested
+against NIST vectors, and the post-quantum pieces X-Wing and ML-DSA-65 resolve
+through FFI as well. The pure-Dart algorithms remain as the fallback when
+libcrypto is unavailable. Which operations still have no native path is
+unchecked; RSA and the older algorithms were not examined.
+
+No published third-party cryptographic audit was found. Searched: one web
+search, and the GitHub organisation three ways. Their own issue 2146 closes
+gaps found by an internal audit, and 1889 tracks post-quantum work. Not finding
+a report is not proof there is none. **Grey knows the company and is asking
+them directly.**
+
+## What Matrix stores, which Q3 depends on
+
+From the Matrix specification, not measured here. A room is a log held on the
+server and replicated to every server with a user in it. Message content is
+encrypted, so the server holds ciphertext it cannot read, and holds it until
+something deletes it. Calls are different: Matrix carries only the setup
+messages, and the audio and video travel over WebRTC without touching it.
+
+So a 72-hour purge is a thing we build and prove, not a thing we get. Federating
+with an outside server means that server holds a copy too. Neither claim has
+been tested against a running homeserver yet.
