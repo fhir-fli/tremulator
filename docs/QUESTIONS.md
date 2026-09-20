@@ -1,7 +1,14 @@
-# Open: 11. Nothing is built until these are answered or deferred with a date.
+# Tremulator — open decisions
 
-Delete a question when it is answered, and record the ruling in the document it
-governs.
+**11 questions are open. None is answered.** Nothing is built until each is
+answered or deferred with a date.
+
+When one is answered, DELETE the question from this file and record the ruling
+in the document it governs. Never leave an answered question sitting here.
+
+## Closed
+
+Nothing yet.
 
 **Q1. Can tremulator, and anything that uses it, be AGPL-3.0?**
 The Matrix Dart SDK and the Dart vodozemac bindings are both AGPL. Linking them
