@@ -1,6 +1,12 @@
-# Decisions taken
+# Current design
 
-Closed. Do not re-open without a reason written here.
+**This is where the design stands today, not a settled record.** Everything here
+was decided in one conversation on 2026-09-20 and 2026-09-21 and is expected to
+change. Each entry says what we chose and the reasoning, so that when it changes
+we know what we are giving up. Nothing in it is frozen.
+
+D5 is the exception: Grey has settled it more than once and it is not to be
+raised again.
 
 ## D1. MLS, not Matrix. 2026-09-21
 
