@@ -1,5 +1,12 @@
 # Build, adopt, or don't build
 
+> **Superseded recommendation.** This file is the evidence gathered on
+> 2026-09-20. Its recommendation below, Matrix for the channel, was replaced on
+> 2026-09-21 by MLS through the MIT `openmls` package with fhirant as the
+> delivery service. See [DECISIONS.md](DECISIONS.md) D1 and D2 for the current
+> design and why. The package facts and measurements remain accurate for the
+> date they were read.
+
 All package facts below were read from pub.dev and GitHub on **2026-09-20**.
 Nothing here is from memory.
 
@@ -42,7 +49,7 @@ calling code is not production-proven, even though the text and E2EE are.
 Consequence: do not rest audio and video on `matrix`'s VoIP module. Use WebRTC
 directly.
 
-## Recommendation
+## Recommendation (superseded 2026-09-21, see DECISIONS.md D1)
 
 Three layers, decided separately.
 

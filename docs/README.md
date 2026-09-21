@@ -10,8 +10,7 @@ Companions: **[DECISIONS.md](DECISIONS.md) (settled, read first)** ·
 
 **The stack, settled 2026-09-21:** MLS (RFC 9420) through the MIT `openmls`
 Dart package for keys, fhirant as the delivery service, WebRTC for media, a
-cloud fhirant as a peer that orders messages. Not Matrix, not atsign. See
-DECISIONS.md.
+cloud fhirant as a peer. See DECISIONS.md.
 
 ## What it is
 
@@ -22,10 +21,10 @@ messaging protocol.
 
 | Layer | Owner | Why |
 |---|---|---|
-| Primitives (X25519, AES-GCM, Megolm/MLS) | audited Rust, via FFI | Dart has no constant-time guarantees, no key zeroisation, no control of swap |
-| Transport + E2EE session state | adopted protocol behind a `TremulatorTransport` interface | protocol reimplementation is where CVEs live |
-| Media | WebRTC (P2P DTLS-SRTP for 1:1; SFU + frame cryptor beyond 2) | 1:1 P2P is genuinely end-to-end with no server in the media path |
-| Directory, consult workflow, retention, chart write-back, call orchestration | **tremulator** | this is the part no existing app does |
+| Keys and encryption | MLS, RFC 9420, through the MIT `openmls` package (Rust underneath) | Dart cannot wipe keys from memory or guarantee constant-time comparisons |
+| Delivery, roster, key package store | fhirant, plus a cloud fhirant as a peer | it already runs in the deployment; it never sees plaintext |
+| Media | WebRTC through `flutter_webrtc`, MIT, fingerprints carried over MLS | two phones connected directly have no server in the media path |
+| Enrollment, receipts, purge, call orchestration | **tremulator** | the part no existing app does for a deployment roster |
 
 ## What it is not
 
@@ -34,7 +33,8 @@ messaging protocol.
   and push credentials, or contracts someone to.
 - Not metadata-hiding. Who called whom, when, and for how long is visible to
   whoever runs the server and to the network. Stated, not mitigated.
-- Not a replacement for the chart. See Q3.
+- Not the patient's record. Messages are deleted on a schedule; the notes
+  clinicians already write are the record (DECISIONS.md D8).
 
 ## Why not just use Signal
 
@@ -43,9 +43,8 @@ Signal plus a written policy, and Gate 0 says so out loud.
 
 1. **Directory tied to clinical role.** FHIR `Practitioner` / `PractitionerRole`
    / `Endpoint` scoped to a deployment roster, not a phone-number graph.
-   This is what gematik's TI-Messenger does with its FHIR VZD directory.
-2. **Chart write-back.** The consultant's recommendation lands in the record,
-   attributed, timestamped, and it is the record that persists.
+2. *(Withdrawn 2026-09-21.)* Chart write-back is not a messaging feature;
+   clinicians already document in notes (DECISIONS.md D8).
 3. **Retention as a verifiable deployment operation.** Purge destroys keys on a
    schedule the deployment sets, and a test proves the content is unrecoverable.
 4. **Degraded and offline operation.** Field LAN with no internet; audio that

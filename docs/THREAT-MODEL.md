@@ -57,7 +57,9 @@ means the server holds no key, so there is no server-side break-glass. Either
 the clinical content lives in the chart and the message channel is explicitly
 not the source of ePHI, which resolves it, or a key-escrow mechanism is needed,
 which undoes the security model. This is the strongest argument for the Grady
-design: keep consequential content out of the channel. Q3 decides it.
+design: keep consequential content out of the channel. **Resolved by
+DECISIONS.md D8 on 2026-09-21**: the channel is not the record, clinicians
+document in notes as they already do, and messages are deleted on a schedule.
 
 Also open: whether the 2025 proposed Security Rule update has been finalised.
 The eCFR text above is still the 2013 amendment. Status UNKNOWN, check in Gate 0.

@@ -171,3 +171,29 @@ server keeps nothing once a message is collected.
 
 This also resolves the HIPAA emergency-access conflict in THREAT-MODEL.md: the
 record, not the channel, is the source of clinical information.
+
+## D9. The sender sees that a message was delivered and seen. 2026-09-21
+
+Grey, 2026-09-21: *"yes, I want a confirmation something was seen."*
+
+From the OpenEvidence summary Grey pasted, not read directly: the American
+Academy of Pediatrics (Webber et al, Pediatrics 2019;144(1):e20191359) cautions
+that electronic communication should not drive care decisions without
+closed-loop confirmation of receipt.
+
+Two states per message, shown to the sender: delivered to the recipient's phone,
+and seen by the recipient. The receipts travel through the same encrypted
+channel as the messages.
+
+## D8, addendum: the purge destroys keys. 2026-09-21
+
+Same summary: the American Psychiatric Association's telepsychiatry resource
+document (Recupero and Fisher, 2014) warns that messaging systems keep copies
+users believe are deleted, and that forensic recovery is often possible. So a
+purge destroys the encryption keys for the purged messages, which makes any
+leftover copy unreadable, rather than only deleting records. Gate 3 already
+tests it by inspecting the phone's storage and the server afterwards.
+
+Also from that summary, and deliberately **not** built into the software: the
+Joint Commission's position against orders by text, and restricting chat to
+non-critical coordination. Both are deployment policy, each group's to write.

@@ -11,12 +11,13 @@ sources read, not assumed: 45 CFR 164.312 (done, 2026-09-20), plus the data
 protection acts of every deployment country, plus GDPR if a European
 organisation is in the chain.
 
-Reading list, none of it done yet:
-- gematik TI-Messenger specification (TI-M Basis, TI-M Pro, TI-M ePA), and
-  whether audio and video calls are in its scope at all
-- Matrix specification v1.17, the end-to-end encryption sections
-- MLS, RFC 9420, and the SFrame RFC, to know what we are not using and why
-- ICRC Handbook on Data Protection in Humanitarian Action, messaging chapter
+Reading list:
+- MLS, RFC 9420. Sections 1 and 10 read 2026-09-21; the rest, including the
+  security considerations in section 16, not yet.
+- The `openmls` Dart package source and its test suite, and how complete its
+  coverage of the Rust API is.
+- ICRC Handbook on Data Protection in Humanitarian Action, 2nd edition,
+  messaging chapter. Retention sections read 2026-09-21.
 - Chandra et al 2023, the Grady secure-messaging implementation, J Med Syst 47(1):56
 - Mars, Morris and Scott 2019, "WhatsApp Guidelines — What Guidelines?",
   J Telemed Telecare 25(9):524-529
@@ -48,18 +49,23 @@ Exit criteria:
    verification, a key reused across sessions, a purge that unlinks without
    destroying the key, and an attachment uploaded unencrypted.
 
-## Gate 2 — Spike, then choose the transport
+## Gate 2 — Spike the chosen stack
 
 Two real handsets, one in the United States and one on an international mobile
-network. Both candidate transports measured, nothing merged.
+network. The stack from DECISIONS.md: MLS through `openmls`, a fhirant mailbox,
+WebRTC with its fingerprints carried over MLS. Nothing merged.
 
-Measured, per transport, per profile: call setup time; fraction of calls that
-stay peer-to-peer versus falling back to a TURN relay; one-way audio delay;
-video freeze seconds per minute at five bandwidth caps; text delivery rate and
-median latency across a 24-hour intermittent replay.
+Measured per profile: call setup time; fraction of calls that stay
+peer-to-peer versus falling back to a relay; one-way audio delay; video freeze
+seconds per minute at five bandwidth caps; text delivery rate and median
+latency across a 24-hour intermittent replay.
 
-Exit: a written comparison against the Gate 1 reference baseline, and a named
-transport decision with the number that drove it.
+Also measured here, because D4 is open: run the ordering server on the ground
+and in the cloud against the intermittent profile, and count messages that fail
+to send. That number decides D4.
+
+Exit: numbers against the Gate 1 reference baseline, and either confirmation
+that `openmls` does what we need or a written reason it does not.
 
 ## Gate 3 — Text
 
@@ -69,7 +75,10 @@ transport decision with the number that drove it.
 - A revoked device reads nothing sent after revocation.
 - Purge: after the retention window, the content is unrecoverable from the
   on-device SQLCipher database and from the server store, verified by
-  inspecting both, not by trusting a delete call.
+  inspecting both, not by trusting a delete call. The purge destroys the keys
+  (D8).
+- Delivered and seen receipts reach the sender for every message in the
+  24-hour replay, including messages sent while the recipient was offline (D9).
 
 ## Gate 4 — Audio
 
