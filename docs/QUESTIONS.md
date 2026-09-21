@@ -1,6 +1,6 @@
 # Tremulator — open decisions
 
-**5 questions are open.** Nothing is built until each is
+**4 questions are open.** Nothing is built until each is
 answered or deferred with a date.
 
 When one is answered, DELETE the question from this file and record the ruling
