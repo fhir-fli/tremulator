@@ -160,11 +160,14 @@ deleted.
   summary: no mandatory national guideline for clinical instant messaging
   exists, only advisories.
 
-What it means for the build: "extract first, then delete" is what all of them
-assume. So the consultant's recommendation needs an easy path into the patient's
-record before the purge takes it. The purge itself stays simple, since each
-device holds its own history and the server keeps nothing once a message is
-collected.
+What it means for the build: nothing extra. "Transfer the decision to the
+record" means document the way clinicians already do. Grey, 2026-09-21: the chat
+is the discussion; the consultant writes the official recommendation as a note
+anyway, and the field team writes notes at least daily. There is no extraction
+feature to build. An earlier draft of this entry said there was; that was wrong.
+
+The purge itself stays simple, since each device holds its own history and the
+server keeps nothing once a message is collected.
 
 This also resolves the HIPAA emergency-access conflict in THREAT-MODEL.md: the
 record, not the channel, is the source of clinical information.
