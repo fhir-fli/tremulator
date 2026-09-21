@@ -1,6 +1,6 @@
 # Tremulator — open decisions
 
-**4 questions are open.** Nothing is built until each is
+**1 question is open.** Nothing is built until each is
 answered or deferred with a date.
 
 When one is answered, DELETE the question from this file and record the ruling
@@ -8,6 +8,15 @@ in the document it governs. Never leave an answered question sitting here.
 
 ## Closed
 
+- **Q4, patients messaging clinicians, is later.** Grey, 2026-09-21. Out of
+  scope for the first build.
+- **Q10, pub.dev, is fine but not the goal.** Grey, 2026-09-21: publishing is
+  acceptable, unlike the FHIR packages it is not the primary aim. Everything in
+  the stack is MIT, so nothing blocks it.
+- **Q11, money for review, is none at present.** Grey, 2026-09-21. The free routes
+  in DESIGN.md step 6 are the plan: the Open Technology Fund's Red Team Lab, if
+  it qualifies, and putting the design in front of the MLS working group and the
+  OpenMLS maintainers.
 - **Q8, the reference app, is WhatsApp.** Agreed 2026-09-21: it is what
   clinicians use now, so matching it on bad networks is what makes them switch.
   Its Gate 1 numbers are the bar for Gates 3 to 5.
@@ -34,17 +43,6 @@ in the document it governs. Never leave an answered question sitting here.
   through the MIT `openmls` package, so nothing in it is AGPL and the repo stays
   MIT.
 
-**Q4. Patient-to-clinician: in scope now, later, or never?**
-It changes identity, consent and the regulatory surface completely.
-
 **Q9. Which deployment is first, and therefore whose law binds?**
 The answer decides the regulatory register. If it is the Miami group's next
 deployment, the binding regime is the host country's act, not HIPAA.
-
-**Q10. Does tremulator go to pub.dev, or does it stay inside the apps?**
-Depends on Q1, and on whether anyone outside FHIR-FLI is meant to use it.
-
-**Q11. Is there money for an external cryptographic review?**
-If there is not, the correct decision is to adopt more and build less, because
-an unreviewed protocol we wrote ourselves is worse than a reviewed one we did
-not.
