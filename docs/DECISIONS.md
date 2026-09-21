@@ -213,3 +213,26 @@ whenever one is to hand. Web is questionable.
 - Known snag, unmeasured: some hospitals manage staff personal phones with a
   work profile that blocks unapproved apps. A consultant behind one could not
   install. A desktop install on their own laptop is the fallback.
+
+## D11. Each group runs its own, and it must run entirely locally. 2026-09-21
+
+Grey, 2026-09-21: *"no, fhir-fli should not run it. each group should run their
+own. IMPORTANT, I want this to be able to run completely locally. So cloud is
+nice, and will probably be generally used, but I don't want it to be required."*
+
+- The ground fhirant is the only required server. The cloud fhirant is optional.
+- **D4 changes accordingly:** the ground server orders messages by default. A
+  deployment that runs a cloud peer may choose to have it order conversations
+  that include outside consultants. Which, is measured in Gate 2.
+- Ringing a closed app with **no internet**, looked up 2026-09-21:
+  - iOS: Apple's Local Push Connectivity (iOS 14+, `NEAppPushProvider`) lets an
+    app hold a connection to its own server on named Wi-Fi networks and receive
+    pushes, VoIP calls included, without Apple's push service. Built for
+    hospitals, ships and campuses. It needs a restricted entitlement requested
+    from Apple. A Flutter package, `local_push_connectivity`, exists; not
+    evaluated.
+  - Android: a foreground service holding a connection to the ground server.
+    No Google service involved.
+- Ringing a closed app **over the internet** is unresolved. Apple's and Google's
+  push services only accept messages signed with keys issued to whoever
+  published the app. See QUESTIONS.md.
