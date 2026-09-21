@@ -1,6 +1,6 @@
 # Tremulator — open decisions
 
-**10 questions are open.** Nothing is built until each is
+**8 questions are open.** Nothing is built until each is
 answered or deferred with a date.
 
 When one is answered, DELETE the question from this file and record the ruling
@@ -8,6 +8,11 @@ in the document it governs. Never leave an answered question sitting here.
 
 ## Closed
 
+- **Q3, whether the chat is part of the record, is closed by D8.** It is not.
+  Messages are deleted on a schedule; decisions go into the record first.
+- **Q6, messaging with no internet, is answered.** Yes, at least text between
+  phones on the same local network. How ordering works for those
+  conversations is in D4, still open.
 - **Q1, the AGPL question, is closed by D1 in DECISIONS.md.** The stack is MLS
   through the MIT `openmls` package, so nothing in it is AGPL and the repo stays
   MIT.
@@ -18,15 +23,6 @@ This is an operating cost and a legal exposure, not a technical detail. The
 University of Miami and Panamerican Trauma Society team, MayJuun, or the
 deployment itself.
 
-**Q3. Is the message channel part of the record, or deliberately unsuitable for
-anything that matters?**
-Grady chose the second: purge every 72 hours, and an explicit prohibition on
-using it for critical information, urgent results, or peer-review content. That
-also resolves the emergency-access conflict in the HIPAA technical safeguards.
-The opposite design, where the consult is the record, is defensible but
-demands retention, break-glass and discovery handling. These are opposite
-builds. Pick one before anything is written.
-
 **Q4. Patient-to-clinician: in scope now, later, or never?**
 It changes identity, consent and the regulatory surface completely.
 
@@ -34,10 +30,6 @@ It changes identity, consent and the regulatory surface completely.
 If the consultant is "whoever is on call at a university hospital", a browser
 client is mandatory and that rules out some options. If it is a named volunteer
 panel who will install an app, it does not.
-
-**Q6. Must it work with no internet at all, two handsets on a field LAN?**
-If yes, native ringing cannot depend on Apple or Google push, and that is a
-real design constraint from day one rather than a later addition.
 
 **Q7. Duress and device seizure: requirement or accepted risk?**
 An unlocked handset at a checkpoint gives up everything. Options exist, such as

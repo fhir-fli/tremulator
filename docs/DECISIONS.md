@@ -123,3 +123,48 @@ What carries the accountability instead, at no cost to the clinician: whatever
 the threshold, both the enrollment and the access to a restricted record are
 recorded and visible to the deployment. Nobody is slowed down, and the question
 can still be answered afterwards.
+
+## D8. Messages are throwaway. 2026-09-21
+
+Grey, 2026-09-21: *"I think we can throw it away."* The channel is not part of
+the patient's record. Messages are deleted on a schedule the deployment sets.
+
+What the guidance says, and it all says the same thing: the message is
+transient, the clinical decision goes into the record, then the message is
+deleted.
+
+- **ICRC, Handbook on Data Protection in Humanitarian Action, 2nd edition
+  (2020), chapter on mobile messaging apps.** Read verbatim 2026-09-21 from the
+  PDF. Section 11.4: *"Humanitarian Organizations should also consider having a
+  retention policy concerning the exchanges of information or "chats"
+  themselves and delete the chat history at regular intervals to ensure data
+  minimization."* Section 11.6: *"it is recommended that Humanitarian
+  Organizations also consider having clear policies on deleting chats at
+  regular intervals, once the necessary data have been extracted."* Section
+  11.2.4.2: privacy *"is better served when the contents of messages are
+  delivered to a user's device and deleted from the app company's servers after
+  they are read."* Caveat: the chapter is about organisations messaging the
+  people they serve, not clinicians messaging each other.
+- **NHS England, guidance on mobile and instant messaging in health and care
+  settings (2018).** Not read verbatim: the site returned no content to an
+  automated request on 2026-09-21. Two news reports from 2018 and the search
+  summary agree that it says messaging does not replace the record, clinical
+  decisions are transferred to the record as soon as possible, and the original
+  messages are deleted. It also asks for the ability to wipe a lost device
+  remotely.
+- **Grady Health System** (Chandra et al, J Med Syst 2023;47(1):56), via the
+  OpenEvidence summary Grey pasted, not read directly: not part of the legal
+  record, purged every 72 hours, and not to be used for critical information,
+  urgent results or peer-review content.
+- **Mars, Morris and Scott**, J Telemed Telecare 2019;25(9):524-529, via the same
+  summary: no mandatory national guideline for clinical instant messaging
+  exists, only advisories.
+
+What it means for the build: "extract first, then delete" is what all of them
+assume. So the consultant's recommendation needs an easy path into the patient's
+record before the purge takes it. The purge itself stays simple, since each
+device holds its own history and the server keeps nothing once a message is
+collected.
+
+This also resolves the HIPAA emergency-access conflict in THREAT-MODEL.md: the
+record, not the channel, is the source of clinical information.
