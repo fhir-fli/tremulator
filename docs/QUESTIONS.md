@@ -1,6 +1,6 @@
 # Tremulator — open decisions
 
-**6 questions are open.** Nothing is built until each is
+**5 questions are open.** Nothing is built until each is
 answered or deferred with a date.
 
 When one is answered, DELETE the question from this file and record the ruling
@@ -8,6 +8,9 @@ in the document it governs. Never leave an answered question sitting here.
 
 ## Closed
 
+- **Q8, the reference app, is WhatsApp.** Agreed 2026-09-21: it is what
+  clinicians use now, so matching it on bad networks is what makes them switch.
+  Its Gate 1 numbers are the bar for Gates 3 to 5.
 - **Q7, a phone seized while unlocked, moves to bumblebee.** Grey, 2026-09-21: it
   is bigger than messages, since the chart on the same phone matters as much.
   Bumblebee's SECURITY-MODEL.md already names checkpoint seizure as a threat,
@@ -33,10 +36,6 @@ in the document it governs. Never leave an answered question sitting here.
 
 **Q4. Patient-to-clinician: in scope now, later, or never?**
 It changes identity, consent and the regulatory surface completely.
-
-**Q8. Which existing app do we baseline against?**
-Whatever we measure it on, it becomes the number every later gate is judged
-against. Signal, Element or WhatsApp.
 
 **Q9. Which deployment is first, and therefore whose law binds?**
 The answer decides the regulatory register. If it is the Miami group's next

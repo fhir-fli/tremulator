@@ -36,7 +36,7 @@ repeat run:
 | P5 field LAN | 10 Mbit/s | 5 ms | 0% | no internet route |
 
 Exit criteria:
-1. A reference application (Signal, Element or WhatsApp, chosen in Gate 0) is
+1. The reference application, WhatsApp (chosen 2026-09-21), is
    measured on all five profiles. Those numbers become the targets for Gates
    3 to 5. We do not invent a target.
 2. Instrument validated in both directions: a 0 kbit/s profile fails the
