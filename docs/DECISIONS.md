@@ -236,3 +236,47 @@ nice, and will probably be generally used, but I don't want it to be required."*
 - Ringing a closed app **over the internet** is unresolved. Apple's and Google's
   push services only accept messages signed with keys issued to whoever
   published the app. See QUESTIONS.md.
+
+## D12. One app, one wake-up relay run by FHIR-FLI, and nothing else. 2026-09-21
+
+Grey, 2026-09-21: one published app that each group points at its own servers,
+not an app per group. And the relay is its own program: *"where this is all it
+does, the only thing it ever does."*
+
+Why a relay exists at all, from sources read 2026-09-21:
+
+- **Apple, "Establishing a token-based connection to APNs"**: pushes are signed
+  with a key from the publisher's developer account, tied to its team ID and
+  the app. Only the publisher can wake the app on an iPhone. The key is
+  team-scoped, so handing it to groups would also let them push to every other
+  app in FHIR-FLI's account.
+- **Matrix push gateway specification v1.17**: the published design for one app
+  over many servers. Push is *"managed by a distinct entity called the Push
+  Gateway,"* drawn as run by the app developer, between each homeserver and
+  Apple or Google.
+- **FHIR R5 Subscription, payload types**: *"systems SHOULD use the minimum level
+  of detail consistent with the use case."* Its `empty` type carries nothing,
+  and details are fetched separately.
+- **Senator Wyden's letter, December 2023**: governments have requested push
+  records from Apple and Google. Apple now requires a judge's order. On an
+  iPhone, Apple sees every wake-up whatever we build.
+- Epic's own design could not be found publicly. Epic publishes Haiku, so by
+  Apple's rule it must run the equivalent. That is a deduction.
+- No HHS guidance on push notifications was found. OWASP's mobile standard says
+  keep sensitive data out of notifications.
+
+The relay:
+
+- Its own program, not part of fhirant. It holds the Apple key and nothing else.
+- Takes "wake this device" from a group's server and passes it to Apple. No
+  message content, no names, no patient.
+- Stores nothing and logs nothing.
+- Only for iPhones over the internet. Android rings through UnifiedPush, which a
+  group can host itself (Dart package `unifiedpush` 6.2.0). On the local network,
+  iPhones ring through Apple's Local Push Connectivity and never touch it.
+- If it is down, iPhones stop ringing over the internet; messages and calls
+  still arrive when the app is next opened.
+- It is **the one exception to D11**: FHIR-FLI runs this and nothing else.
+- A group that will not depend on FHIR-FLI can publish its own build of the MIT
+  app under its own Apple account and run its own relay.
+- Not Firebase: Grey does not want wake-ups passing through Google.

@@ -1,6 +1,6 @@
 # Tremulator — open decisions
 
-**8 questions are open.** Nothing is built until each is
+**7 questions are open.** Nothing is built until each is
 answered or deferred with a date.
 
 When one is answered, DELETE the question from this file and record the ruling
@@ -8,6 +8,8 @@ in the document it governs. Never leave an answered question sitting here.
 
 ## Closed
 
+- **Q12, ringing a closed app over the internet, is answered by D12.** One
+  app; FHIR-FLI runs a separate wake-up relay that stores nothing.
 - **Q2, who runs the servers, is answered by D11.** Each group runs its own;
   FHIR-FLI runs nothing; everything must work with no internet. One piece it
   leaves open is Q12 below.
@@ -45,11 +47,3 @@ Depends on Q1, and on whether anyone outside FHIR-FLI is meant to use it.
 If there is not, the correct decision is to adopt more and build less, because
 an unreviewed protocol we wrote ourselves is worse than a reviewed one we did
 not.
-
-**Q12. Over the internet, how does a closed app ring?**
-Apple and Google only deliver a push signed with keys issued to whoever
-published the app in their stores. FHIR-FLI will not run anything, so one of
-these has to give: each group publishes its own build of the app and holds its
-own keys; or the app rings a closed phone only on the deployment's local Wi-Fi,
-and a remote consultant sees a call or message when they next open the app.
-
