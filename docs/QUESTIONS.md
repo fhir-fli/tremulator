@@ -1,6 +1,6 @@
 # Tremulator — open decisions
 
-**7 questions are open.** Nothing is built until each is
+**6 questions are open.** Nothing is built until each is
 answered or deferred with a date.
 
 When one is answered, DELETE the question from this file and record the ruling
@@ -8,6 +8,13 @@ in the document it governs. Never leave an answered question sitting here.
 
 ## Closed
 
+- **Q7, a phone seized while unlocked, moves to bumblebee.** Grey, 2026-09-21: it
+  is bigger than messages, since the chart on the same phone matters as much.
+  Bumblebee's SECURITY-MODEL.md already names checkpoint seizure as a threat,
+  keeps restricted records off standard phones, purges by cryptographic erase
+  (NIST SP 800-88r2) and plans remote wipe. It has no quick-wipe or duress PIN;
+  that is to be decided there, once, for the whole app. Tremulator follows it,
+  and its messages already purge by destroying keys (D8).
 - **Q12, ringing a closed app over the internet, is answered by D12.** One
   app; FHIR-FLI runs a separate wake-up relay that stores nothing.
 - **Q2, who runs the servers, is answered by D11.** Each group runs its own;
@@ -26,11 +33,6 @@ in the document it governs. Never leave an answered question sitting here.
 
 **Q4. Patient-to-clinician: in scope now, later, or never?**
 It changes identity, consent and the regulatory surface completely.
-
-**Q7. Duress and device seizure: requirement or accepted risk?**
-An unlocked handset at a checkpoint gives up everything. Options exist, such as
-a short history window on the device or a duress credential, and they all cost
-usability. State the position rather than leaving it implied.
 
 **Q8. Which existing app do we baseline against?**
 Whatever we measure it on, it becomes the number every later gate is judged
