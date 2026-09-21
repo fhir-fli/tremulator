@@ -1,13 +1,16 @@
 # Tremulator — open decisions
 
-**1 question is open.** Nothing is built until each is
-answered or deferred with a date.
+**Nothing is open.** Every Phase 0 question is answered; rulings are in
+DECISIONS.md. New questions go below, with the open count updated here.
 
 When one is answered, DELETE the question from this file and record the ruling
 in the document it governs. Never leave an answered question sitting here.
 
 ## Closed
 
+- **Q9, whose law binds, is answered by D15.** All 195 countries were checked
+  on 2026-09-21 and the defaults hold in every country with data. Each
+  deployment still reads its own country's law first.
 - **Q4, patients messaging clinicians, is later.** Grey, 2026-09-21. Out of
   scope for the first build.
 - **Q10, pub.dev, is fine but not the goal.** Grey, 2026-09-21: publishing is
@@ -42,7 +45,3 @@ in the document it governs. Never leave an answered question sitting here.
 - **Q1, the AGPL question, is closed by D1 in DECISIONS.md.** The stack is MLS
   through the MIT `openmls` package, so nothing in it is AGPL and the repo stays
   MIT.
-
-**Q9. Which deployment is first, and therefore whose law binds?**
-The answer decides the regulatory register. If it is the Miami group's next
-deployment, the binding regime is the host country's act, not HIPAA.

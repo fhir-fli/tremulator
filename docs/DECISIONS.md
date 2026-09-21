@@ -319,3 +319,32 @@ services. Candidate library: `sideshow/apns2`, MIT, 3,189 stars, last pushed
 2025-07-22. Grey has written some Go.
 
 The exception to "everything we write is Dart" is this one program.
+
+## D15. Defaults checked against all 195 countries. 2026-09-21
+
+Grey, 2026-09-21: HIPAA plays no role, since patients are not treated in the
+United States. Rather than wait for a first deployment, check every country and
+set defaults by where most lean. Full table and method:
+[research/countries/](../research/countries/README.md).
+
+What the defaults are, and the count behind each:
+
+- **Ground server required, cloud optional**, unchanged. At least 10 of the 146
+  countries DLA Piper covers require data to stay in the country (6 in general,
+  4 for health data: Kenya, Slovenia, the UAE, Zambia). The ground server
+  satisfies all of them; a group there keeps its cloud peer in-country or runs
+  without one. The count is a floor: DLA's summary missed Kenya's health rule,
+  found only by reading Kenya's regulations directly.
+- **Clinical content is sensitive everywhere.** Health data is a sensitive
+  category in 123 of 146.
+- **Encryption is always on and cannot be switched off.** 13 countries have
+  widespread encryption restrictions and 23 have licensing or registration
+  rules; they are listed for checking before a deployment. For 106 countries
+  the encryption map has no information.
+- **Sending clinical content abroad is the use case**, and it is a regulated
+  transfer in 131 of 146, allowed on conditions in nearly all. The legal basis
+  is the deploying group's to establish; nothing in software turns it off.
+
+Not covered by DLA at all: 49 countries, including Afghanistan, Iraq, Malawi,
+Somalia, South Sudan, Sudan, Syria and Yemen. Before deploying anywhere, the
+group reads that country's actual law.
