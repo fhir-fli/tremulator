@@ -91,3 +91,28 @@ No use for text, which already goes through a server, and none for calls, since
 it bridges TCP and real-time media wants UDP. Keep it in mind for reaching a
 machine rather than a person: a clinic laptop, a field server, an ultrasound
 workstation behind a hospital firewall.
+
+## D7. Multiple enrollers, and the deployment picks one or two signatures. 2026-09-21
+
+Grey, 2026-09-21: *"I think multiple enrollers. Maybe we want to add folks at a
+different university or in the capital or something. And I think we should allow
+the group to choose. So we should make it possible with one or two people to
+approve."*
+
+- Several people hold the enroller role, and they need not be in the same place.
+  One enroller asleep or out of signal blocks a consult.
+- The enroller signs the new person's key into the roster. Phones trust the
+  signature, not the server, so a compromised server cannot invent a consultant.
+- Every addition is visible to the whole deployment: who was added, by whom,
+  when. Visibility, not an approval step.
+- The threshold is the deployment's setting: one signature or two.
+
+Falls out of making the threshold configurable, and has to be built in from the
+start: **changing the threshold requires the higher threshold, and so does
+removing an enroller.** Otherwise one enroller sets it to one and adds
+themselves.
+
+Open: whether a deployment can set different thresholds for different things, so
+that joining the general roster takes one signature and reaching restricted
+records takes two. Bumblebee already has restricted records, the protection
+cases, so the need is real.
