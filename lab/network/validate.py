@@ -12,7 +12,14 @@ removed afterwards, including on failure.
 import json, math, os, re, statistics, subprocess, sys, time
 
 IMG = "tremulator-lab:latest"
-SRV, CLI = "tlab-srv", "tlab-cli"
+# Two networks and two container pairs, created ONCE per run and reused; only
+# the tc settings change between profiles. The first version created and removed
+# a network and two containers per profile, about 20 interface changes a run,
+# and each one raised a "disconnected" desktop alert on Grey's laptop
+# (2026-09-21; the alerts stopped when the run stopped).
+NETS = {False: "tlab-net", True: "tlab-internal"}
+PAIRS = {False: ("tlab-srv", "tlab-cli"), True: ("tlab-srv-int", "tlab-cli-int")}
+SRV, CLI = PAIRS[False]
 PAYLOAD_RATE, PAYLOAD_LOSS = 1000, 64       # UDP payload bytes for rate / loss tests
 OVERHEAD = 42                               # UDP 8 + IPv4 20 + Ethernet 14 bytes
 
@@ -51,18 +58,28 @@ def netem(c, rate, delay_ms, loss, verb="replace"):
     if r.returncode != 0:
         raise RuntimeError(f"netem on {c}: {r.stderr.strip()}")
 
-def up(net, internal):
-    teardown(net)
-    sh(["docker", "network", "create", *(["--internal"] if internal else []), net], check=True)
-    for c in (SRV, CLI):
-        sh(["docker", "run", "-d", "--rm", "--name", c, "--network", net,
-            "--cap-add", "NET_ADMIN", IMG], check=True)
-    dx(SRV, "iperf3", "-s", "-D")
+def setup_all():
+    teardown_all()
+    for internal, net in NETS.items():
+        sh(["docker", "network", "create", *(["--internal"] if internal else []), net], check=True)
+        for c in PAIRS[internal]:
+            sh(["docker", "run", "-d", "--rm", "--name", c, "--network", net,
+                "--cap-add", "NET_ADMIN", IMG], check=True)
+        dx(PAIRS[internal][0], "iperf3", "-s", "-D")
     time.sleep(1)
 
-def teardown(net):
-    sh(["docker", "rm", "-f", SRV, CLI])
-    sh(["docker", "network", "rm", net])
+def teardown_all():
+    for pair in PAIRS.values():
+        sh(["docker", "rm", "-f", *pair])
+    for net in NETS.values():
+        sh(["docker", "network", "rm", net])
+
+def use(internal):
+    """Point the measurement helpers at one container pair and clear its shaping."""
+    global SRV, CLI
+    SRV, CLI = PAIRS[internal]
+    for c in (SRV, CLI):
+        dx(c, "sh", "-c", "pkill -f 'while true' ; tc qdisc del dev eth0 root 2>/dev/null; true")
 
 def srv_ip():
     r = dx(SRV, "sh", "-c", "ip -4 -o addr show eth0 | awk '{print $4}' | cut -d/ -f1")
@@ -126,56 +143,50 @@ def internet_probe():
     return r.returncode == 0
 
 try:
+    setup_all()
     for name, (rate, rtt, loss, internal) in PROFILES.items():
-        net = f"tlab-{name.lower()}"
-        up(net, internal)
-        try:
-            for c in (SRV, CLI):
-                netem(c, rate, rtt/2, loss)
-            steady(name, rate, rtt, loss)
-            if name == "P2":   # known-positive control for the internet check
-                reach = internet_probe()
-                log({"run": label, "profile": name, "metric": "internet_reachable_control",
-                     "reachable": reach, "pass": reach})
-            if name == "P5":
-                reach = internet_probe()
-                log({"run": label, "profile": name, "metric": "no_internet",
-                     "reachable": reach, "pass": not reach})
-            if name == "P4":
-                # duty cycle: 30 s up, 60 s down, on both ends, two cycles
-                loop = (f"while true; do tc qdisc replace dev eth0 root netem delay {rtt/2}ms loss {loss}% rate {rate}kbit; "
-                        f"sleep 30; tc qdisc replace dev eth0 root netem loss 100%; sleep 60; done")
-                for c in (SRV, CLI):
-                    sh(["docker", "exec", "-d", c, "sh", "-c", loop])
-                t0 = time.time()
-                r = dx(CLI, "ping", "-n", "-D", "-i", "0.2", "-W", "1", "-w", "185", srv_ip(), timeout=240)
-                stamps = [float(x) for x in re.findall(r"^\[([\d.]+)\].*time=", r.stdout, re.M)]
-                ups, downs, start = [], [], None
-                for a, b in zip(stamps, stamps[1:]):
-                    if start is None: start = a
-                    if b - a > 2.0:
-                        ups.append(a - start); downs.append(b - a); start = None
-                if start is not None and stamps: ups.append(stamps[-1] - start)
-                full_ups = ups[1:-1] if len(ups) > 2 else ups   # first/last windows may be cut by the probe start/end
-                ok_up = bool(full_ups) and all(abs(u - 30) <= 3 for u in full_ups)
-                ok_dn = bool(downs) and all(abs(d - 60) <= 6 for d in downs)
-                log({"run": label, "profile": name, "metric": "duty_cycle", "up_windows_s": [round(u,1) for u in ups],
-                     "down_gaps_s": [round(d,1) for d in downs], "judged_up": [round(u,1) for u in full_ups],
-                     "pass": ok_up and ok_dn})
-        finally:
-            teardown(net)
-    # P0: the zero link must fail
-    net = "tlab-p0"; up(net, False)
-    try:
+        use(internal)
         for c in (SRV, CLI):
-            netem(c, 0, 0, 100)
-        rtts = ping_rtts(srv_ip(), count=20)
-        u = iperf_udp(srv_ip(), 100000, 64, 5)
-        failed = len(rtts) == 0 and ("error" in u or not u.get("bps"))
-        log({"run": label, "profile": "P0", "metric": "zero_link_fails", "ping_replies": len(rtts),
-             "iperf": u, "pass": failed})
-    finally:
-        teardown(net)
+            netem(c, rate, rtt/2, loss)
+        steady(name, rate, rtt, loss)
+        if name == "P2":   # known-positive control for the internet check
+            reach = internet_probe()
+            log({"run": label, "profile": name, "metric": "internet_reachable_control",
+                 "reachable": reach, "pass": reach})
+        if name == "P5":
+            reach = internet_probe()
+            log({"run": label, "profile": name, "metric": "no_internet",
+                 "reachable": reach, "pass": not reach})
+        if name == "P4":
+            # duty cycle: 30 s up, 60 s down, on both ends, two cycles
+            loop = (f"while true; do tc qdisc replace dev eth0 root netem delay {rtt/2}ms loss {loss}% rate {rate}kbit; "
+                    f"sleep 30; tc qdisc replace dev eth0 root netem loss 100%; sleep 60; done")
+            for c in (SRV, CLI):
+                sh(["docker", "exec", "-d", c, "sh", "-c", loop])
+            r = dx(CLI, "ping", "-n", "-D", "-i", "0.2", "-W", "1", "-w", "185", srv_ip(), timeout=240)
+            stamps = [float(x) for x in re.findall(r"^\[([\d.]+)\].*time=", r.stdout, re.M)]
+            ups, downs, start = [], [], None
+            for a, b in zip(stamps, stamps[1:]):
+                if start is None: start = a
+                if b - a > 2.0:
+                    ups.append(a - start); downs.append(b - a); start = None
+            if start is not None and stamps: ups.append(stamps[-1] - start)
+            full_ups = ups[1:-1] if len(ups) > 2 else ups   # first/last windows may be cut by the probe start/end
+            ok_up = bool(full_ups) and all(abs(u - 30) <= 3 for u in full_ups)
+            ok_dn = bool(downs) and all(abs(d - 60) <= 6 for d in downs)
+            log({"run": label, "profile": name, "metric": "duty_cycle", "up_windows_s": [round(u,1) for u in ups],
+                 "down_gaps_s": [round(d,1) for d in downs], "judged_up": [round(u,1) for u in full_ups],
+                 "pass": ok_up and ok_dn})
+    # P0: the zero link must fail
+    use(False)
+    for c in (SRV, CLI):
+        netem(c, 0, 0, 100)
+    rtts = ping_rtts(srv_ip(), count=20)
+    u = iperf_udp(srv_ip(), 100000, 64, 5)
+    failed = len(rtts) == 0 and ("error" in u or not u.get("bps"))
+    log({"run": label, "profile": "P0", "metric": "zero_link_fails", "ping_replies": len(rtts),
+         "iperf": u, "pass": failed})
 finally:
+    teardown_all()
     out.close()
 print("DONE", flush=True)

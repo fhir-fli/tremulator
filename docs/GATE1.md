@@ -59,11 +59,18 @@ going to sleep, before the first Docker command at 15:12:59), but it logged
 **612 events** about Docker bridge and veth interfaces between 15:12:59 and
 15:21:44: each profile created and removed a Docker network and two containers.
 Applications that watch for network changes can treat that as a disconnect.
-That link is a hypothesis, untested; whether the drops stopped after 15:22 is
-Grey's to confirm.
+Grey, afterwards: the alerts came from the Linux network indicator, not from an
+application, and **they stopped when the run stopped**. So the cause is the
+Docker interface churn; the Wi-Fi connection itself never dropped.
 
-**Fix before resuming:** create the lab networks once and reuse them, changing
-only the `tc` settings between profiles. **Do not restart without Grey's go.**
+Fixed in `validate.py`: two networks and two container pairs are created once
+per run and reused, with only `tc` changing between profiles (from about 20
+network changes per run to 2). **Not yet fixed in `mutation_test.py`**, which
+still creates a network and two containers per mode (8 per run); fix before its
+next run. Permanent fix on Grey's side, if he chooses: a NetworkManager
+`unmanaged-devices` rule for `docker*`, `br-*` and `veth*`.
+
+**Do not restart the network runs without Grey's go.**
 
 ## Findings so far
 
