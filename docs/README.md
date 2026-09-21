@@ -3,9 +3,15 @@
 Secure clinician-to-clinician messaging (text, audio, video) for field and
 remote-consult use. **Phase 0. No code until Gate 0 closes.**
 
-Companions: [OPTIONS.md](OPTIONS.md) (ecosystem evidence and the build/adopt
-recommendation) · [THREAT-MODEL.md](THREAT-MODEL.md) · [QUESTIONS.md](QUESTIONS.md)
-(Grey's open decisions) · [SUCCESS.md](SUCCESS.md) (gates, numbers, tests).
+Companions: **[DECISIONS.md](DECISIONS.md) (settled, read first)** ·
+[OPTIONS.md](OPTIONS.md) (ecosystem evidence) · [THREAT-MODEL.md](THREAT-MODEL.md) ·
+[QUESTIONS.md](QUESTIONS.md) (Grey's open decisions) ·
+[SUCCESS.md](SUCCESS.md) (gates, numbers, tests).
+
+**The stack, settled 2026-09-21:** MLS (RFC 9420) through the MIT `openmls`
+Dart package for keys, fhirant as the delivery service, WebRTC for media, a
+cloud fhirant as a peer that orders messages. Not Matrix, not atsign. See
+DECISIONS.md.
 
 ## What it is
 

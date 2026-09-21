@@ -1,6 +1,6 @@
 # Tremulator — open decisions
 
-**11 questions are open. None is answered.** Nothing is built until each is
+**10 questions are open.** Nothing is built until each is
 answered or deferred with a date.
 
 When one is answered, DELETE the question from this file and record the ruling
@@ -8,15 +8,9 @@ in the document it governs. Never leave an answered question sitting here.
 
 ## Closed
 
-Nothing yet.
-
-**Q1. Can tremulator, and anything that uses it, be AGPL-3.0?**
-The Matrix Dart SDK and the Dart vodozemac bindings are both AGPL. Linking them
-makes bumblebee AGPL and stops a permissive pub.dev release. FluffyChat ships
-AGPL on both app stores, so distribution is not the blocker. The blocker is
-whether MayJuun ever needs a closed consumer of this package. If no, the Matrix
-path opens and this gets much cheaper. If yes, we write our own bindings to the
-permissive Rust library, which is months.
+- **Q1, the AGPL question, is closed by D1 in DECISIONS.md.** The stack is MLS
+  through the MIT `openmls` package, so nothing in it is AGPL and the repo stays
+  MIT.
 
 **Q2. Who runs the server, the TURN relay and the push credentials, per
 deployment, and who is on the hook when it goes down at 3 a.m.?**
