@@ -197,3 +197,19 @@ tests it by inspecting the phone's storage and the server afterwards.
 Also from that summary, and deliberately **not** built into the software: the
 Joint Commission's position against orders by text, and restricting chat to
 non-critical coordination. Both are deployment policy, each group's to write.
+
+## D10. Every platform Flutter builds for; installed app, not web. 2026-09-21
+
+Grey, 2026-09-21: requiring consultants to install the app is reasonable, and
+all FHIR-FLI software targets every platform, phone first, with a laptop usable
+whenever one is to hand. Web is questionable.
+
+- Android, iOS, Windows, macOS and Linux. `openmls` lists all five, plus web.
+- Store distribution is required on phones: iPhones effectively install only
+  through the App Store, and ringing a closed app needs Apple's and Google's
+  push services.
+- Web is not planned. A browser is a weaker place to hold private keys and a
+  closed tab cannot ring.
+- Known snag, unmeasured: some hospitals manage staff personal phones with a
+  work profile that blocks unapproved apps. A consultant behind one could not
+  install. A desktop install on their own laptop is the fallback.
