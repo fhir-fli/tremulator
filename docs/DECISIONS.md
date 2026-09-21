@@ -112,7 +112,14 @@ start: **changing the threshold requires the higher threshold, and so does
 removing an enroller.** Otherwise one enroller sets it to one and adds
 themselves.
 
-Open: whether a deployment can set different thresholds for different things, so
-that joining the general roster takes one signature and reaching restricted
-records takes two. Bumblebee already has restricted records, the protection
-cases, so the need is real.
+Settled 2026-09-21, same conversation. Thresholds are per category and every one
+of them can be set to a single signature, **including access to the protection
+cases**. Grey: *"Some groups may not want that much trouble to access records.
+So as I said, we should have the ability to only have one signature to reach
+protection cases."* A rule that blocks care at 2 a.m. is worse than the risk it
+removes, and that is his call to make.
+
+What carries the accountability instead, at no cost to the clinician: whatever
+the threshold, both the enrollment and the access to a restricted record are
+recorded and visible to the deployment. Nobody is slowed down, and the question
+can still be answered afterwards.
