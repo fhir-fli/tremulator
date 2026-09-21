@@ -280,3 +280,42 @@ The relay:
 - A group that will not depend on FHIR-FLI can publish its own build of the MIT
   app under its own Apple account and run its own relay.
 - Not Firebase: Grey does not want wake-ups passing through Google.
+
+## D13. Wake-ups go to an address each device registers. 2026-09-21
+
+The architecture choice that avoids regret: the group's server has one wake-up
+behaviour for every device. At enrollment each device registers an address;
+when that device must be woken, the server sends an empty wake-up to it. What
+sits at the address is the device's business. This is the UnifiedPush model,
+an endpoint the server posts to, so it follows a published design.
+
+Methods behind the address, and which is the default:
+
+| Device, network | Method | Default |
+|---|---|---|
+| iPhone, internet | FHIR-FLI's wake-up relay (D12) | yes |
+| iPhone, local Wi-Fi | Apple Local Push Connectivity | yes |
+| Android, anywhere | the app's own kept-open connection to the group's server | yes |
+| Android, anywhere | UnifiedPush through a group-hosted ntfy | option |
+| Android, anywhere | Google's push, if a group ever wants it | not built by us |
+
+Why the kept-open connection is the Android default: no extra app for users,
+no Google, and the same mechanism on the local network as over the internet.
+Cost: Android shows a permanent notification while it runs, and battery use is
+**unmeasured**. Gate 2 measures it; if it is poor, UnifiedPush becomes the
+default with no change to the server.
+
+Why not Google by default: Grey does not want wake-ups passing through Google.
+Standard Android push runs through Google Play services. UnifiedPush's own FAQ
+confirms that avoiding it means users install a separate push app.
+
+## D14. The relay is written in Go. 2026-09-21
+
+Its one job is signing requests to Apple with the key (ES256 JSON web tokens).
+In Dart the standard package, `dart_jsonwebtoken` 3.4.1, signs through
+pointycastle in pure Dart, which step 1 of DESIGN.md rules out. Go's standard
+library signs in well-reviewed code, and Go is built for small network
+services. Candidate library: `sideshow/apns2`, MIT, 3,189 stars, last pushed
+2025-07-22. Grey has written some Go.
+
+The exception to "everything we write is Dart" is this one program.

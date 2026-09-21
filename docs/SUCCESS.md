@@ -60,6 +60,9 @@ peer-to-peer versus falling back to a relay; one-way audio delay; video freeze
 seconds per minute at five bandwidth caps; text delivery rate and median
 latency across a 24-hour intermittent replay.
 
+Also measured here: battery drain of the Android kept-open connection over 24
+hours, idle and in use, against the same phone with the app closed (D13).
+
 Also measured here, because D4 is open: run the ordering server on the ground
 and in the cloud against the intermittent profile, and count messages that fail
 to send. That number decides D4.
