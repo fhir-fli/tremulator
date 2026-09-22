@@ -8,7 +8,9 @@ import 'package:tremulator_lab/lab_dir.dart';
 import 'package:tremulator_lab/network_lab.dart';
 
 Future<void> main(List<String> args) async {
-  if (args.isEmpty) {
+  // A label that looks like a flag is refused: '--help' once started a full
+  // run under that label (2026-09-22).
+  if (args.isEmpty || args.first.startsWith('-')) {
     stderr.writeln('usage: validate_network LABEL [--only-loss] [--only-p0]');
     exit(2);
   }
