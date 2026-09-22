@@ -41,7 +41,8 @@ String _quote(String s) {
 List<int> _utf16(String s, {required bool little}) {
   final out = <int>[];
   for (final u in s.codeUnits) {
-    final hi = u >> 8, lo = u & 0xff;
+    final hi = u >> 8;
+    final lo = u & 0xff;
     out.addAll(little ? [lo, hi] : [hi, lo]);
   }
   return out;
@@ -60,9 +61,11 @@ Map<String, List<int>> variants(String text) {
     'hex': ascii.encode(_hex(b)),
     'HEX': ascii.encode(_hex(b).toUpperCase()),
     'url': ascii.encode(_quote(text)),
-    'json_u': ascii.encode(text.codeUnits
-        .map((c) => '\\u${c.toRadixString(16).padLeft(4, '0')}')
-        .join()),
+    'json_u': ascii.encode(
+      text.codeUnits
+          .map((c) => '\\u${c.toRadixString(16).padLeft(4, '0')}')
+          .join(),
+    ),
   };
   for (var pad = 0; pad < 3; pad++) {
     // base64 of the canary at each alignment; keep the stable middle.
@@ -116,8 +119,8 @@ List<int>? _inflate(List<int> blob, int start, {required bool gzip}) {
 }
 
 final _b64Run = RegExp('[A-Za-z0-9+/]{16,}={0,2}');
-final _jsonLit = RegExp(
-    r'"(?:[^"\\]|\\.){0,4096}?\\u[0-9a-fA-F]{4}(?:[^"\\]|\\.){0,4096}"');
+final _jsonLit =
+    RegExp(r'"(?:[^"\\]|\\.){0,4096}?\\u[0-9a-fA-F]{4}(?:[^"\\]|\\.){0,4096}"');
 
 /// Yield (how, bytes) for compressed streams, JSON literals and base64 runs.
 Iterable<(String, List<int>)> decodedChildren(List<int> blob) sync* {
@@ -126,7 +129,8 @@ Iterable<(String, List<int>)> decodedChildren(List<int> blob) sync* {
       final d = _inflate(blob, i, gzip: true);
       if (d != null) yield ('gzip', d);
     }
-    if (blob[i] == 0x78 && const [0x01, 0x5e, 0x9c, 0xda].contains(blob[i + 1])) {
+    if (blob[i] == 0x78 &&
+        const [0x01, 0x5e, 0x9c, 0xda].contains(blob[i + 1])) {
       final d = _inflate(blob, i, gzip: false);
       if (d != null) yield ('zlib', d);
     }
@@ -152,9 +156,13 @@ Iterable<(String, List<int>)> decodedChildren(List<int> blob) sync* {
 }
 
 /// Scan one blob, then what can be decoded out of it, to two levels.
-void scanBlob(List<int> blob, Map<String, Map<String, List<int>>> canaries,
-    String where, void Function(Hit) emit,
-    [int depth = 0]) {
+void scanBlob(
+  List<int> blob,
+  Map<String, Map<String, List<int>>> canaries,
+  String where,
+  void Function(Hit) emit, [
+  int depth = 0,
+]) {
   canaries.forEach((cid, forms) {
     forms.forEach((form, needle) {
       final i = indexOfBytes(blob, needle);
@@ -175,7 +183,8 @@ void scanBlob(List<int> blob, Map<String, Map<String, List<int>>> canaries,
   if (data.length < 24) return ({}, udp);
   final bd = ByteData.sublistView(data);
   final m = data.sublist(0, 4);
-  final little = (m[0] == 0xd4 && m[1] == 0xc3) || (m[0] == 0x4d && m[1] == 0x3c);
+  final little =
+      (m[0] == 0xd4 && m[1] == 0xc3) || (m[0] == 0x4d && m[1] == 0x3c);
   final e = little ? Endian.little : Endian.big;
   final linktype = bd.getUint32(20, e);
   var off = 24;
@@ -188,31 +197,41 @@ void scanBlob(List<int> blob, Map<String, Map<String, List<int>>> canaries,
     List<int> eth;
     Uint8List l3;
     if (linktype == 1 && pkt.length > 14) {
-      eth = pkt.sublist(12, 14); l3 = pkt.sublist(14);
+      eth = pkt.sublist(12, 14);
+      l3 = pkt.sublist(14);
     } else if (linktype == 113 && pkt.length > 16) {
-      eth = pkt.sublist(14, 16); l3 = pkt.sublist(16);
+      eth = pkt.sublist(14, 16);
+      l3 = pkt.sublist(16);
     } else if (linktype == 276 && pkt.length > 20) {
-      eth = pkt.sublist(0, 2); l3 = pkt.sublist(20);
+      eth = pkt.sublist(0, 2);
+      l3 = pkt.sublist(20);
     } else {
       continue;
     }
     int proto;
-    List<int> src, dst;
+    List<int> src;
+    List<int> dst;
     Uint8List l4;
     if (eth[0] == 0x08 && eth[1] == 0x00 && l3.length >= 20) {
       final ihl = (l3[0] & 15) * 4;
-      proto = l3[9]; src = l3.sublist(12, 16); dst = l3.sublist(16, 20);
+      proto = l3[9];
+      src = l3.sublist(12, 16);
+      dst = l3.sublist(16, 20);
       if (ihl > l3.length) continue;
       l4 = l3.sublist(ihl);
     } else if (eth[0] == 0x86 && eth[1] == 0xdd && l3.length >= 40) {
-      proto = l3[6]; src = l3.sublist(8, 24); dst = l3.sublist(24, 40);
+      proto = l3[6];
+      src = l3.sublist(8, 24);
+      dst = l3.sublist(24, 40);
       l4 = l3.sublist(40);
     } else {
       continue;
     }
     final l4d = ByteData.sublistView(l4);
     if (proto == 6 && l4.length >= 20) {
-      final sp = l4d.getUint16(0), dp = l4d.getUint16(2), seq = l4d.getUint32(4);
+      final sp = l4d.getUint16(0);
+      final dp = l4d.getUint16(2);
+      final seq = l4d.getUint32(4);
       final doff = (l4[12] >> 4) * 4;
       if (doff > l4.length) continue;
       final payload = l4.sublist(doff);
@@ -234,9 +253,12 @@ void scanBlob(List<int> blob, Map<String, Map<String, List<int>>> canaries,
 }
 
 /// Scan [paths] (files or directories) for the canaries in [canaryFile]
-/// ("id<TAB>text" per line). Every hit is appended to [out] and flushed.
+/// (`id<TAB>text` per line). Every hit is appended to [out] and flushed.
 Future<List<Hit>> scanPaths(
-    String canaryFile, List<String> paths, IOSink out) async {
+  String canaryFile,
+  List<String> paths,
+  IOSink out,
+) async {
   final canaries = <String, Map<String, List<int>>>{};
   for (final line in File(canaryFile).readAsLinesSync()) {
     if (line.trim().isEmpty) continue;
@@ -246,10 +268,12 @@ Future<List<Hit>> scanPaths(
   final files = <String>[];
   for (final p in paths) {
     if (FileSystemEntity.isDirectorySync(p)) {
-      files.addAll(Directory(p)
-          .listSync(recursive: true)
-          .whereType<File>()
-          .map((f) => f.path));
+      files.addAll(
+        Directory(p)
+            .listSync(recursive: true)
+            .whereType<File>()
+            .map((f) => f.path),
+      );
     } else if (File(p).existsSync()) {
       files.add(p);
     }
