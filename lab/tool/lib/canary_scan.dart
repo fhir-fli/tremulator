@@ -20,8 +20,12 @@ class Hit {
   final String canary;
   final String form;
   final int offset;
-  Map<String, Object> toJson() =>
-      {'where': where, 'canary': canary, 'form': form, 'offset': offset};
+  Map<String, Object> toJson() => {
+    'where': where,
+    'canary': canary,
+    'form': form,
+    'offset': offset,
+  };
 }
 
 /// Python's urllib.parse.quote with its default safe="/".
@@ -119,8 +123,9 @@ List<int>? _inflate(List<int> blob, int start, {required bool gzip}) {
 }
 
 final _b64Run = RegExp('[A-Za-z0-9+/]{16,}={0,2}');
-final _jsonLit =
-    RegExp(r'"(?:[^"\\]|\\.){0,4096}?\\u[0-9a-fA-F]{4}(?:[^"\\]|\\.){0,4096}"');
+final _jsonLit = RegExp(
+  r'"(?:[^"\\]|\\.){0,4096}?\\u[0-9a-fA-F]{4}(?:[^"\\]|\\.){0,4096}"',
+);
 
 /// Yield (how, bytes) for compressed streams, JSON literals and base64 runs.
 Iterable<(String, List<int>)> decodedChildren(List<int> blob) sync* {
@@ -269,10 +274,9 @@ Future<List<Hit>> scanPaths(
   for (final p in paths) {
     if (FileSystemEntity.isDirectorySync(p)) {
       files.addAll(
-        Directory(p)
-            .listSync(recursive: true)
-            .whereType<File>()
-            .map((f) => f.path),
+        Directory(
+          p,
+        ).listSync(recursive: true).whereType<File>().map((f) => f.path),
       );
     } else if (File(p).existsSync()) {
       files.add(p);

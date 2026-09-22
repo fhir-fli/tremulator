@@ -1,0 +1,7 @@
+# Dart toy client/server for the adversary-harness mutation test. Built from
+# `dart build cli` bundles (each carries its own libsqlite3.so).
+FROM debian:bookworm-slim
+RUN apt-get update && apt-get install -y --no-install-recommends tcpdump procps \
+ && rm -rf /var/lib/apt/lists/*
+COPY build/toy_server/bundle /toy/server
+COPY build/toy_client/bundle /toy/client

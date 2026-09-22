@@ -11,8 +11,8 @@ import 'package:tremulator_lab/canary_scan.dart';
 const c = 'CANARY-7f3a9c2e41b0d6f8 pt febrile HIV PEP day 3';
 
 List<int> _utf16le(String s) => [
-      for (final u in s.codeUnits) ...[u & 0xff, u >> 8],
-    ];
+  for (final u in s.codeUnits) ...[u & 0xff, u >> 8],
+];
 
 String _quote(String s) => Uri.encodeComponent(s).replaceAll('%2F', '/');
 
