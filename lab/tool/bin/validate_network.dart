@@ -4,6 +4,7 @@ library;
 
 import 'dart:io';
 
+import 'package:tremulator_lab/lab_dir.dart';
 import 'package:tremulator_lab/network_lab.dart';
 
 Future<void> main(List<String> args) async {
@@ -11,8 +12,8 @@ Future<void> main(List<String> args) async {
     stderr.writeln('usage: validate_network LABEL [--only-loss] [--only-p0]');
     exit(2);
   }
-  final here = File(Platform.script.toFilePath()).parent.parent.parent.path;
-  final dir = Directory('$here/network/results')..createSync(recursive: true);
+  final dir = Directory('${labDir()}/network/results')
+    ..createSync(recursive: true);
   final sink = File(
     '${dir.path}/${args[0]}.jsonl',
   ).openWrite(mode: FileMode.append);

@@ -19,6 +19,7 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:tremulator_lab/canary_scan.dart';
+import 'package:tremulator_lab/lab_dir.dart';
 
 const img = 'tremulator-toy-dart:latest';
 const srv = 'tadv-srv';
@@ -50,7 +51,7 @@ Future<void> teardown() async {
 
 Future<void> main(List<String> args) async {
   final label = args.first;
-  final lab = File(Platform.script.toFilePath()).parent.parent.parent.path;
+  final lab = labDir();
   final outRoot = Directory('$lab/adversary/out/$label')
     ..createSync(recursive: true);
   final results = File(
