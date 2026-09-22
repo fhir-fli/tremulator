@@ -40,6 +40,10 @@ per-measurement rule fails a correct link by construction once there are many
 checks. **Declared 2026-09-22, before any further runs: loss is judged by the
 pooled test from now on.** The two failures stay recorded as failures.
 
+**The Dart validator reproduces it** (run `dart1`, 2026-09-22, the instrument
+we keep): all 19 checks pass first time with no retries, and every metric is
+within ±4% of the Python runs' mean (largest: P4 loss, −4.0%).
+
 Loss runs had to be long: at 2,000 datagrams, chance alone moves measured loss
 about 15% between identical runs, which a ±10% rule cannot survive. Loss tests
 are now sized from the target (15,000 to 76,000 datagrams). The first attempt at
