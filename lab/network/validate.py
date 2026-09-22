@@ -31,6 +31,11 @@ PROFILES = {  # name: (rate_kbit, rtt_ms, loss_pct, internal_network)
     "P5": (10000, 5, 0.0, True),
 }
 
+import signal
+# A stop (SIGTERM) must still run the cleanup in the finally block; Python's
+# default SIGTERM action skips it and left the lab containers running.
+signal.signal(signal.SIGTERM, lambda *_: sys.exit(143))
+
 label = sys.argv[1]
 os.makedirs("results", exist_ok=True)
 out = open(f"results/{label}.jsonl", "a")
@@ -66,7 +71,24 @@ def setup_all():
             sh(["docker", "run", "-d", "--rm", "--name", c, "--network", net,
                 "--cap-add", "NET_ADMIN", IMG], check=True)
         dx(PAIRS[internal][0], "iperf3", "-s", "-D")
+        pin_neighbours(*PAIRS[internal])
     time.sleep(1)
+
+def pin_neighbours(a, b):
+    """Make each container's neighbour entry for the other permanent. The lab is
+    one Ethernet segment, so during a P4 outage ARP for the peer fails, the entry
+    goes FAILED and stays there, and ping exits with 'Destination Host
+    Unreachable' (results/diag_duty/, 2026-09-22: probe died at 52.7 s). A phone
+    reaching a server over the internet never ARPs for the far end, so a pinned
+    entry is the faithful emulation: an outage then only drops packets
+    (results/diag_duty_static/: up 29.3 and 29.5 s, down 60.5 and 60.5 s)."""
+    def ip_mac(c):
+        ip = dx(c, "sh", "-c", "ip -4 -o addr show eth0 | awk '{print $4}' | cut -d/ -f1").stdout.strip()
+        mac = dx(c, "cat", "/sys/class/net/eth0/address").stdout.strip()
+        return ip, mac
+    (aip, amac), (bip, bmac) = ip_mac(a), ip_mac(b)
+    dx(a, "ip", "neigh", "replace", bip, "lladdr", bmac, "dev", "eth0", "nud", "permanent")
+    dx(b, "ip", "neigh", "replace", aip, "lladdr", amac, "dev", "eth0", "nud", "permanent")
 
 def teardown_all():
     for pair in PAIRS.values():
@@ -97,22 +119,32 @@ def ping_rtts(ip, count=100, interval=0.2):
     rtts = [float(x) for x in re.findall(r"time=([\d.]+) ms", r.stdout)]
     return rtts
 
-def iperf_udp(ip, rate_bps, length, secs):
-    r = dx(CLI, "iperf3", "-c", ip, "-u", "-b", str(int(rate_bps)), "-l", str(length),
-           "-t", str(secs), "-J", timeout=secs + 120)
-    try:
-        j = json.loads(r.stdout)
-    except ValueError:
-        return {"error": (r.stdout + r.stderr)[-300:]}
-    if "error" in j:
-        return {"error": j["error"]}
-    # Receiver-side figures. end.sum / end.sum_sent carry the SENDER's rate; the
-    # first version read end.sum and reported 60 kbit/s delivered on a 50 kbit/s
-    # link (2026-09-21). end.sum_received is what arrived.
-    s = j["end"].get("sum_received") or j["end"]["sum"]
-    return {"bps": s.get("bits_per_second"), "lost": s.get("lost_packets"),
-            "packets": s.get("packets"), "seconds": s.get("seconds"),
-            "sent_bps": j["end"].get("sum_sent", {}).get("bits_per_second")}
+def iperf_udp(ip, rate_bps, length, secs, tries=5):
+    """UDP test with retries. iperf3's own setup and control exchanges cross the
+    shaped link and get lost: A/B 2026-09-21, same containers and server, 0/40
+    errors at 0% loss vs 20/29 at 30% loss (results/ab_iperf_setup.jsonl). A
+    failed setup measured nothing, so it is retried, with a fresh server each
+    time (a failed test can leave the server 'busy'). Retries are recorded."""
+    errors = []
+    for attempt in range(tries):
+        dx(SRV, "sh", "-c", "pkill iperf3; sleep 0.5; iperf3 -s -D")
+        time.sleep(0.5)
+        r = dx(CLI, "iperf3", "-c", ip, "-u", "-b", str(int(rate_bps)), "-l", str(length),
+               "-t", str(secs), "-J", timeout=secs + 120)
+        try:
+            j = json.loads(r.stdout)
+        except ValueError:
+            errors.append((r.stdout + r.stderr)[-150:]); continue
+        if "error" in j:
+            errors.append(j["error"]); continue
+        # Receiver-side figures. end.sum / end.sum_sent carry the SENDER's rate;
+        # the first version read end.sum (2026-09-21).
+        s = j["end"].get("sum_received") or j["end"]["sum"]
+        return {"bps": s.get("bits_per_second"), "lost": s.get("lost_packets"),
+                "packets": s.get("packets"), "seconds": s.get("seconds"),
+                "sent_bps": j["end"].get("sum_sent", {}).get("bits_per_second"),
+                "retries": attempt, "retry_errors": errors}
+    return {"error": errors[-1] if errors else "unknown", "retries": tries, "retry_errors": errors}
 
 def steady(name, rate, rtt, loss):
     ip = srv_ip()
