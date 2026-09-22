@@ -32,43 +32,52 @@ def log(r):
     r["t"] = time.strftime("%Y-%m-%dT%H:%M:%S"); res.write(json.dumps(r) + "\n"); res.flush(); print(json.dumps(r), flush=True)
 def sh(cmd, timeout=180):
     return subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
-def cleanup(net):
-    sh(["docker", "rm", "-f", SRV, CLI]); sh(["docker", "network", "rm", net])
 
-for mode, expect in MODES.items():
-    base = os.path.join(HERE, "out", label, mode)
-    shutil.rmtree(base, ignore_errors=True)
-    inp, srvd, clid = (os.path.join(base, d) for d in ("in", "srv", "cli"))
-    for d in (inp, srvd, clid): os.makedirs(d)
-    key = secrets.token_hex(32)
-    msgs = [f"m{i}\tCANARY-{secrets.token_hex(8)}" for i in range(5)]
-    open(os.path.join(inp, "msgs.tsv"), "w").write("\n".join(msgs) + "\n")
-    open(os.path.join(base, "canaries.tsv"), "w").write("\n".join(msgs + [f"key\t{key}"]) + "\n")
-    net = f"tadv-{mode.replace('_', '-')}"
-    cleanup(net); sh(["docker", "network", "create", net])
-    try:
-        r = sh(["docker", "run", "-d", "--name", SRV, "--network", net, "-v", f"{srvd}:/work",
-                IMG, "sh", "-c", "tcpdump -i eth0 -U -w /work/traffic.pcap & sleep 1; exec python3 /toy/server.py"])
-        if r.returncode: raise RuntimeError(r.stderr)
+# One network and one container per role, created ONCE and reused across modes;
+# each mode starts a fresh server process and capture inside the same container.
+# The first version made a network and two containers per mode, and that
+# interface churn raised "disconnected" desktop alerts on Grey's laptop
+# (2026-09-21).
+NET = "tadv-net"
+outroot = os.path.join(HERE, "out", label)
+os.makedirs(outroot, exist_ok=True)
+def teardown():
+    sh(["docker", "rm", "-f", SRV, CLI]); sh(["docker", "network", "rm", NET])
+teardown()
+sh(["docker", "network", "create", NET])
+for c in (SRV, CLI):
+    r = sh(["docker", "run", "-d", "--name", c, "--network", NET, "-v", f"{outroot}:/out", IMG, "sleep", "infinity"])
+    if r.returncode: raise RuntimeError(r.stderr)
+try:
+    for mode, expect in MODES.items():
+        base = os.path.join(outroot, mode); shutil.rmtree(base, ignore_errors=True)
+        inp, srvd, clid = (os.path.join(base, d) for d in ("in", "srv", "cli"))
+        for d in (inp, srvd, clid): os.makedirs(d)
+        cb = f"/out/{mode}"
+        key = secrets.token_hex(32)
+        msgs = [f"m{i}\tCANARY-{secrets.token_hex(8)}" for i in range(5)]
+        open(os.path.join(inp, "msgs.tsv"), "w").write("\n".join(msgs) + "\n")
+        open(os.path.join(base, "canaries.tsv"), "w").write("\n".join(msgs + [f"key\t{key}"]) + "\n")
+        sh(["docker", "exec", "-d", SRV, "sh", "-c",
+            f"tcpdump -i eth0 -U -w {cb}/srv/traffic.pcap & sleep 1; "
+            f"TOY_DB={cb}/srv/server.db TOY_LOG={cb}/srv/server.log exec python3 /toy/server.py"])
         time.sleep(3)
-        r = sh(["docker", "run", "--rm", "--name", CLI, "--network", net, "-e", f"DEFECT={mode}",
-                "-e", f"TOY_KEY_HEX={key}", "-v", f"{inp}:/in:ro", "-v", f"{clid}:/work",
-                IMG, "python3", "/toy/client.py", SRV, "/in/msgs.tsv"])
+        r = sh(["docker", "exec", "-e", f"DEFECT={mode}", "-e", f"TOY_KEY_HEX={key}",
+                "-e", f"TOY_LOCAL_DB={cb}/cli/client.db", CLI, "python3", "/toy/client.py", SRV, f"{cb}/in/msgs.tsv"])
         client_out = (r.stdout + r.stderr).strip()[-300:]
         time.sleep(1)
-        sh(["docker", "exec", SRV, "sh", "-c", "pkill -INT tcpdump; sleep 1"])
-    finally:
-        sh(["docker", "stop", "-t", "2", SRV]); cleanup(net)
-    hits_path = os.path.join(base, "hits.jsonl")
-    s = sh(["python3", os.path.join(HERE, "canary_scan.py"), os.path.join(base, "canaries.tsv"),
-            hits_path, srvd, clid])
-    hits = [json.loads(l) for l in open(hits_path)] if os.path.exists(hits_path) else []
-    where = sorted({os.path.basename(h["where"].split("#")[0].split("|")[0]) for h in hits})
-    artefacts = sorted(os.listdir(srvd) + os.listdir(clid))
-    ok = (not hits) if mode == "none" else any(a in where for a in expect)
-    log({"run": label, "mode": mode, "client": client_out, "artefacts": artefacts,
-         "hits": len(hits), "hit_in": where, "expected_in": expect,
-         "verdict": "CLEAN" if not hits else "CAUGHT", "pass": ok})
+        sh(["docker", "exec", SRV, "sh", "-c", "pkill -INT tcpdump; pkill -f /toy/server.py; sleep 1"])
+        hits_path = os.path.join(base, "hits.jsonl")
+        sh(["python3", os.path.join(HERE, "canary_scan.py"), os.path.join(base, "canaries.tsv"), hits_path, srvd, clid])
+        hits = [json.loads(l) for l in open(hits_path)] if os.path.exists(hits_path) else []
+        where = sorted({os.path.basename(h["where"].split("#")[0].split("|")[0]) for h in hits})
+        artefacts = sorted(os.listdir(srvd) + os.listdir(clid))
+        ok = (not hits) if mode == "none" else any(a in where for a in expect)
+        log({"run": label, "mode": mode, "client": client_out, "artefacts": artefacts,
+             "hits": len(hits), "hit_in": where, "expected_in": expect,
+             "verdict": "CLEAN" if not hits else "CAUGHT", "pass": ok})
+finally:
+    teardown()
 res.close()
 # Containers write as root; hand the outputs back to the invoking user.
 sh(["docker", "run", "--rm", "-v", f"{os.path.join(HERE, 'out')}:/o", "tremulator-lab:latest",
