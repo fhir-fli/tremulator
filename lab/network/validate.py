@@ -46,7 +46,13 @@ def log(rec):
     print(json.dumps(rec), flush=True)
 
 def sh(cmd, timeout=600, check=False):
-    r = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
+    try:
+        r = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
+    except subprocess.TimeoutExpired as e:
+        # A command that never finishes is a result, not a crash: on the P0 dead
+        # link iperf3 waits forever for its control connection, and run1 of
+        # 2026-09-22 died here instead of recording "no connection".
+        return subprocess.CompletedProcess(cmd, None, e.stdout or "", f"TIMEOUT after {timeout}s")
     if check and r.returncode != 0:
         raise RuntimeError(f"{cmd}: {r.returncode} {r.stderr.strip()}")
     return r
@@ -148,6 +154,8 @@ def iperf_udp(ip, rate_bps, length, secs, tries=5):
 
 def steady(name, rate, rtt, loss):
     ip = srv_ip()
+    if "--only-loss" in sys.argv:
+        return loss_only(name, rate, loss, ip)
     rtts = ping_rtts(ip)
     med = statistics.median(rtts) if rtts else None
     ok = med is not None and abs(med - rtt) <= 0.10 * rtt
@@ -160,7 +168,15 @@ def steady(name, rate, rtt, loss):
     log({"run": label, "profile": name, "metric": "delivered_bps", "expected": exp_bps, **u, "pass": ok})
     # one-way loss
     pps = rate * 1000 * 0.5 / ((PAYLOAD_LOSS + OVERHEAD) * 8)
-    secs = max(15, math.ceil(2000 / pps) + 2)
+    # Enough datagrams that two runs on an identical link land within ±10% of
+    # each other 95% of the time: sqrt(2)*sqrt((1-p)/(n p)) <= 0.10/1.96, so
+    # n >= (1-p) / (p * 0.0013). With the first fixed 2,000-datagram floor,
+    # chance alone gave P2 and P4 run-to-run differences of 14.9% and 12.9%
+    # (z = -1.07, -0.96), failing a criterion that a perfect link fails about
+    # half the time (2026-09-22). The criterion stays; the sample grows.
+    p = loss / 100
+    need = math.ceil((1 - p) / (p * 0.0013)) if p > 0 else 2000
+    secs = max(15, math.ceil(need / pps) + 2)
     u = iperf_udp(ip, rate * 1000 * 0.5, PAYLOAD_LOSS, secs)
     if "packets" in u and u["packets"]:
         lo, hi = wilson(u["lost"], u["packets"])
@@ -170,6 +186,27 @@ def steady(name, rate, rtt, loss):
     else:
         log({"run": label, "profile": name, "metric": "loss", "target_pct": loss, **u, "pass": False})
 
+def loss_only(name, rate, loss, ip):
+    pps = rate * 1000 * 0.5 / ((PAYLOAD_LOSS + OVERHEAD) * 8)
+    # Enough datagrams that two runs on an identical link land within ±10% of
+    # each other 95% of the time: sqrt(2)*sqrt((1-p)/(n p)) <= 0.10/1.96, so
+    # n >= (1-p) / (p * 0.0013). With the first fixed 2,000-datagram floor,
+    # chance alone gave P2 and P4 run-to-run differences of 14.9% and 12.9%
+    # (z = -1.07, -0.96), failing a criterion that a perfect link fails about
+    # half the time (2026-09-22). The criterion stays; the sample grows.
+    p = loss / 100
+    need = math.ceil((1 - p) / (p * 0.0013)) if p > 0 else 2000
+    secs = max(15, math.ceil(need / pps) + 2)
+    u = iperf_udp(ip, rate * 1000 * 0.5, PAYLOAD_LOSS, secs)
+    if "packets" in u and u["packets"]:
+        lo, hi = wilson(u["lost"], u["packets"])
+        ok = lo <= loss/100 <= hi and u["packets"] >= 2000
+        log({"run": label, "profile": name, "metric": "loss", "target_pct": loss,
+             "measured_pct": 100*u["lost"]/u["packets"], "ci95_pct": [100*lo, 100*hi], **u, "pass": ok})
+    else:
+        log({"run": label, "profile": name, "metric": "loss", "target_pct": loss, **u, "pass": False})
+
+
 def internet_probe():
     r = dx(CLI, "ping", "-n", "-c", "3", "-W", "2", "1.1.1.1", timeout=30)
     return r.returncode == 0
@@ -177,10 +214,14 @@ def internet_probe():
 try:
     setup_all()
     for name, (rate, rtt, loss, internal) in PROFILES.items():
+        if "--only-p0" in sys.argv:
+            break
         use(internal)
         for c in (SRV, CLI):
             netem(c, rate, rtt/2, loss)
         steady(name, rate, rtt, loss)
+        if "--only-loss" in sys.argv:
+            continue
         if name == "P2":   # known-positive control for the internet check
             reach = internet_probe()
             log({"run": label, "profile": name, "metric": "internet_reachable_control",
@@ -210,11 +251,13 @@ try:
                  "down_gaps_s": [round(d,1) for d in downs], "judged_up": [round(u,1) for u in full_ups],
                  "pass": ok_up and ok_dn})
     # P0: the zero link must fail
+    if "--only-loss" in sys.argv:
+        raise SystemExit(0)
     use(False)
     for c in (SRV, CLI):
         netem(c, 0, 0, 100)
     rtts = ping_rtts(srv_ip(), count=20)
-    u = iperf_udp(srv_ip(), 100000, 64, 5)
+    u = iperf_udp(srv_ip(), 100000, 64, 5, tries=1)   # one attempt: a dead link must not be retried into success
     failed = len(rtts) == 0 and ("error" in u or not u.get("bps"))
     log({"run": label, "profile": "P0", "metric": "zero_link_fails", "ping_replies": len(rtts),
          "iperf": u, "pass": failed})
