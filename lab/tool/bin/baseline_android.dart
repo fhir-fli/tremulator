@@ -278,17 +278,11 @@ Future<void> _photo(String number, String local, _Log log) async {
     '-d',
     'file://$remote',
   ]);
-  final q = await _adb([
-    'shell',
-    'content',
-    'query',
-    '--uri',
-    'content://media/external/images/media',
-    '--projection',
-    '_id',
-    '--where',
-    "_display_name='$name'",
-  ]);
+  // One shell string, so the phone's shell keeps the SQL quotes.
+  final query =
+      'content query --uri content://media/external/images/media '
+      '--projection _id --where "_display_name=\'$name\'"';
+  final q = await _adb(['shell', query]);
   final id = RegExp(r'_id=(\d+)').firstMatch(q)?.group(1);
   if (id == null) throw StateError('media store has no row for $name: $q');
   await _adb([
@@ -300,7 +294,7 @@ Future<void> _photo(String number, String local, _Log log) async {
     '-t',
     'image/jpeg',
     '-n',
-    'com.whatsapp/.ContactPicker',
+    'com.whatsapp/.contact.ui.picker.ExternalShareAlias',
     '--es',
     'jid',
     '$number@s.whatsapp.net',

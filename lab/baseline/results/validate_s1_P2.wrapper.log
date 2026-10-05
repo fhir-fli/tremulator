@@ -1,6 +1,7 @@
-validator pid 249306, console /home/grey/dev/fhir/tremulator/lab/baseline/results/validate_s1_P2.out
-2026-10-05T18:33:52-04:00 typed into Termux: iperf3 -c 10.42.0.1 -u -b 360000 -l 1000 -t 30
-2026-10-05T18:34:35-04:00 typed into Termux: iperf3 -c 10.42.0.1 -u -b 150000 -l 64 -t 216
-validator exit 143
-Running build hooks...{"metric":"rtt_ms","target":227.2,"base_rtt":27.2,"tolerance":22.72,"median":226.0,"n_replies":97,"pass":true,"t":"2026-10-05T18:33:47","label":"s1","profile":"P2"}
-{"metric":"delivered_bps","expected":282149.7120921305,"bps":286065.5507965955,"lost":28,"packets":1351,"seconds":36.998513,"phone_command":"iperf3 -c 10.42.0.1 -u -b 360000 -l 1000 -t 30","pass":true,"t":"2026-10-05T18:34:31","label":"s1","profile":"P2"}
+validator pid 253466, console /home/grey/dev/fhir/tremulator/lab/baseline/results/validate_s1_P2.out
+2026-10-05T18:40:31-04:00 typed into Termux: iperf3 -c 10.42.0.1 -u -b 360000 -l 1000 -t 30  (phone output trem_s1_P2_1.txt)
+2026-10-05T18:41:17-04:00 typed into Termux: iperf3 -c 10.42.0.1 -u -b 150000 -l 64 -t 216  (phone output trem_s1_P2_2.txt)
+validator exit 0
+Running build hooks...{"metric":"rtt_ms","target":227.2,"base_rtt":27.2,"tolerance":22.72,"median":226.0,"n_replies":95,"pass":true,"t":"2026-10-05T18:40:25","label":"s1","profile":"P2"}
+{"metric":"delivered_bps","expected":282149.7120921305,"bps":265785.20595681056,"lost":27,"packets":1351,"seconds":39.851729,"phone_command":"iperf3 -c 10.42.0.1 -u -b 360000 -l 1000 -t 30","retries":0,"retry_errors":[],"pass":true,"t":"2026-10-05T18:41:12","label":"s1","profile":"P2"}
+{"metric":"loss","target_pct":2.0,"measured_pct":1.948421352043235,"ci95_pct":[1.8436096557623116,2.0590667368670315],"bps":146873.19896597188,"lost":1233,"packets":63282,"seconds":216.302826,"phone_command":"iperf3 -c 10.42.0.1 -u -b 150000 -l 64 -t 216","retries":0,"retry_errors":[],"pass":true,"t":"2026-10-05T18:44:57","label":"s1","profile":"P2"}
