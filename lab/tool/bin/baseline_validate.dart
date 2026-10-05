@@ -15,7 +15,6 @@
 ///       P4 only: 185 s of 0.2 s pings while shape.sh P4 is looping
 library;
 
-import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
@@ -41,19 +40,19 @@ Future<void> main(List<String> argv) async {
   final sink = File(
     '${dir.path}/validate_$label.jsonl',
   ).openWrite(mode: FileMode.append);
-  void log(Map<String, Object?> rec) {
+  Future<void> log(Map<String, Object?> rec) async {
     rec['t'] = DateTime.now().toIso8601String().substring(0, 19);
     rec['label'] = label;
     rec['profile'] = profile;
     final line = jsonEncode(rec);
     sink.writeln(line);
-    unawaited(sink.flush());
+    await sink.flush();
     print(line);
   }
 
   if (profile == 'off') {
     final rtts = await _ping(phone, 100, 0.2);
-    log({
+    await log({
       'metric': 'rtt_ms_unshaped',
       'median': rtts.isEmpty ? null : median(rtts),
       'n_replies': rtts.length,
@@ -75,7 +74,7 @@ Future<void> main(List<String> argv) async {
     );
     final w = dutyWindows(stampsFromPing(r.out));
     double r1(double x) => (x * 10).round() / 10;
-    log({
+    await log({
       'metric': 'duty_cycle',
       'up_windows_s': w.ups.map(r1).toList(),
       'down_gaps_s': w.downs.map(r1).toList(),
@@ -92,7 +91,7 @@ Future<void> main(List<String> argv) async {
 
   if (profile == 'P0') {
     final rtts = await _ping(phone, 20, 0.5);
-    log({
+    await log({
       'metric': 'dead_link',
       'n_replies': rtts.length,
       'pass': rtts.isEmpty,
@@ -105,7 +104,7 @@ Future<void> main(List<String> argv) async {
   final target = rtt + baseRtt;
   final rtts = await _ping(phone, 100, max(0.2, pingInterval(rate)));
   final med = rtts.isEmpty ? null : median(rtts);
-  log({
+  await log({
     'metric': 'rtt_ms',
     'target': target,
     'base_rtt': baseRtt,
@@ -148,7 +147,7 @@ Future<void> main(List<String> argv) async {
     final got = int.tryParse(m?.group(2) ?? '') ?? 0;
     final lost = sent - got;
     final (lo, hi) = wilson(lost, sent);
-    log({
+    await log({
       'metric': 'loss_two_way_ping',
       'target_pct': 100 * p2,
       'per_direction_pct': loss,
@@ -171,7 +170,7 @@ Future<void> main(List<String> argv) async {
     timeoutS: 400,
   );
   final bps = u['bps'] as num?;
-  log({
+  await log({
     'metric': 'delivered_bps',
     'expected': exp,
     ...u,
@@ -191,7 +190,7 @@ Future<void> main(List<String> argv) async {
   if (n != null && n > 0) {
     final lost = l['lost']! as int;
     final (lo, hi) = wilson(lost, n);
-    log({
+    await log({
       'metric': 'loss',
       'target_pct': loss,
       'measured_pct': 100 * lost / n,
@@ -200,7 +199,7 @@ Future<void> main(List<String> argv) async {
       'pass': lo <= loss / 100 && loss / 100 <= hi && n >= 2000,
     });
   } else {
-    log({'metric': 'loss', 'target_pct': loss, ...l, 'pass': false});
+    await log({'metric': 'loss', 'target_pct': loss, ...l, 'pass': false});
   }
   await sink.close();
 }
