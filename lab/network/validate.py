@@ -84,10 +84,11 @@ def pin_neighbours(a, b):
     """Make each container's neighbour entry for the other permanent. The lab is
     one Ethernet segment, so during a P4 outage ARP for the peer fails, the entry
     goes FAILED and stays there, and ping exits with 'Destination Host
-    Unreachable' (results/diag_duty/, 2026-09-22: probe died at 52.7 s). A phone
+    Unreachable' (diag_duty.sh output, 2026-09-22: probe died at 52.7 s; the
+    files were removed 2026-10-05 and remain in git history). A phone
     reaching a server over the internet never ARPs for the far end, so a pinned
     entry is the faithful emulation: an outage then only drops packets
-    (results/diag_duty_static/: up 29.3 and 29.5 s, down 60.5 and 60.5 s)."""
+    (diag_duty.sh with STATIC_NEIGH: up 29.3 and 29.5 s, down 60.5 and 60.5 s)."""
     def ip_mac(c):
         ip = dx(c, "sh", "-c", "ip -4 -o addr show eth0 | awk '{print $4}' | cut -d/ -f1").stdout.strip()
         mac = dx(c, "cat", "/sys/class/net/eth0/address").stdout.strip()
