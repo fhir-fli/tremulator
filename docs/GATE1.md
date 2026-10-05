@@ -99,6 +99,35 @@ user may create a shared hotspot without root (`nmcli general permissions`:
 are installed; no phone attached. `iw` is still not installed and is not
 needed. Open: which two phones carry WhatsApp for the measurement.
 
+## WhatsApp baseline: instruments ready, 2026-10-05
+
+`lab/baseline/` (README there is the procedure). Field phone, an Android with
+mobile data off, on a hotspot this laptop hosts; the consultant phone, an
+iPhone, on the home Wi-Fi, unshaped, as in the real scenario and so that a
+peer-to-peer call cannot bypass the ingress shaping inside the Wi-Fi driver.
+The laptop never needs access to the iPhone.
+
+No root: `tc` and `tcpdump` run in `tremulator-lab:latest` on the host network
+with `NET_ADMIN`. Proved on the unused `docker0` bridge before touching Wi-Fi:
+netem write, `ifb0` creation, ingress `matchall`/`mirred` redirect, teardown.
+Shaping numbers are the lab's exactly, on egress to the phone and on `ifb0`
+for its uploads. Each step logs to `results/*.log` with a timestamp.
+
+Instruments (`lab/tool/bin/baseline_*.dart`, 15 tests, seen to fail once):
+`baseline_validate` (ping RTT, iperf3 rate and loss with the lab's checks and
+sizing, `--ping-only` fallback, `--duty` for P4), `baseline_events` (operator
+timestamps), `baseline_flows` (relay vs peer-to-peer from the capture),
+`baseline_onsets` (one-way audio delay from a clap recording).
+
+Pre-registered before the first run (README, "Pre-registered rules"): RTT
+target = profile RTT + unshaped Wi-Fi RTT, tolerance max(10%, 2 ms); ping loss
+is two-way, 1 − (1 − p)²; a failed validation is kept and the profile is not
+measured until it passes.
+
+Still needed: the two phones here, `iperf3` on the Android (Termux) or the Mac
+on the hotspot for the rate check, and an afternoon. Unverified until then:
+whether the phones stay on a Wi-Fi network with no internet for P5.
+
 ## 2026-09-21 incident: the lab disturbed Grey's network
 
 Grey reported the laptop dropping off the network every few seconds while run 1
