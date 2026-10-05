@@ -8,6 +8,8 @@
 ///   dart run bin/baseline_android.dart current
 ///       name of the chat on screen, and the newest tick
 ///   dart run bin/baseline_android.dart open `number`
+///   dart run bin/baseline_android.dart number-of "`contact name`"
+///       open that chat from the list, then its contact page, print the number
 ///   dart run bin/baseline_android.dart texts `number` `label` [n=10] [gap_s=10]
 ///   dart run bin/baseline_android.dart photo `number` `local.jpg` `label`
 ///   dart run bin/baseline_android.dart call `number` voice|video `label`
@@ -18,7 +20,6 @@
 ///       print the ids and descriptions on screen (for finding new widgets)
 library;
 
-import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -44,6 +45,9 @@ Future<void> main(List<String> argv) async {
     case 'open':
       if (a.length != 1) _usage();
       await _open(a[0]);
+    case 'number-of':
+      if (a.length != 1) _usage();
+      await _numberOf(a[0]);
     case 'texts':
       if (a.length < 2) _usage();
       final log = _Log(a[1]);
@@ -96,7 +100,10 @@ class _Log {
   final String label;
   final IOSink _sink;
 
-  void add(String event, [Map<String, Object?> extra = const {}]) {
+  Future<void> add(
+    String event, [
+    Map<String, Object?> extra = const {},
+  ]) async {
     final now = DateTime.now();
     final rec = {
       't': now.toIso8601String(),
@@ -105,7 +112,7 @@ class _Log {
       ...extra,
     };
     _sink.writeln(jsonEncode(rec));
-    unawaited(_sink.flush());
+    await _sink.flush();
     print(
       '${now.toIso8601String().substring(11, 23)} $event '
       '${extra.isEmpty ? '' : jsonEncode(extra)}',
@@ -178,6 +185,48 @@ Future<void> _open(String number, {String text = ''}) async {
   await _waitFor((n) => byId(n, 'entry'), what: 'chat entry box');
 }
 
+/// Launch WhatsApp's chat list, open the chat whose row shows `name`, verify
+/// the header shows it, open the contact page and print any phone number on
+/// it. Every tap is on a widget found in the current screen dump.
+Future<void> _numberOf(String name) async {
+  await _adb([
+    'shell',
+    'am',
+    'start',
+    '-n',
+    'com.whatsapp/.home.ui.HomeActivity',
+  ]);
+  final row = await _waitFor(
+    (ns) => ns.cast<UiNode?>().firstWhere(
+      (n) => n!.id == '${waId}conversations_row_contact_name' && n.text == name,
+      orElse: () => null,
+    ),
+    what: 'chat row "$name"',
+  );
+  await _tap(row);
+  final header = await _waitFor(
+    (ns) => byId(ns, 'conversation_contact_name'),
+    what: 'chat header',
+  );
+  if (header.text != name) {
+    throw StateError('opened "${header.text}", not "$name"; stopping');
+  }
+  print('chat open: ${header.text}');
+  final contact = await _waitFor(
+    (ns) => byId(ns, 'conversation_contact'),
+    what: 'chat header button',
+  );
+  await _tap(contact);
+  await Future<void>.delayed(const Duration(seconds: 2));
+  final ns = await _nodes();
+  final numbers = ns
+      .map((n) => n.text)
+      .where((t) => RegExp(r'^\+?[0-9][0-9 ()-]{7,}$').hasMatch(t))
+      .toSet();
+  print('numbers on contact page: $numbers');
+  await _adb(['shell', 'input', 'keyevent', 'KEYCODE_BACK']);
+}
+
 Future<void> _texts(String number, _Log log, int n, double gap) async {
   for (var i = 1; i <= n; i++) {
     final body =
@@ -190,14 +239,14 @@ Future<void> _texts(String number, _Log log, int n, double gap) async {
     );
     await _tap(send);
     final t0 = DateTime.now();
-    log.add('text_tap', {'i': i, 'chars': body.length});
+    await log.add('text_tap', {'i': i, 'chars': body.length});
     String? last;
     final deadline = t0.add(const Duration(minutes: 5));
     while (DateTime.now().isBefore(deadline)) {
       final s = lastStatus(await _nodes())?.desc;
       if (s != null && s != last) {
         last = s;
-        log.add('text_tick', {
+        await log.add('text_tick', {
           'i': i,
           'tick': s,
           'since_tap_s': DateTime.now().difference(t0).inMilliseconds / 1000,
@@ -207,7 +256,7 @@ Future<void> _texts(String number, _Log log, int n, double gap) async {
       await Future<void>.delayed(const Duration(milliseconds: 400));
     }
     if (last != 'Delivered' && last != 'Read') {
-      log.add('text_timeout', {'i': i, 'last_tick': last});
+      await log.add('text_timeout', {'i': i, 'last_tick': last});
     }
     final wait = gap - DateTime.now().difference(t0).inMilliseconds / 1000;
     if (i < n && wait > 0) {
@@ -267,14 +316,14 @@ Future<void> _photo(String number, String local, _Log log) async {
   );
   await _tap(send);
   final t0 = DateTime.now();
-  log.add('photo_tap', {'file': name, 'bytes': File(local).lengthSync()});
+  await log.add('photo_tap', {'file': name, 'bytes': File(local).lengthSync()});
   String? last;
   final deadline = t0.add(const Duration(minutes: 10));
   while (DateTime.now().isBefore(deadline)) {
     final s = lastStatus(await _nodes())?.desc;
     if (s != null && s != last) {
       last = s;
-      log.add('photo_tick', {
+      await log.add('photo_tick', {
         'tick': s,
         'since_tap_s': DateTime.now().difference(t0).inMilliseconds / 1000,
       });
@@ -283,7 +332,7 @@ Future<void> _photo(String number, String local, _Log log) async {
     await Future<void>.delayed(const Duration(milliseconds: 400));
   }
   if (last != 'Delivered' && last != 'Read') {
-    log.add('photo_timeout', {'last_tick': last});
+    await log.add('photo_timeout', {'last_tick': last});
   }
 }
 
@@ -292,7 +341,7 @@ Future<void> _call(String number, String kind, _Log log) async {
   final label = kind == 'voice' ? 'Voice call' : 'Video call';
   final btn = await _waitFor((ns) => byDesc(ns, label), what: '$label button');
   await _tap(btn);
-  log.add('call_tap', {'kind': kind});
+  await log.add('call_tap', {'kind': kind});
   // A confirmation sheet ("Call <name>?") appears on some builds.
   final confirm = await _tryFor(
     (ns) => byDesc(ns, 'Call') ?? _byText(ns, 'Call'),
@@ -300,7 +349,7 @@ Future<void> _call(String number, String kind, _Log log) async {
   );
   if (confirm != null) {
     await _tap(confirm);
-    log.add('call_confirm');
+    await log.add('call_confirm');
   }
   // Watch the call screen for its state text for up to 60 s.
   final t0 = DateTime.now();
@@ -310,7 +359,7 @@ Future<void> _call(String number, String kind, _Log log) async {
     final state = _callState(ns);
     if (state != null && state != last) {
       last = state;
-      log.add('call_state', {
+      await log.add('call_state', {
         'state': state,
         'since_tap_s': DateTime.now().difference(t0).inMilliseconds / 1000,
       });
@@ -354,7 +403,7 @@ Future<void> _hangup(_Log log) async {
     what: 'end call button',
   );
   await _tap(btn);
-  log.add('hangup');
+  await log.add('hangup');
 }
 
 Future<void> _waitIncoming(_Log log, int seconds) async {
@@ -367,9 +416,9 @@ Future<void> _waitIncoming(_Log log, int seconds) async {
     if (t != null && newestIsIncoming(ns) && t.text != lastText) {
       lastText = t.text;
       count++;
-      log.add('incoming', {'n': count, 'text': t.text});
+      await log.add('incoming', {'n': count, 'text': t.text});
     }
     await Future<void>.delayed(const Duration(milliseconds: 400));
   }
-  log.add('wait_incoming_end', {'count': count});
+  await log.add('wait_incoming_end', {'count': count});
 }
