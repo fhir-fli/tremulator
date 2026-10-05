@@ -224,38 +224,64 @@ Future<List<double>> _ping(String ip, int count, double interval) async {
   return rttsFromPing(r.out);
 }
 
-/// Start a one-shot iperf3 server, tell the operator what to type on the
-/// phone, and return the receiver-side figures when the client run ends.
+/// Start a one-shot iperf3 server, tell the operator (or the wrapper, which
+/// types it into Termux) what to run on the phone, and return the
+/// receiver-side figures. Retried with a fresh server up to [tries] times, as
+/// the lab did, because iperf3's own control connection crosses the shaped
+/// link; every error is kept in the record.
 Future<Map<String, Object?>> _iperfServer(
   String phoneCommand, {
   required int timeoutS,
+  int tries = 3,
 }) async {
-  print(
-    '\n>>> on the phone (Termux) or the Mac, run:\n    $phoneCommand\n'
-    '    waiting up to $timeoutS s for the run to finish...',
-  );
-  final r = await sh(
-    [
-      'docker',
-      'run',
-      '--rm',
-      '--network',
-      'host',
-      img,
-      'iperf3',
-      '-s',
-      '-1',
-      '-J',
-    ],
-    timeoutS: timeoutS,
-  );
-  if (r.code == null) return {'error': r.err};
-  try {
-    return {...parseIperfServerJson(r.out), 'phone_command': phoneCommand};
-  } on FormatException {
-    final tail = '${r.out}${r.err}';
-    return {'error': tail.substring(max(0, tail.length - 200))};
+  final errors = <String>[];
+  for (var attempt = 0; attempt < tries; attempt++) {
+    print(
+      '\n>>> on the phone (Termux) or the Mac, run (attempt ${attempt + 1}):\n'
+      '    $phoneCommand\n'
+      '    waiting up to $timeoutS s for the run to finish...',
+    );
+    final r = await sh(
+      [
+        'docker',
+        'run',
+        '--rm',
+        '--network',
+        'host',
+        img,
+        'iperf3',
+        '-s',
+        '-1',
+        '-J',
+      ],
+      timeoutS: timeoutS,
+    );
+    if (r.code == null) {
+      errors.add(r.err);
+      continue;
+    }
+    try {
+      final parsed = parseIperfServerJson(r.out);
+      if (parsed['error'] != null) {
+        errors.add('${parsed['error']}');
+        continue;
+      }
+      return {
+        ...parsed,
+        'phone_command': phoneCommand,
+        'retries': attempt,
+        'retry_errors': errors,
+      };
+    } on FormatException {
+      final tail = '${r.out}${r.err}';
+      errors.add(tail.substring(max(0, tail.length - 200)));
+    }
   }
+  return {
+    'error': errors.isEmpty ? 'unknown' : errors.last,
+    'retries': tries,
+    'retry_errors': errors,
+  };
 }
 
 Map<String, String> _args(List<String> argv) {
