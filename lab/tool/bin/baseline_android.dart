@@ -14,6 +14,8 @@
 ///   dart run bin/baseline_android.dart photo `number` `local.jpg` `label`
 ///   dart run bin/baseline_android.dart call `number` voice|video `label`
 ///   dart run bin/baseline_android.dart hangup `label`
+///   dart run bin/baseline_android.dart watch `label` `seconds`
+///       log the phone's Wi-Fi address; exit 3 the moment it leaves 10.42.0.x
 ///   dart run bin/baseline_android.dart wait-incoming `label` `seconds`
 ///       log each new incoming bubble as it appears (the iPhone → Android leg)
 ///   dart run bin/baseline_android.dart dump
@@ -69,6 +71,11 @@ Future<void> main(List<String> argv) async {
       if (a.length != 1) _usage();
       final log = _Log(a[0]);
       await _hangup(log);
+      await log.close();
+    case 'watch':
+      if (a.length != 2) _usage();
+      final log = _Log(a[0]);
+      await _watch(log, int.parse(a[1]));
       await log.close();
     case 'wait-incoming':
       if (a.length != 2) _usage();
@@ -128,6 +135,24 @@ Future<String> _adb(List<String> args) async {
     throw StateError('adb ${args.join(' ')}: ${r.stderr}');
   }
   return r.stdout as String;
+}
+
+/// The phone's Wi-Fi address. Every poll checks it: a run on a phone that has
+/// left the shaped hotspot measures nothing, so it stops at once.
+Future<String> _wlan0() async {
+  final out = await _adb(['shell', 'ip', '-4', '-o', 'addr', 'show', 'wlan0']);
+  return RegExp(r'inet (\d+\.\d+\.\d+\.\d+)').firstMatch(out)?.group(1) ??
+      'none';
+}
+
+String hotspotPrefix = '10.42.0.';
+
+Future<void> _assertOnHotspot(_Log log, String where) async {
+  final ip = await _wlan0();
+  if (!ip.startsWith(hotspotPrefix)) {
+    await log.add('PHONE_LEFT_HOTSPOT', {'wlan0': ip, 'during': where});
+    throw StateError('phone left the hotspot (wlan0=$ip) during $where');
+  }
 }
 
 Future<List<UiNode>> _nodes() async {
@@ -243,6 +268,7 @@ Future<void> _texts(String number, _Log log, int n, double gap) async {
     String? last;
     final deadline = t0.add(const Duration(minutes: 5));
     while (DateTime.now().isBefore(deadline)) {
+      await _assertOnHotspot(log, 'text $i');
       final s = lastStatus(await _nodes())?.desc;
       if (s != null && s != last) {
         last = s;
@@ -314,6 +340,7 @@ Future<void> _photo(String number, String local, _Log log) async {
   String? last;
   final deadline = t0.add(const Duration(minutes: 10));
   while (DateTime.now().isBefore(deadline)) {
+    await _assertOnHotspot(log, 'photo');
     final s = lastStatus(await _nodes())?.desc;
     if (s != null && s != last) {
       last = s;
@@ -349,6 +376,7 @@ Future<void> _call(String number, String kind, _Log log) async {
   final t0 = DateTime.now();
   String? last;
   while (DateTime.now().difference(t0).inSeconds < 60) {
+    await _assertOnHotspot(log, 'call setup');
     final ns = await _nodes();
     final state = _callState(ns);
     if (state != null && state != last) {
@@ -398,6 +426,25 @@ Future<void> _hangup(_Log log) async {
   );
   await _tap(btn);
   await log.add('hangup');
+}
+
+/// Log the phone's Wi-Fi address every 2 s for [seconds]; exits non-zero the
+/// moment it leaves the hotspot. Run beside a call.
+Future<void> _watch(_Log log, int seconds) async {
+  final end = DateTime.now().add(Duration(seconds: seconds));
+  var last = '';
+  while (DateTime.now().isBefore(end)) {
+    final ip = await _wlan0();
+    if (ip != last) {
+      await log.add('wlan0', {'ip': ip});
+      last = ip;
+    }
+    if (!ip.startsWith(hotspotPrefix)) {
+      await log.add('PHONE_LEFT_HOTSPOT', {'wlan0': ip, 'during': 'watch'});
+      exit(3);
+    }
+    await Future<void>.delayed(const Duration(seconds: 2));
+  }
 }
 
 Future<void> _waitIncoming(_Log log, int seconds) async {
