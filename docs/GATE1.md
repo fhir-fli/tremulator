@@ -89,6 +89,16 @@ cable, so it cannot also be the phones' access point. Needed: a USB Wi-Fi
 adapter that supports access-point mode, or a spare router, plus two phones with
 WhatsApp. Grey's phone is in use for other testing (2026-09-21).
 
+**2026-10-05: the hardware block is gone.** The Ethernet port has a cable and
+an address on the home LAN (192.168.8.215/24, default route via 192.168.8.1),
+and NetworkManager reports the Wi-Fi card can be an access point
+(`nmcli -f WIFI-PROPERTIES device show wlp2s0`: `AP: yes`, 2.4/5/6 GHz). The
+user may create a shared hotspot without root (`nmcli general permissions`:
+`wifi.share.protected yes`). Still root-only: `tc` on the host interface, and
+`tcpdump` (installed, no capabilities; `dumpcap` absent). `adb` and `scrcpy`
+are installed; no phone attached. `iw` is still not installed and is not
+needed. Open: which two phones carry WhatsApp for the measurement.
+
 ## 2026-09-21 incident: the lab disturbed Grey's network
 
 Grey reported the laptop dropping off the network every few seconds while run 1
