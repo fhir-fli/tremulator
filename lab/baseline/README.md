@@ -39,7 +39,8 @@ reconnects on its own.
 
 ## Per profile, in this order: P2, P1, P3, P4, then P5 and P0 last
 
-P5 and P0 take the laptop offline (`./hotspot.sh offline`), so they go last.
+P5 and P0 put the iPhone on the hotspot too (airplane mode, Wi-Fi on). The
+laptop keeps its uplink: `shape.sh P5` drops the phones' non-LAN traffic with tc.
 
 ```bash
 ./shape.sh P2                                   # P4: leave it looping in its own terminal

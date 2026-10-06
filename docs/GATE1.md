@@ -9,7 +9,7 @@ how each is being met and what is blocked.
 | Instrument fails a 0 kbit/s link and passes P5 | same lab | **met**: P0 no replies and no connection, twice; P5 passes, its no-internet check has a working positive control |
 | Adversary harness: no plaintext in server storage or traffic | canary scanner over files and packet captures | **met**: 13/13 encoding checks, Python and Dart identical on 16 saved cases |
 | Harness catches at least 5 injected defects | toy messenger with switchable defects | **met**: correct toy clean, 7/7 defects caught, four times (Python m2, m3; Dart d1, d2) |
-| WhatsApp baseline on all five profiles | two phones through the shaped link | **blocked: needs hardware** |
+| WhatsApp baseline on all five profiles | two phones through the shaped link | **met 2026-10-06**: P0–P5 measured, table below; two declared instrument changes |
 
 ## Network verdict, 2026-09-22
 
@@ -127,6 +127,39 @@ measured until it passes.
 Still needed: the two phones here, `iperf3` on the Android (Termux) or the Mac
 on the hotspot for the rate check, and an afternoon. Unverified until then:
 whether the phones stay on a Wi-Fi network with no internet for P5.
+
+## WhatsApp baseline results, 2026-10-05/06
+
+Field phone: OnePlus CPH2749 (Android 16) on the laptop's shaped hotspot,
+mobile data off, home network forgotten. Consultant phone: iPhone on the home
+Wi-Fi (P1–P4) or on the hotspot in airplane mode (P5, P0). Every call was
+relayed through Meta (UDP 3478); the phone tried a direct path to the iPhone
+on every call (20 packets out, none back). Raw records: `lab/baseline/results/`.
+
+| Profile | Texts A→i | Texts i→A | Photo (1.1 MB in) | Voice call 3 min | One-way audio delay | Video call 3 min | Video frozen (Android side) |
+|---|---|---|---|---|---|---|---|
+| P1 rural 2G, 50 kbit/s, 400 ms, 5% | 10/10, median 5.3 s, max 7.7 s | 10/10 | 20.6 s | held, 9–22 kbit/s sent | 696 ms (one pair) | held, link saturated | 14.2 s/min (24.1, 7.8, 8.9) |
+| P2 congested 3G, 300 kbit/s, 200 ms, 2% | 10/10, ≤4.9 s | 10/10 | 20.2 s | held (56 s, 4 min, 97 s calls) | 258, 268 ms | held, 145/202 kbit/s | 3.4 s/min |
+| P3 satellite, 1 Mbit/s, 700 ms, 1% | 10/10, median 5.7 s, max 8.3 s | 10/10 | 6.0 s | held | pending (detector) | held, 660 kbit/s up | 6.0 s/min (4.5, 6.2, 6.9) |
+| P4 intermittent, 30 s up / 60 s down | 18/18; 3 s when up, 53–75 s when sent into an outage | 10/10, in bursts after outages | 86 s (sent 3 s into an outage) | **dropped ~25 s after the cut**, twice (51 s logged both) | — | **dropped ~28 s after the cut** (59 s logged) | — |
+| P5 field LAN, no internet | clock icon, never sent (>11 min) | clock on the iPhone, none arrived | — | never rings; "Couldn't place call. Make sure your device has an internet connection" between 86 and 383 s; logged No answer | — | — | — |
+| P0 dead link | clock, timed out at 60 s | — | — | stuck on "Calling", ended by hand at 57 s, logged No answer | — | — | — |
+
+Validation on the Wi-Fi path (all pass under the pre-registered rules):
+P1 RTT 442 ms vs 427, 44.9 kbit/s vs 45.6, loss 4.86% (CI 4.60–5.14);
+P2 226 vs 227 ms, 266 kbit/s vs 282, loss 1.95% (1.84–2.06);
+P3 728.5 vs 727 ms, 938 kbit/s vs 950, loss 1.008% (0.955–1.064);
+P4 up 30.1 s, down 61.2 / 60.9 s. P5 RTT failed (26.0 ms vs 32.2 ± 3.2) because
+the unshaped base RTT used was yesterday's 27.2 ms, against the rule's "same
+session"; recorded as a fail, not reinterpreted.
+
+Caveats: text and photo times have a 2.5 s read resolution (the screen poll);
+the photo WhatsApp actually sent is much smaller than 1.1 MB, size unmeasured;
+iPhone→Android latency is unmeasured (no send instant); audio delay comes
+from one clean clap pair per profile (P3's recording awaits a transient
+detector); video freeze is the Android side only, by ffmpeg freezedetect over
+the remote-video area. The call driver logs nothing after the dial on most
+calls (open defect); setup times come from the capture instead.
 
 ## WhatsApp baseline sessions, 2026-10-05/06
 
