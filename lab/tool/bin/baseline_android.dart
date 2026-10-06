@@ -10,7 +10,7 @@
 ///   dart run bin/baseline_android.dart open `number`
 ///   dart run bin/baseline_android.dart number-of "`contact name`"
 ///       open that chat from the list, then its contact page, print the number
-///   dart run bin/baseline_android.dart texts `number` `label` [n=10] [gap_s=10]
+///   dart run bin/baseline_android.dart texts `number` `label` [n=10] [gap_s=10] [wait_s=300]
 ///   dart run bin/baseline_android.dart photo `number` `local.jpg` `label`
 ///   dart run bin/baseline_android.dart call `number` voice|video `label`
 ///   dart run bin/baseline_android.dart hangup `label`
@@ -55,7 +55,8 @@ Future<void> main(List<String> argv) async {
       final log = _Log(a[1], cmd);
       final n = a.length > 2 ? int.parse(a[2]) : 10;
       final gap = a.length > 3 ? double.parse(a[3]) : 10.0;
-      await _texts(a[0], log, n, gap);
+      final waitS = a.length > 4 ? int.parse(a[4]) : 300;
+      await _texts(a[0], log, n, gap, waitS);
       await log.close();
     case 'photo':
       if (a.length != 3) _usage();
@@ -308,7 +309,13 @@ Future<void> _numberOf(String name) async {
   await _adb(['shell', 'input', 'keyevent', 'KEYCODE_BACK']);
 }
 
-Future<void> _texts(String number, _Log log, int n, double gap) async {
+Future<void> _texts(
+  String number,
+  _Log log,
+  int n,
+  double gap, [
+  int waitS = 300,
+]) async {
   for (var i = 1; i <= n; i++) {
     final body =
         'tremulator ${log.label} $i of $n: '
@@ -322,7 +329,7 @@ Future<void> _texts(String number, _Log log, int n, double gap) async {
     final t0 = DateTime.now();
     await log.add('text_tap', {'i': i, 'chars': body.length});
     String? last;
-    final deadline = t0.add(const Duration(minutes: 5));
+    final deadline = t0.add(Duration(seconds: waitS));
     while (DateTime.now().isBefore(deadline)) {
       await _assertOnHotspot(log, 'text $i');
       final s = lastStatus(await _nodes())?.desc;

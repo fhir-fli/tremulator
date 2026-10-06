@@ -69,14 +69,26 @@ retune() { # netem argument string; leaf only (P4 toggling)
   indocker "$(set_netem "$dev" "$1"); $(set_netem "$ifb" "$1")"
 }
 
+# P5 is a LAN with no way out. The LAPTOP keeps its uplink (the session runs
+# over it; 2026-10-06). The phones' traffic to anything outside 10.42.0.0/24,
+# and their DNS to the laptop, is dropped by tc filters; LAN traffic between
+# the phones and to the laptop passes, shaped as the profile says.
+noinet_filters() { # dev -> filters that let LAN through and drop the rest
+  echo "tc filter add dev $1 parent 1: protocol ip prio 4 u32 match ip dst 10.42.0.1/32 match ip protocol 17 0xff match ip dport 53 0xffff action drop;
+tc filter add dev $1 parent 1: protocol ip prio 5 u32 match ip dst 10.42.0.0/24 flowid 1:2;
+tc filter add dev $1 parent 1: protocol ip prio 6 u32 match ip src 0.0.0.0/0 action drop"
+}
+
 p="${1:-}"
 case "$p" in
-  P1|P2|P3|P5)
+  P1|P2|P3)
     apply "$(netem_args "${RATE[$p]}" "${RTT[$p]}" "${LOSS[$p]}")"
     note "shape $p on $dev: rate ${RATE[$p]} kbit/s rtt ${RTT[$p]} ms loss ${LOSS[$p]}% both directions"
-    if [ "$p" = P5 ] && ip route show default | grep -q .; then
-      echo "WARNING: P5 requires no internet route; run hotspot.sh offline" >&2
-    fi
+    ;;
+  P5)
+    apply "$(netem_args "${RATE[P5]}" "${RTT[P5]}" "${LOSS[P5]}")"
+    indocker "$(noinet_filters "$dev"); $(noinet_filters "$ifb")"
+    note "shape P5 on $dev: rate ${RATE[P5]} kbit/s rtt ${RTT[P5]} ms loss 0%; phones' non-LAN traffic and DNS dropped (laptop uplink untouched)"
     ;;
   P0)
     apply "loss 100%"

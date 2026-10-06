@@ -1,12 +1,17 @@
 #!/usr/bin/env bash
 # Host the field phone's Wi-Fi network on this laptop (NetworkManager, no root).
-# The hotspot shares the Ethernet uplink by NAT; "offline" cuts that uplink so
-# the hotspot is a LAN with no internet route (P5, P0).
+# The hotspot shares the Ethernet uplink by NAT.
 #
 #   hotspot.sh up        create (first time) and start the access point
 #   hotspot.sh down      stop it; the laptop's own Wi-Fi reconnects on its own
-#   hotspot.sh offline   disconnect the Ethernet uplink: no internet for anyone
-#   hotspot.sh online    reconnect the Ethernet uplink
+#   hotspot.sh online    (re)activate the "Wired" profile on the uplink
+#
+# There is deliberately NO "offline" command. 2026-10-06: disconnecting the
+# uplink cut the laptop's own internet (the Claude session runs over it) and
+# NetworkManager then re-attached the port to "pi-direct", a link-local
+# profile with no gateway, so the laptop stayed offline for six minutes. The
+# no-internet profiles (P5, P0) block the PHONES' traffic with tc in shape.sh
+# instead; the laptop keeps its uplink.
 #   hotspot.sh status    AP state, its address, phones seen, uplink state
 #
 # Env: TREM_AP_DEV (wlp2s0), TREM_UPLINK_DEV (enp1s0f0), TREM_AP_BAND (bg|a),
@@ -45,13 +50,9 @@ case "${1:-}" in
     nmcli connection down "$con" || true
     note "hotspot down"
     ;;
-  offline)
-    nmcli device disconnect "$uplink"
-    note "uplink $uplink disconnected (no internet)"
-    ;;
   online)
-    nmcli device connect "$uplink"
-    note "uplink $uplink connected"
+    nmcli connection up "${TREM_UPLINK_CON:-Wired}"
+    note "uplink profile ${TREM_UPLINK_CON:-Wired} activated on $uplink"
     ;;
   status)
     echo "--- access point $dev"
