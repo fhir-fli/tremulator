@@ -10,7 +10,7 @@
 ///       unshaped: measures the Wi-Fi RTT to the phone; pass it back as
 ///       --base-rtt
 ///   dart run bin/baseline_validate.dart --profile P2 --phone 10.42.0.23 \
-///       --label v1 --base-rtt 4.1 [--ping-only] [--server 10.42.0.1]
+///       --label v1 --base-rtt 4.1 [--ping-only] [--rtt-only] [--server 10.42.0.1]
 ///   dart run bin/baseline_validate.dart --profile P4 --phone ... --label v1 --duty
 ///       P4 only: 185 s of 0.2 s pings while shape.sh P4 is looping
 library;
@@ -113,6 +113,11 @@ Future<void> main(List<String> argv) async {
     'n_replies': rtts.length,
     'pass': med != null && (med - target).abs() <= rttTolerance(target),
   });
+
+  if (a.containsKey('rtt-only')) {
+    await sink.close();
+    return;
+  }
 
   if (pingOnly) {
     final p1 = loss / 100;
