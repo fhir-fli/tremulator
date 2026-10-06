@@ -218,3 +218,22 @@ Two more findings while building it:
   produces" and looped on the same commit until fhirant's rate limit (600
   requests a minute) answered 429. Fixed by counting epochs; the 429 was the
   instrument catching it.
+
+## Step 2, lab ready, 2026-10-06: dry run on the laptop 10/10, store clean
+
+`lab/gate2/run.py` is the Docker run (one fhirant, two clients, P1–P5 and
+P0, the Gate 1 shaping and duty loop, a packet capture, the server's own dump
+of every stored blob, and the canary scan over dump, store file and capture).
+`lab/gate2/dry_run.sh` is the same pipeline on the laptop with no Docker and
+no shaping. Its result, `results/dry-2026-10-06`:
+
+| sent | received | one-way median | one-way max | store after the run | canary scan |
+|---|---|---|---|---|---|
+| 10 | 10 | 126 ms | 696 ms | 1 commit, 9 key packages, 0 messages, 0 welcomes | clean (exit 0); positive control with a planted canary: 2 hits, exit 1 |
+
+The one-way time on the laptop is the wake-up round trip (ping, then
+collect, then decrypt), not the network. The 696 ms maximum is the first
+message, which also carried the welcome and the join.
+
+Not run: the Docker profiles. A run creates two Docker networks; it waits for
+Grey's go (GATE1.md).
