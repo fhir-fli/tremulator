@@ -135,3 +135,31 @@ Exit, from SUCCESS.md: the numbers above beside the WhatsApp table, and either
 
 Every step writes its results to `lab/gate2/results/` on every iteration.
 Network lab runs wait for Grey's go each time (GATE1.md).
+
+## Step 1 result, 2026-10-06: keys package built, 9 tests green
+
+`packages/tremulator_keys`, pure Dart, `openmls` 3.2.1. `dart test` downloads
+the prebuilt native library on first run (Linux x64 worked first time) and
+passes 9 of 9: ten messages each way; a third phone added mid-conversation
+reads only what follows; a removed phone reads nothing after and cannot send;
+a stranger reads nothing; a key package is single use; state survives close
+and reopen with the same key and the wrong key opens nothing; blobs can be
+routed by conversation id, epoch and kind without decrypting.
+
+**Finding that changed the design.** The wrapper applies every change to the
+phone's own state before returning (`rust/src/api/engine.rs`: `add_members`,
+`remove_members`, `self_update`, `flexible_commit` each call
+`merge_pending_commit`). So a phone cannot hold a change until the server
+accepts it. When two phones change the same epoch, the server keeps the first
+and the other phone is out of step. Recovery is the RFC's own: the phone
+destroys its stale state and rejoins by external commit from the snapshot
+(GroupInfo plus key tree) the winner publishes beside every commit (RFC 9420
+section 12.4.3.2). Tested: both phones rotate keys at once, the loser's commit
+is refused, it rejoins, the old leaf is gone, messages flow both ways. Cost:
+every commit also carries a snapshot to the server. Possible upstream ask,
+not filed: a "do not merge yet" option on the wrapper's commit calls.
+
+A welcome cannot be classified from its header (the library parses protocol
+messages only), so the mailbox labels welcomes by Communication category.
+The wrong-key test prints one `sqlcipher ... hmac check failed` line on
+stderr; that is the library refusing the key, as intended.
