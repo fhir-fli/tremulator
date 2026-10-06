@@ -163,3 +163,30 @@ A welcome cannot be classified from its header (the library parses protocol
 messages only), so the mailbox labels welcomes by Communication category.
 The wrong-key test prints one `sqlcipher ... hmac check failed` line on
 stderr; that is the library refusing the key, as intended.
+
+## Step 2, first half, 2026-10-06: mailbox package built, 6 tests green
+
+`packages/tremulator_mailbox`, pure Dart over `fhir_r4` + `fhir_r4_at_rest`
++ `http` + `web_socket_channel`. Its tests start a real fhirant in the same
+process (path dependency on `fhirant_server`, in-memory database, free port)
+and pass 6 of 6: a phone registers once and is found by name with its key;
+key packages are taken one at a time until the stock is empty; a message is
+collected once and the server then holds nothing; **the server keeps the
+first commit for an epoch and refuses the second**; the wake-up websocket
+pings when something is addressed to the phone; with authentication on, a
+signed-in phone works and a stranger is refused.
+
+How ordering works on the server, as built: a commit is one Communication
+addressed to every member, with `identifier` = commit system | `<conversation
+hex>:<epoch it produces>`, sent with `If-None-Exist` on that identifier. The
+first phone's create answers 201; a second phone's answers 200 with the first
+one's resource, and the package reports "rejected". The test also posts the
+same identifier without the header and gets 201, so the header is what
+refuses. A phone catches up by asking for the commit after its own epoch
+(`commitAfter`) until none exists; the last one carries the GroupInfo and key
+tree it would rejoin from. Commits are not deleted by recipients (the purge
+sweep's job); messages and welcomes are, after collection (D8).
+
+What fhirant needed changing: nothing. Open: the websocket route in secure
+mode takes no token yet (tests ran it with authentication off); and fhirant
+prints its log to stdout.

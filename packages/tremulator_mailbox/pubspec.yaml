@@ -1,0 +1,26 @@
+name: tremulator_mailbox
+description: >-
+  Talks to the group's fhirant server: registers the phone, publishes key
+  packages, posts and collects encrypted blobs, and holds the wake-up
+  connection. Never sees plaintext.
+version: 0.1.0
+publish_to: none
+repository: https://github.com/fhir-fli/tremulator
+
+environment:
+  sdk: ^3.10.0
+
+dependencies:
+  fhir_r4: ^0.13.0
+  fhir_r4_at_rest: ^0.13.0
+  http: ^1.6.0
+  web_socket_channel: ^3.0.3
+
+dev_dependencies:
+  drift: ^2.29.0
+  fhirant_db:
+    path: ../../../fhirant/packages/fhirant_db
+  fhirant_server:
+    path: ../../../fhirant/packages/fhirant_server
+  test: ^1.29.0
+  very_good_analysis: ^10.0.0
