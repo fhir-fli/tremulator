@@ -197,9 +197,9 @@ Docker interface churn; the Wi-Fi connection itself never dropped.
 
 Fixed in `validate.py`: two networks and two container pairs are created once
 per run and reused, with only `tc` changing between profiles (from about 20
-network changes per run to 2). **Not yet fixed in `mutation_test.py`**, which
-still creates a network and two containers per mode (8 per run); fix before its
-next run. Permanent fix on Grey's side, if he chooses: a NetworkManager
+network changes per run to 2). The same fix went into `mutation_test.py` at
+`936fcc5` (2026-09-21); the Dart runs d1 and d2 on 2026-09-22 ran on it.
+Permanent fix on Grey's side, if he chooses: a NetworkManager
 `unmanaged-devices` rule for `docker*`, `br-*` and `veth*`.
 
 **Do not restart the network runs without Grey's go.**
