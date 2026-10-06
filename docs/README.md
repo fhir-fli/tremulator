@@ -59,7 +59,7 @@ Each gate exits on a number, not an opinion. Full criteria and test lists in
 |---|---|---|
 | 0 | Decide | every item in QUESTIONS.md answered or deferred with a date; licence decided; threat model and regulatory matrix written from sources read |
 | 1 | Instrument | 5 network profiles reproducible ±10%; a reference app's baseline numbers recorded on all 5; adversary harness catches ≥5 injected defects |
-| 2 | Spike | two real handsets, international path, both candidate transports measured against the Gate 1 baseline; transport chosen in writing |
+| 2 | First version | two real handsets, international path; the chosen design (DECISIONS.md D1–D3) measured against the Gate 1 baseline; `openmls` confirmed or rejected in writing; D4 decided by measurement |
 | 3 | Text | E2EE text + attachments, device verification, revocation, purge verified irrecoverable on device and server |
 | 4 | Audio | call completion on the worst profile at or above the Gate 1 reference number |
 | 5 | Video | same, plus a degradation policy that falls to audio rather than failing |

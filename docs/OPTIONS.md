@@ -77,8 +77,8 @@ Three layers, decided separately.
 - **atPlatform as the transport.** Permissive licence and Dart-native are real
   advantages, and the store-and-forward data model fits asynchronous case
   referral well. But there is no media layer, no published healthcare profile,
-  and Flutter web is unsupported. Revisit at Gate 2 as an async-referral spike
-  only, if Gate 0 says web clients are not required.
+  and Flutter web is unsupported. Revisit at Gate 2 as a small test of asynchronous
+  referral only, if Gate 0 says web clients are not required.
 - **Signal as a library.** libsignal is AGPL too, so it carries the same
   licence cost as Matrix without the healthcare profile or the directory.
 

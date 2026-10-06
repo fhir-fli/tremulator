@@ -49,16 +49,23 @@ Exit criteria:
    verification, a key reused across sessions, a purge that unlinks without
    destroying the key, and an attachment uploaded unencrypted.
 
-## Gate 2 — Spike the chosen stack
+## Gate 2 — First working version, measured
 
 Two real handsets, one in the United States and one on an international mobile
-network. The stack from DECISIONS.md: MLS through `openmls`, a fhirant mailbox,
-WebRTC with its fingerprints carried over MLS. Nothing merged.
+network. The design from DECISIONS.md: group keys through `openmls`, messages
+held on our own fhirant server until the other phone fetches them, calls
+phone-to-phone over WebRTC with the call's identity check carried inside the
+encrypted chat.
+
+This is the first version of the real app, built in this repo and kept (D16).
+It leaves out login, enrollment, the user interface, purge and backups; those
+come in Gates 3 to 5. All code that touches `openmls` lives in one folder, so
+the library can be replaced without touching the rest.
 
 Measured per profile: call setup time; fraction of calls that stay
-peer-to-peer versus falling back to a relay; one-way audio delay; video freeze
-seconds per minute at five bandwidth caps; text delivery rate and median
-latency across a 24-hour intermittent replay.
+phone-to-phone versus falling back to a relay server; one-way audio delay;
+video freeze seconds per minute at five bandwidth caps; text delivery rate and
+median latency across a 24-hour replay of the intermittent profile.
 
 Also measured here: battery drain of the Android kept-open connection over 24
 hours, idle and in use, against the same phone with the app closed (D13).

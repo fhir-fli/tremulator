@@ -348,3 +348,19 @@ What the defaults are, and the count behind each:
 Not covered by DLA at all: 49 countries, including Afghanistan, Iraq, Malawi,
 Somalia, South Sudan, Sudan, Syria and Yemen. Before deploying anywhere, the
 group reads that country's actual law.
+
+## D16. Gate 2 is the first real version, not a throwaway. 2026-10-06
+
+Grey: "I don't like to repeat work." The earlier plan called Gate 2 a
+throwaway test build ("nothing merged"). That was convention, not need. The
+design does not change if the libraries hold, so the code that talks to the
+encryption library, stores messages on our server and sets up a call is the
+same code the finished app needs, and it is the code the Gate 2 numbers are
+measured on. Rebuilding it would leave the real app unmeasured.
+
+- Gate 2 code is written in this repo, under the normal quality gates, and kept.
+- It omits login, enrollment, user interface, purge and backups. Those are
+  Gates 3 to 5.
+- The one library at real risk of replacement is `openmls` (one maintainer,
+  9 stars). Everything that touches it stays in one folder so a swap is
+  contained.
