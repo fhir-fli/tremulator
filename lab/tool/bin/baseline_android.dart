@@ -211,7 +211,12 @@ Future<void> _open(String number, {String text = ''}) async {
     '-p',
     'com.whatsapp',
   ]);
-  await _waitFor((n) => byId(n, 'entry'), what: 'chat entry box');
+  // On a 50 kbit/s link WhatsApp can take a while to open the chat.
+  await _waitFor(
+    (n) => byId(n, 'entry'),
+    seconds: 90,
+    what: 'chat entry box',
+  );
 }
 
 /// Launch WhatsApp's chat list, open the chat whose row shows `name`, verify
