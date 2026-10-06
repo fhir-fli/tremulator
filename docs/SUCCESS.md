@@ -52,7 +52,10 @@ Exit criteria:
 ## Gate 2 — First working version, measured
 
 Two real handsets, one in the United States and one on an international mobile
-network. The design from DECISIONS.md: group keys through `openmls`, messages
+network. Phones, per Grey 2026-10-06: the OnePlus first; the iPhone cannot
+easily take a build outside the App Store or TestFlight, so the iPhone side
+waits, and the second phone may be his partner's. A tester abroad comes after
+the two-phone measurements. The design from DECISIONS.md: group keys through `openmls`, messages
 held on our own fhirant server until the other phone fetches them, calls
 phone-to-phone over WebRTC with the call's identity check carried inside the
 encrypted chat.
