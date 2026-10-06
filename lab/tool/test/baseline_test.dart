@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:test/test.dart';
@@ -179,6 +180,26 @@ PING 10.42.0.23 (10.42.0.23) 16(44) bytes of data.
       final bad = wav([0, 0], 8000)
         ..buffer.asByteData().setUint16(22, 2, Endian.little);
       expect(() => parseWav16(bad), throwsFormatException);
+    });
+    test('transient detector ignores steady noise and finds two clicks', () {
+      const rate = 16000;
+      final rnd = Random(7);
+      final s = Int16List(rate * 3);
+      for (var i = 0; i < s.length; i++) {
+        s[i] = (rnd.nextDouble() * 2000 - 1000).round(); // speech-like floor
+      }
+      for (var i = 0; i < 40; i++) {
+        final sign = i.isEven ? 1 : -1; // impulsive, like a real clap
+        s[16000 + i] = 25000 * sign; // 1.00 s
+        s[16000 + 4800 + i] = 12000 * sign; // 1.30 s, quieter speaker copy
+      }
+      final ts = transientOnsets(s, rate);
+      expect(ts.length, 2);
+      expect(ts[0], closeTo(1.0, 0.02));
+      expect(ts[1], closeTo(1.3, 0.02));
+      final pairs = onsetPairs(ts);
+      expect(pairs.length, 1);
+      expect(pairs.first.$2, closeTo(0.3, 0.02));
     });
     test('silence has no onsets', () {
       expect(onsets(Int16List(100), 8000), isEmpty);

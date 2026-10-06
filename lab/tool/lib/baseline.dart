@@ -273,3 +273,65 @@ List<double> onsets(
   }
   return out;
 }
+
+/// Transient onsets: 10 ms frame RMS that jumps to at least [ratio] times
+/// the median RMS of the preceding [backgroundMs], and is above [floor] of the
+/// loudest frame. Speech rises slowly against its own background; a clap or a
+/// "pa" does not. [deadMs] after each onset is ignored.
+List<double> transientOnsets(
+  Int16List samples,
+  int rate, {
+  int frameMs = 10,
+  int backgroundMs = 300,
+  double ratio = 6,
+  double floor = 0.05,
+  int deadMs = 150,
+}) {
+  // Work on the first difference x[j] - x[j-1]: it removes the microphone's
+  // DC offset and mains hum (the laptop recordings sit at an RMS floor of
+  // about 6,900 of 32,767 with nobody clapping) and sharpens transients.
+  final n = rate * frameMs ~/ 1000;
+  final frames = <double>[];
+  for (var i = 1; i + n <= samples.length; i += n) {
+    var acc = 0.0;
+    for (var j = i; j < i + n; j++) {
+      final d = (samples[j] - samples[j - 1]).toDouble();
+      acc += d * d;
+    }
+    frames.add(sqrt(acc / n));
+  }
+  if (frames.isEmpty) return const [];
+  final peak = frames.reduce(max);
+  final back = backgroundMs ~/ frameMs;
+  final dead = deadMs ~/ frameMs;
+  final out = <double>[];
+  var skip = 0;
+  for (var f = back; f < frames.length; f++) {
+    if (skip > 0) {
+      skip--;
+      continue;
+    }
+    final window = frames.sublist(f - back, f)..sort();
+    final bg = window[window.length ~/ 2];
+    if (frames[f] >= floor * peak && frames[f] >= ratio * max(bg, 1)) {
+      out.add(f * frameMs / 1000);
+      skip = dead;
+    }
+  }
+  return out;
+}
+
+/// Pairs of onsets [minGap, maxGap] apart: (first onset, gap). The first is
+/// the direct sound, the second the far phone's speaker.
+List<(double, double)> onsetPairs(
+  List<double> onsets, {
+  double minGap = 0.15,
+  double maxGap = 1.5,
+}) {
+  final out = <(double, double)>[];
+  for (var i = 0; i + 1 < onsets.length; i++) {
+    final gap = onsets[i + 1] - onsets[i];
+    if (gap >= minGap && gap <= maxGap) out.add((onsets[i], gap));
+  }
+  return out;
+}

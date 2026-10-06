@@ -160,8 +160,23 @@ Future<void> _assertOnHotspot(_Log log, String where) async {
   }
 }
 
+/// Screen dump, bounded. `uiautomator dump` waits for the UI to go idle; a
+/// live call screen never does, and one dump was measured at 5.5 s in-call.
+/// Suspected (2026-10-06, unproven): a dump that blocks for the rest of the
+/// 60 s call window is why the call loop logged nothing after the dial. So
+/// the dump gets 8 s, a failure returns no nodes, and slow dumps are counted
+/// in [slowDumps] for the record.
+int slowDumps = 0;
 Future<List<UiNode>> _nodes() async {
-  await _adb(['shell', 'uiautomator', 'dump', '/sdcard/ui.xml']);
+  final t = Stopwatch()..start();
+  final r = await Process.run('adb', [
+    'shell',
+    'timeout 8 uiautomator dump /sdcard/ui.xml',
+  ]);
+  if (t.elapsedMilliseconds > 3000) slowDumps++;
+  if (r.exitCode != 0 || !(r.stdout as String).contains('dumped')) {
+    return const [];
+  }
   return parseNodes(await _adb(['exec-out', 'cat', '/sdcard/ui.xml']));
 }
 

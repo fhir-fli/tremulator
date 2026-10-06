@@ -138,9 +138,9 @@ on every call (20 packets out, none back). Raw records: `lab/baseline/results/`.
 
 | Profile | Texts A→i | Texts i→A | Photo (1.1 MB in) | Voice call 3 min | One-way audio delay | Video call 3 min | Video frozen (Android side) |
 |---|---|---|---|---|---|---|---|
-| P1 rural 2G, 50 kbit/s, 400 ms, 5% | 10/10, median 5.3 s, max 7.7 s | 10/10 | 20.6 s | held, 9–22 kbit/s sent | 696 ms (one pair) | held, link saturated | 14.2 s/min (24.1, 7.8, 8.9) |
-| P2 congested 3G, 300 kbit/s, 200 ms, 2% | 10/10, ≤4.9 s | 10/10 | 20.2 s | held (56 s, 4 min, 97 s calls) | 258, 268 ms | held, 145/202 kbit/s | 3.4 s/min |
-| P3 satellite, 1 Mbit/s, 700 ms, 1% | 10/10, median 5.7 s, max 8.3 s | 10/10 | 6.0 s | held | pending (detector) | held, 660 kbit/s up | 6.0 s/min (4.5, 6.2, 6.9) |
+| P1 rural 2G, 50 kbit/s, 400 ms, 5% | 10/10, median 5.3 s, max 7.7 s | 10/10 | 20.6 s | held, 9–22 kbit/s sent | **690–696 ms** (one pair, two detectors agree) | held, link saturated | 14.2 s/min (24.1, 7.8, 8.9) |
+| P2 congested 3G, 300 kbit/s, 200 ms, 2% | 10/10, ≤4.9 s | 10/10 | 20.2 s | held (56 s, 4 min, 97 s calls) | unresolved: 258–268 ms by the amplitude detector, 520–530 ms by the transient detector, different onset pairs | held, 145/202 kbit/s | 3.4 s/min |
+| P3 satellite, 1 Mbit/s, 700 ms, 1% | 10/10, median 5.7 s, max 8.3 s | 10/10 | 6.0 s | held | unmeasured: recording dominated by speech, no clean pair | held, 660 kbit/s up | 6.0 s/min (4.5, 6.2, 6.9) |
 | P4 intermittent, 30 s up / 60 s down | 18/18; 3 s when up, 53–75 s when sent into an outage | 10/10, in bursts after outages | 86 s (sent 3 s into an outage) | **dropped ~25 s after the cut**, twice (51 s logged both) | — | **dropped ~28 s after the cut** (59 s logged) | — |
 | P5 field LAN, no internet | clock icon, never sent (>11 min) | clock on the iPhone, none arrived | — | never rings; "Couldn't place call. Make sure your device has an internet connection" between 86 and 383 s; logged No answer | — | — | — |
 | P0 dead link | clock, timed out at 60 s | — | — | stuck on "Calling", ended by hand at 57 s, logged No answer | — | — | — |
@@ -155,9 +155,12 @@ session"; recorded as a fail, not reinterpreted.
 
 Caveats: text and photo times have a 2.5 s read resolution (the screen poll);
 the photo WhatsApp actually sent is much smaller than 1.1 MB, size unmeasured;
-iPhone→Android latency is unmeasured (no send instant); audio delay comes
-from one clean clap pair per profile (P3's recording awaits a transient
-detector); video freeze is the Android side only, by ffmpeg freezedetect over
+iPhone→Android latency is unmeasured (no send instant). Audio delay: two
+detectors in `baseline_onsets.dart` (amplitude threshold; transient = energy
+jump on the differenced signal, which removes the laptop microphone's DC
+offset of about 6,900/32,767). They agree on P1 only. Next time the clap test
+needs silence on both sides for 10 s around each clap; speech through the
+Android's speaker made P3 unpairable and P2 ambiguous. Video freeze is the Android side only, by ffmpeg freezedetect over
 the remote-video area. The call driver logs nothing after the dial on most
 calls (open defect); setup times come from the capture instead.
 
