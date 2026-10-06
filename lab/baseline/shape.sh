@@ -41,10 +41,32 @@ tc qdisc del dev $dev ingress 2>/dev/null || true;
 tc qdisc add dev $dev handle ffff: ingress;
 tc filter add dev $dev parent ffff: matchall action mirred egress redirect dev $ifb"
 
-apply() { # netem argument string
+# Declared 2026-10-06 before P3 (after the P1 video call): ARP and DHCP are
+# link housekeeping that a cellular link does not have, so they bypass the
+# shaping in a fast band of a prio qdisc; everything else goes through netem
+# exactly as before. Without this, Android declared the laptop gateway
+# unreachable at 50 kbit/s under video load, re-DHCPed, gave up and left for
+# the home Wi-Fi mid-call (phone log 10:27:22-10:27:42).
+shaped_root() { # dev netem-args -> commands that (re)build prio+netem on dev
+  local d="$1" n="$2"
+  echo "tc qdisc del dev $d root 2>/dev/null || true;
+tc qdisc add dev $d root handle 1: prio bands 2 priomap 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1;
+tc filter add dev $d parent 1: protocol arp prio 1 matchall flowid 1:1;
+tc filter add dev $d parent 1: protocol ip prio 2 u32 match ip protocol 17 0xff match ip dport 67 0xffff flowid 1:1;
+tc filter add dev $d parent 1: protocol ip prio 3 u32 match ip protocol 17 0xff match ip dport 68 0xffff flowid 1:1;
+tc qdisc add dev $d parent 1:2 handle 20: netem $n"
+}
+set_netem() { # dev netem-args -> replace only the netem leaf (keeps the fast band)
+  echo "tc qdisc replace dev $1 parent 1:2 handle 20: netem $2"
+}
+
+apply() { # netem argument string; full rebuild
   indocker "$ensure_ifb;
-tc qdisc replace dev $dev root netem $1;
-tc qdisc replace dev $ifb root netem $1"
+$(shaped_root "$dev" "$1");
+$(shaped_root "$ifb" "$1")"
+}
+retune() { # netem argument string; leaf only (P4 toggling)
+  indocker "$(set_netem "$dev" "$1"); $(set_netem "$ifb" "$1")"
 }
 
 p="${1:-}"
@@ -68,10 +90,10 @@ case "$p" in
     while true; do
       note "P4 up"
       sleep 30
-      indocker "tc qdisc replace dev $dev root netem loss 100%; tc qdisc replace dev $ifb root netem loss 100%"
+      retune "loss 100%"
       note "P4 down"
       sleep 60
-      apply "$up"
+      retune "$up"
     done
     ;;
   off)
@@ -81,7 +103,8 @@ ip link del $ifb 2>/dev/null || true"
     note "shape off on $dev"
     ;;
   show)
-    tc qdisc show dev "$dev"; tc qdisc show dev "$ifb" 2>/dev/null || echo "no $ifb"
+    tc qdisc show dev "$dev"; tc filter show dev "$dev" parent 1: | grep -c flowid | sed 's/^/fast-lane filters: /'
+    tc qdisc show dev "$ifb" 2>/dev/null || echo "no $ifb"
     ;;
   *)
     sed -n '2,16p' "$0"; exit 2 ;;

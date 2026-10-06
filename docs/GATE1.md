@@ -128,6 +128,24 @@ Still needed: the two phones here, `iperf3` on the Android (Termux) or the Mac
 on the hotspot for the rate check, and an afternoon. Unverified until then:
 whether the phones stay on a Wi-Fi network with no internet for P5.
 
+## WhatsApp baseline sessions, 2026-10-05/06
+
+Session log and numbers: `lab/baseline/results/` (jsonl per command, counters,
+flows). Instrument findings that changed the method, each declared before
+the next measurement:
+
+- The phone leaves the shaped hotspot for the saved home network when Android
+  judges the link poor (phone Wi-Fi log 2026-10-05 19:09:04, 2026-10-06
+  10:27:40). Every run now aborts the moment the phone's address leaves
+  10.42.0.x; the P1 video drop was Android's IP-reachability check timing out
+  behind the 50 kbit/s queue, so ARP and DHCP now bypass the shaping
+  (`shape.sh`, prio fast band), declared 2026-10-06 before P3.
+- WhatsApp sends under one packet a second during silence. A quiet call looks
+  like lost media in the capture; the operator talks throughout.
+- Dart's `FileMode.append` is not O_APPEND: two processes on one log file
+  overwrite each other. One file per command.
+- The lab image's SQLite finding stands; nothing new there.
+
 ## 2026-09-21 incident: the lab disturbed Grey's network
 
 Grey reported the laptop dropping off the network every few seconds while run 1

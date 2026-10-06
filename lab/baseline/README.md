@@ -85,6 +85,13 @@ suppression may swallow a clap: a short loud "pa" works.
 
 - Shaping numbers are the Docker lab's exactly (GATE1.md): half the RTT and
   the full loss on each direction, the rate cap on both, netem's default queue.
+- **Declared 2026-10-06, after P1's video call and before any further
+  measurement:** ARP and DHCP bypass the shaping in a fast band of a prio
+  qdisc; all other traffic, pings included, is shaped as before. A cellular
+  link has no gateway to probe; on the shaped hotspot Android declared the
+  laptop unreachable under 50 kbit/s video load, re-DHCPed, gave up and left
+  for the home Wi-Fi mid-call. P1 video is rerun under this rule; nothing
+  measured before it is reinterpreted.
 - RTT target on Wi-Fi is the profile's RTT plus the unshaped Wi-Fi RTT to the
   same phone measured the same session; tolerance is the larger of 10% and
   2 ms, because P5's 5 ms would otherwise be judged on 0.5 ms of Wi-Fi jitter.
