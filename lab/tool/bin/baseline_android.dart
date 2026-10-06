@@ -196,27 +196,74 @@ Future<UiNode> _waitFor(
   throw StateError('$what not on screen after $seconds s');
 }
 
-Future<void> _open(String number, {String text = ''}) async {
-  final url =
-      'https://wa.me/$number'
-      '${text.isEmpty ? '' : '?text=${Uri.encodeQueryComponent(text)}'}';
-  await _adb([
-    'shell',
-    'am',
-    'start',
-    '-a',
-    'android.intent.action.VIEW',
-    '-d',
-    url,
-    '-p',
-    'com.whatsapp',
-  ]);
-  // On a 50 kbit/s link WhatsApp can take a while to open the chat.
-  await _waitFor(
-    (n) => byId(n, 'entry'),
-    seconds: 90,
-    what: 'chat entry box',
+/// Open the chat. A target of digits goes through the wa.me link, which
+/// WhatsApp resolves online and which lands on the contact picker when the
+/// link is down (seen on P4). Anything else is a contact name: WhatsApp's
+/// own chat list is opened and the row tapped, no network involved. Text, if
+/// given, is typed into the entry box after clearing any draft.
+Future<void> _open(String target, {String text = ''}) async {
+  if (RegExp(r'^\d+$').hasMatch(target)) {
+    final url =
+        'https://wa.me/$target'
+        '${text.isEmpty ? '' : '?text=${Uri.encodeQueryComponent(text)}'}';
+    await _adb([
+      'shell',
+      'am',
+      'start',
+      '-a',
+      'android.intent.action.VIEW',
+      '-d',
+      url,
+      '-p',
+      'com.whatsapp',
+    ]);
+    await _waitFor(
+      (n) => byId(n, 'entry'),
+      seconds: 90,
+      what: 'chat entry box',
+    );
+    return;
+  }
+  final header = (await _nodes()).cast<UiNode?>().firstWhere(
+    (n) => n!.id == '${waId}conversation_contact_name',
+    orElse: () => null,
   );
+  if (header == null || header.text != target) {
+    await _adb([
+      'shell',
+      'am',
+      'start',
+      '-n',
+      'com.whatsapp/.home.ui.HomeActivity',
+    ]);
+    final row = await _waitFor(
+      (ns) => ns.cast<UiNode?>().firstWhere(
+        (n) =>
+            n!.id == '${waId}conversations_row_contact_name' &&
+            n.text == target,
+        orElse: () => null,
+      ),
+      seconds: 30,
+      what: 'chat row "$target"',
+    );
+    await _tap(row);
+    final h = await _waitFor(
+      (ns) => byId(ns, 'conversation_contact_name'),
+      what: 'chat header',
+    );
+    if (h.text != target) {
+      throw StateError('opened "${h.text}", not "$target"; stopping');
+    }
+  }
+  if (text.isNotEmpty) {
+    final entry = await _waitFor((n) => byId(n, 'entry'), what: 'entry box');
+    await _tap(entry);
+    // clear a stale draft: select all, delete
+    await _adb(['shell', 'input', 'keycombination', '113', '29']);
+    await _adb(['shell', 'input', 'keyevent', '67']);
+    final typed = text.replaceAll("'", '').replaceAll(' ', '%s');
+    await _adb(['shell', "input text '$typed'"]);
+  }
 }
 
 /// Launch WhatsApp's chat list, open the chat whose row shows `name`, verify
