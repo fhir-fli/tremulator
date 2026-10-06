@@ -169,6 +169,7 @@ class Mailbox {
     required Uint8List commit,
     required Uint8List groupInfo,
     required Uint8List ratchetTree,
+    required Uint8List confirmationTag,
   }) async {
     final key = '${conversationKey(conversation)}:$epoch';
     final c = _communication(
@@ -178,6 +179,7 @@ class Mailbox {
         (mlsMediaType, commit),
         (mlsMediaType, groupInfo),
         (octetStream, ratchetTree),
+        (octetStream, confirmationTag),
       ],
       identifier: Identifier(
         system: FhirUri(commitSystem),
@@ -219,10 +221,7 @@ class Mailbox {
     final bundle = await _search('Communication', {
       'recipient': 'Device/$device',
       'status': 'in-progress',
-      'category': [
-        for (final l in Label.values)
-          if (l != Label.commit) '$labelSystem|${l.code}',
-      ].join(','),
+      'category': _collectable,
       '_sort': '_lastUpdated',
       '_count': '$count',
     });
@@ -244,10 +243,12 @@ class Mailbox {
     _check(r, [200, 204, 404, 410]);
   }
 
-  /// How many blobs the server still holds for this phone, any label.
+  /// How many collectable blobs (not commits) the server still holds for
+  /// this phone.
   Future<int> pending() async {
     final bundle = await _search('Communication', {
       'recipient': 'Device/$device',
+      'category': _collectable,
       '_summary': 'count',
     });
     return bundle.total?.valueInt ?? 0;
@@ -278,6 +279,11 @@ class Mailbox {
   void close() => _client.close();
 
   // ---- private ------------------------------------------------------------
+
+  static final String _collectable = [
+    for (final l in Label.values)
+      if (l != Label.commit) '$labelSystem|${l.code}',
+  ].join(',');
 
   Communication _communication({
     required Label label,

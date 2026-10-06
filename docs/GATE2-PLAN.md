@@ -190,3 +190,31 @@ sweep's job); messages and welcomes are, after collection (D8).
 What fhirant needed changing: nothing. Open: the websocket route in secure
 mode takes no token yet (tests ran it with authentication off); and fhirant
 prints its log to stdout.
+
+## Step 2, second half, 2026-10-06: the client, 3 end-to-end tests green
+
+`packages/tremulator_client` joins the two packages: `Client.start` registers
+and publishes five key packages; `open(peer)` takes a key package, adds the
+peer, sends the welcome and offers the commit; `send`; `collect` (welcomes
+join, messages decrypt, each acknowledged, then every conversation walks
+forward through newer commits); `listen` collects on each wake-up ping;
+`refreshKeys`. `bin/tremulator_client.dart` is the lab's phone with no
+screen: it logs one JSON line per event, flushed, with the sender's clock in
+each message so the receiver's line carries the one-way time.
+
+Tests, against a real fhirant in the same process: two phones exchange ten
+messages each way and the server then holds nothing collectable; a wake-up
+ping makes the listener collect on its own; **a phone whose commit lost the
+race rejoins and talks again**, end to end through the server.
+
+Two more findings while building it:
+- A phone can be out of step without knowing: it applied its own commit
+  locally and never learned the server refused it (a crash between the two).
+  So every commit now also publishes the epoch's **confirmation tag** (RFC
+  9420 section 6.1: "confirms that the members of the group have arrived at
+  the same state"), and on every collect a phone compares its own tag with
+  the server's commit for its epoch. A mismatch means rejoin.
+- The rejoin walk first read the commit's header epoch as "the epoch it
+  produces" and looped on the same commit until fhirant's rate limit (600
+  requests a minute) answered 429. Fixed by counting epochs; the 429 was the
+  instrument catching it.

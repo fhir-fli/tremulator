@@ -58,14 +58,25 @@ class Change {
 /// clients to join by making a GroupInfo object available to them ... each
 /// GroupInfo object can be used for one external join".
 class Snapshot {
-  /// Bundles both parts.
-  const Snapshot({required this.groupInfo, required this.ratchetTree});
+  /// Bundles the parts.
+  const Snapshot({
+    required this.groupInfo,
+    required this.ratchetTree,
+    required this.confirmationTag,
+  });
 
   /// The signed group description, with the external public key.
   final Uint8List groupInfo;
 
   /// The full key tree, so the joiner need not fetch it separately.
   final Uint8List ratchetTree;
+
+  /// The epoch's confirmation tag. A phone whose own tag for the same epoch
+  /// differs has applied a different commit and is out of step. RFC 9420
+  /// section 6.1, read verbatim from rfc9420.txt (rfc-editor.org,
+  /// 2026-10-06): "The confirmation tag value confirms that the members of
+  /// the group have arrived at the same state of the group."
+  final Uint8List confirmationTag;
 }
 
 /// What came out of [Conversation.receive].
@@ -212,8 +223,14 @@ class Conversation {
         signerBytes: _identity.secret,
       ),
       ratchetTree: await _engine.exportRatchetTree(groupIdBytes: id),
+      confirmationTag: await confirmationTag(),
     ),
   );
+
+  /// This phone's confirmation tag for the current epoch (see
+  /// [Snapshot.confirmationTag]).
+  Future<Uint8List> confirmationTag() =>
+      guarded(() => _engine.groupConfirmationTag(groupIdBytes: id));
 
   /// Encrypts [plaintext] for every current member.
   Future<Uint8List> encrypt(Uint8List plaintext) => guarded(() async {

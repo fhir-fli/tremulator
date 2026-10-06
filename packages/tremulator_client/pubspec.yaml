@@ -1,0 +1,27 @@
+name: tremulator_client
+description: >-
+  A phone without a screen: joins tremulator_keys and tremulator_mailbox into
+  one client that registers, starts conversations, sends and receives. The
+  app and the lab's measurement runs both use it.
+version: 0.1.0
+publish_to: none
+repository: https://github.com/fhir-fli/tremulator
+
+environment:
+  sdk: ^3.10.0
+
+dependencies:
+  args: ^2.7.0
+  tremulator_keys:
+    path: ../tremulator_keys
+  tremulator_mailbox:
+    path: ../tremulator_mailbox
+
+dev_dependencies:
+  drift: ^2.29.0
+  fhirant_db:
+    path: ../../../fhirant/packages/fhirant_db
+  fhirant_server:
+    path: ../../../fhirant/packages/fhirant_server
+  test: ^1.29.0
+  very_good_analysis: ^10.0.0

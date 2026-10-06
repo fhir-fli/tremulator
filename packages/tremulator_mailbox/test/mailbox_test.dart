@@ -101,6 +101,7 @@ void main() {
         commit: bytes('alice commit'),
         groupInfo: bytes('alice info'),
         ratchetTree: bytes('alice tree'),
+        confirmationTag: bytes('alice tag'),
       );
       expect(accepted, isTrue);
       final rejected = await bob.sendCommit(
@@ -110,6 +111,7 @@ void main() {
         commit: bytes('bob commit'),
         groupInfo: bytes('bob info'),
         ratchetTree: bytes('bob tree'),
+        confirmationTag: bytes('bob tag'),
       );
       expect(rejected, isFalse);
 
@@ -119,6 +121,7 @@ void main() {
       expect(next.extra.map(String.fromCharCodes), [
         'alice info',
         'alice tree',
+        'alice tag',
       ]);
       expect(next.from, alice.device);
       expect(await bob.commitAfter(conversation, BigInt.two), isNull);

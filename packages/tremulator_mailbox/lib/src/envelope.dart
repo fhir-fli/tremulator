@@ -23,8 +23,9 @@ class Envelope {
   /// The first payload: the MLS message.
   final Uint8List bytes;
 
-  /// Further payloads, in order. For a commit: the GroupInfo, then the key
-  /// tree, which together are the snapshot an out-of-step phone rejoins from.
+  /// Further payloads, in order. For a commit: the GroupInfo, the key tree
+  /// and the confirmation tag, which together are the snapshot an
+  /// out-of-step phone checks itself against and rejoins from.
   final List<Uint8List> extra;
 
   /// The sending Device's id, if the sender said.
