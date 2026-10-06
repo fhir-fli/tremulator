@@ -1,0 +1,10 @@
+# fhirant, as its own Dockerfile builds it (image `fhirant`, context the
+# fhirant repo), plus shaping and capture. run.py starts the server itself
+# so each profile gets a fresh store.
+FROM fhirant:latest
+USER root
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      iproute2 tcpdump procps sqlite3 \
+ && rm -rf /var/lib/apt/lists/*
+RUN mkdir -p /data/empty-spec /out && chown -R 1000:1000 /data /out
+CMD ["sleep", "infinity"]

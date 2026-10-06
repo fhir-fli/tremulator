@@ -19,8 +19,17 @@ String conversationKey(Uint8List id) =>
 class Mailbox {
   /// A mailbox on [base] (the server root, e.g. `http://10.42.0.1:8080`),
   /// signed in with [token] (null on a server with authentication off).
-  Mailbox({required this.base, this.token, http.Client? client})
-    : _client = client ?? http.Client();
+  Mailbox({
+    required this.base,
+    this.token,
+    http.Client? client,
+    this.requestTimeout = const Duration(seconds: 30),
+  }) : _client = client ?? http.Client();
+
+  /// How long one request may take before it counts as failed. A dead link
+  /// otherwise holds a request open for the socket's own timeout, which on a
+  /// phone can be minutes. A timeout surfaces as a [MailboxError].
+  final Duration requestTimeout;
 
   /// The server root.
   final Uri base;
@@ -71,7 +80,7 @@ class Mailbox {
         'If-None-Exist': 'identifier=$deviceNameSystem|$deviceName',
       },
       client: _client,
-    ).sendRequest();
+    ).sendRequest().timeout(requestTimeout);
     _check(r, [200, 201]);
     return _device = _idOf(r);
   }
@@ -88,7 +97,9 @@ class Mailbox {
 
   /// The public signing key of Device [deviceId], from its identifier.
   Future<Uint8List?> signingKeyOf(String deviceId) async {
-    final r = await _client.get(_uri('Device/$deviceId'), headers: _headers);
+    final r = await _client
+        .get(_uri('Device/$deviceId'), headers: _headers)
+        .timeout(requestTimeout);
     _check(r, [200]);
     final d = Device.fromJson(jsonDecode(r.body) as Map<String, dynamic>);
     for (final i in d.identifier ?? const <Identifier>[]) {
@@ -135,7 +146,7 @@ class Mailbox {
         id: id,
         headers: _headers,
         client: _client,
-      ).sendRequest();
+      ).sendRequest().timeout(requestTimeout);
       if (r.statusCode == 200 || r.statusCode == 204) {
         return _firstPayload(c);
       }
@@ -192,7 +203,7 @@ class Mailbox {
       resource: c.toJson(),
       headers: {..._headers, 'If-None-Exist': 'identifier=$commitSystem|$key'},
       client: _client,
-    ).sendRequest();
+    ).sendRequest().timeout(requestTimeout);
     _check(r, [200, 201]);
     return r.statusCode == 201;
   }
@@ -239,7 +250,7 @@ class Mailbox {
       id: id,
       headers: _headers,
       client: _client,
-    ).sendRequest();
+    ).sendRequest().timeout(requestTimeout);
     _check(r, [200, 204, 404, 410]);
   }
 
@@ -348,13 +359,15 @@ class Mailbox {
       resource: resource.toJson(),
       headers: _headers,
       client: _client,
-    ).sendRequest();
+    ).sendRequest().timeout(requestTimeout);
     _check(r, [201]);
     return _idOf(r);
   }
 
   Future<Bundle> _search(String type, Map<String, String> params) async {
-    final r = await _client.get(_uri(type, params), headers: _headers);
+    final r = await _client
+        .get(_uri(type, params), headers: _headers)
+        .timeout(requestTimeout);
     _check(r, [200]);
     return Bundle.fromJson(jsonDecode(r.body) as Map<String, dynamic>);
   }

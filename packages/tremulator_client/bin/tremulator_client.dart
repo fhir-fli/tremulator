@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:args/args.dart';
@@ -13,6 +14,8 @@ import 'package:tremulator_mailbox/tremulator_mailbox.dart';
 /// Every event is one JSON line appended to --out and flushed as it happens.
 /// Message plaintexts carry the sender's clock, so the receiver's line has
 /// the one-way time when both run on the same clock (the Docker lab does).
+/// With --canary, every message also carries a secret word the lab then
+/// hunts for in the server's store and the packet capture.
 Future<void> main(List<String> argv) async {
   final parser = ArgParser()
     ..addOption('server', mandatory: true, help: 'http://host:port')
@@ -24,6 +27,8 @@ Future<void> main(List<String> argv) async {
     ..addOption('send', defaultsTo: '0', help: 'messages to send to --peer')
     ..addOption('interval-ms', defaultsTo: '1000', help: 'between sends')
     ..addOption('listen-s', defaultsTo: '0', help: 'stay and collect for N s')
+    ..addOption('canary', help: 'secret word put in every message')
+    ..addOption('timeout-s', defaultsTo: '30', help: 'per request')
     ..addFlag('poll', help: 'collect every second instead of on wake-up');
   final args = parser.parse(argv);
 
@@ -43,6 +48,7 @@ Future<void> main(List<String> argv) async {
     mailbox: Mailbox(
       base: Uri.parse(args['server'] as String),
       token: args['token'] as String?,
+      requestTimeout: Duration(seconds: int.parse(args['timeout-s'] as String)),
     ),
     report: log,
   );
@@ -66,23 +72,65 @@ Future<void> main(List<String> argv) async {
     });
   });
 
+  Future<void> guardedCollect() async {
+    try {
+      await client.collect();
+    } catch (e) {
+      log({'event': 'collect-failed', 'error': '$e'});
+    }
+  }
+
   if (args['poll'] as bool) {
-    Timer.periodic(const Duration(seconds: 1), (_) => client.collect());
+    Timer.periodic(const Duration(seconds: 1), (_) => guardedCollect());
   } else {
-    await client.listen();
+    try {
+      await client.listen();
+    } catch (e) {
+      // No wake-up connection: poll instead, so the run still measures
+      // what arrives.
+      log({'event': 'listen-failed', 'error': '$e'});
+      Timer.periodic(const Duration(seconds: 1), (_) => guardedCollect());
+    }
   }
 
   final peer = args['peer'] as String?;
   final count = int.parse(args['send'] as String);
+  final canary = args['canary'] as String?;
   if (peer != null && count > 0) {
-    final c = await client.open(peer);
     final gap = Duration(
       milliseconds: int.parse(args['interval-ms'] as String),
     );
-    for (var i = 0; i < count; i++) {
+    Conversation? c;
+    for (var attempt = 1; c == null && attempt <= 5; attempt++) {
+      try {
+        c = await client.open(peer);
+      } catch (e) {
+        log({'event': 'open-failed', 'attempt': attempt, 'error': '$e'});
+        await Future<void>.delayed(gap);
+      }
+    }
+    for (var i = 0; c != null && i < count; i++) {
       final sentAt = DateTime.now().toUtc().toIso8601String();
-      await client.send(c, jsonEncode({'seq': i, 'sent': sentAt}));
-      log({'event': 'sent', 'seq': i, 'sent': sentAt});
+      final body = {
+        'seq': i,
+        'sent': sentAt,
+        if (canary != null) 'canary': '$canary-$i',
+      };
+      var delivered = false;
+      for (var attempt = 1; !delivered && attempt <= 3; attempt++) {
+        try {
+          await client.send(c, jsonEncode(body));
+          delivered = true;
+          log({'event': 'sent', 'seq': i, 'sent': sentAt, 'attempt': attempt});
+        } catch (e) {
+          log({
+            'event': 'send-failed',
+            'seq': i,
+            'attempt': attempt,
+            'error': '$e',
+          });
+        }
+      }
       await Future<void>.delayed(gap);
     }
   }
@@ -91,10 +139,15 @@ Future<void> main(List<String> argv) async {
   if (listen > 0) {
     await Future<void>.delayed(Duration(seconds: listen));
   }
-  await client.collect();
+  await guardedCollect();
   log({'event': 'done'});
-  await client.close();
+  try {
+    await client.close();
+  } catch (e) {
+    log({'event': 'close-failed', 'error': '$e'});
+  }
   await out.close();
+  exit(0);
 }
 
 /// Keys live in --state: a 32-byte storage key and the identity, written on
@@ -113,8 +166,9 @@ Future<KeyStore> _openKeys(Directory state, String name) async {
       secret: base64.decode(j['secret'] as String),
     );
   } else {
+    final rng = Random.secure();
     storageKey = Uint8List.fromList(
-      List.generate(32, (_) => DateTime.now().microsecond % 256),
+      List.generate(32, (_) => rng.nextInt(256)),
     );
     identity = await Identity.create(name);
     keyFile.writeAsBytesSync(storageKey);

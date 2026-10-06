@@ -1,0 +1,9 @@
+# The lab's phone with no screen: the tremulator_client bundle from
+# `dart build cli` (carries libopenmls_frb.so), plus shaping and capture.
+# Build context: packages/tremulator_client (run.py sets it).
+FROM debian:bookworm-slim
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      iproute2 tcpdump procps curl ca-certificates \
+ && rm -rf /var/lib/apt/lists/*
+COPY build/cli/bundle /client
+CMD ["sleep", "infinity"]

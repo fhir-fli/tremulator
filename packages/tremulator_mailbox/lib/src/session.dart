@@ -12,11 +12,13 @@ Future<String> login({
   http.Client? client,
 }) async {
   final c = client ?? http.Client();
-  final r = await c.post(
-    base.replace(path: '${base.path}/auth/login'),
-    headers: {'Content-Type': 'application/json'},
-    body: jsonEncode({'username': username, 'password': password}),
-  );
+  final r = await c
+      .post(
+        base.replace(path: '${base.path}/auth/login'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'username': username, 'password': password}),
+      )
+      .timeout(const Duration(seconds: 30));
   if (r.statusCode != 200) {
     throw MailboxError('login failed: ${r.statusCode} ${r.body}');
   }
@@ -38,14 +40,16 @@ Future<void> register({
   http.Client? client,
 }) async {
   final c = client ?? http.Client();
-  final r = await c.post(
-    base.replace(path: '${base.path}/auth/register'),
-    headers: {
-      'Content-Type': 'application/json',
-      if (token != null) 'Authorization': 'Bearer $token',
-    },
-    body: jsonEncode({'username': username, 'password': password}),
-  );
+  final r = await c
+      .post(
+        base.replace(path: '${base.path}/auth/register'),
+        headers: {
+          'Content-Type': 'application/json',
+          if (token != null) 'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({'username': username, 'password': password}),
+      )
+      .timeout(const Duration(seconds: 30));
   if (r.statusCode != 200 && r.statusCode != 201) {
     throw MailboxError('register failed: ${r.statusCode} ${r.body}');
   }
