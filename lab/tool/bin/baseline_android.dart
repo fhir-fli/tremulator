@@ -52,34 +52,34 @@ Future<void> main(List<String> argv) async {
       await _numberOf(a[0]);
     case 'texts':
       if (a.length < 2) _usage();
-      final log = _Log(a[1]);
+      final log = _Log(a[1], cmd);
       final n = a.length > 2 ? int.parse(a[2]) : 10;
       final gap = a.length > 3 ? double.parse(a[3]) : 10.0;
       await _texts(a[0], log, n, gap);
       await log.close();
     case 'photo':
       if (a.length != 3) _usage();
-      final log = _Log(a[2]);
+      final log = _Log(a[2], cmd);
       await _photo(a[0], a[1], log);
       await log.close();
     case 'call':
       if (a.length != 3 || !{'voice', 'video'}.contains(a[1])) _usage();
-      final log = _Log(a[2]);
+      final log = _Log(a[2], cmd);
       await _call(a[0], a[1], log);
       await log.close();
     case 'hangup':
       if (a.length != 1) _usage();
-      final log = _Log(a[0]);
+      final log = _Log(a[0], cmd);
       await _hangup(log);
       await log.close();
     case 'watch':
       if (a.length != 2) _usage();
-      final log = _Log(a[0]);
+      final log = _Log(a[0], cmd);
       await _watch(log, int.parse(a[1]));
       await log.close();
     case 'wait-incoming':
       if (a.length != 2) _usage();
-      final log = _Log(a[0]);
+      final log = _Log(a[0], cmd);
       await _waitIncoming(log, int.parse(a[1]));
       await log.close();
     default:
@@ -97,10 +97,14 @@ Never _usage() {
   exit(2);
 }
 
+/// One file per label AND per command. Dart's FileMode.append seeks to the
+/// end once at open, it is not O_APPEND, so two processes sharing a file
+/// overwrite each other (seen 2026-10-06: the hotspot watch and the call
+/// driver erased each other's records).
 class _Log {
-  _Log(this.label)
+  _Log(this.label, String command)
     : _sink = File(
-        '${labDir()}/baseline/results/android_$label.jsonl',
+        '${labDir()}/baseline/results/android_${label}_$command.jsonl',
       ).openWrite(mode: FileMode.append) {
     Directory('${labDir()}/baseline/results').createSync();
   }
