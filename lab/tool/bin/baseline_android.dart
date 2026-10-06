@@ -419,17 +419,28 @@ String? _callState(List<UiNode> ns) {
 }
 
 Future<void> _hangup(_Log log) async {
-  final btn = await _waitFor(
+  // A video call hides its controls after a few seconds: tap the screen to
+  // bring them back, then find the end button. Fall back to the position the
+  // red button had on this phone (1272x2772) when the dump has no button.
+  await _adb(['shell', 'input', 'tap', '636', '1386']);
+  await Future<void>.delayed(const Duration(milliseconds: 600));
+  final btn = await _tryFor(
     (ns) =>
         byDesc(ns, 'End call') ??
         byDesc(ns, 'Leave call') ??
         byDesc(ns, 'Hang up') ??
         byId(ns, 'end_call_button'),
-    seconds: 5,
-    what: 'end call button',
+    seconds: 4,
   );
-  await _tap(btn);
-  await log.add('hangup');
+  if (btn != null) {
+    await _tap(btn);
+    await log.add('hangup', {'via': btn.desc});
+  } else {
+    await _adb(['shell', 'input', 'tap', '636', '1386']);
+    await Future<void>.delayed(const Duration(milliseconds: 600));
+    await _adb(['shell', 'input', 'tap', '1086', '2527']);
+    await log.add('hangup', {'via': 'fixed position, button not in dump'});
+  }
 }
 
 /// Log the phone's Wi-Fi address every 2 s for [seconds]; exits non-zero the
