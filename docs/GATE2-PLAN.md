@@ -285,3 +285,30 @@ Design finding for the next change, after run6: about four server requests
 per message (find the peer's Device, create; then on the receiver a search,
 a commit check and a delete). Cache the peer lookup and check commits once
 per collect, then re-measure P1.
+
+## Text at human pace, 2026-10-07 (run6: ten messages, one every 10 s)
+
+This is the pace Gate 1 measured WhatsApp at: one text, wait, the next.
+
+| Profile | tremulator texts | one-way median | one-way max | WhatsApp (Gate 1) |
+|---|---|---|---|---|
+| P1 rural 2G | 10/10 | 4.9 s | 6.2 s | 10/10, median 5.3 s |
+| P2 congested 3G | 10/10 | 1.5 s | 2.4 s | 10/10 |
+| P3 satellite | 10/10 | 3.7 s | 5.4 s | 10/10, median 5.7 s, max 8.3 s |
+| P4 dropping link | see run7 | | | 10/10, 53–75 s into an outage |
+| P5 local, no internet | 10/10 | 0.13 s | 0.16 s | 0 delivered |
+| P0 dead link | 0/0 | — | — | 0 delivered |
+
+Run6's P4 is instrument-limited: all ten were sent (each outage cost one
+60 s timeout, then the retry went through) but Bob's fixed listening window
+ended 93 s before Alice finished, and four messages sat uncollected on the
+server. Bob now listens until the script's stop sign (`f1883e6`); run7 is
+P4 alone with that fix.
+
+So at the pace WhatsApp was measured, the first version delivers every text
+on every profile with a route to the server, and the one-way times sit at or
+under WhatsApp's. Caveats: our clock is one laptop, so one-way times are
+exact; Gate 1's WhatsApp times were read off a screen poll with 2.5 s
+resolution. Our server is on the local network in the lab; WhatsApp's is on
+the internet behind the same shaped link in Gate 1, which is a fair match
+for P1–P4 and the whole point of P5.
