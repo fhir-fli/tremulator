@@ -27,6 +27,10 @@ Future<void> main(List<String> argv) async {
     ..addOption('send', defaultsTo: '0', help: 'messages to send to --peer')
     ..addOption('interval-ms', defaultsTo: '1000', help: 'between sends')
     ..addOption('listen-s', defaultsTo: '0', help: 'stay and collect for N s')
+    ..addOption(
+      'until-file',
+      help: "stay and collect until this file exists (the lab's stop sign)",
+    )
     ..addOption('canary', help: 'secret word put in every message')
     ..addOption('timeout-s', defaultsTo: '30', help: 'per request')
     ..addFlag('poll', help: 'collect every second instead of on wake-up');
@@ -154,6 +158,15 @@ Future<void> main(List<String> argv) async {
   final listen = int.parse(args['listen-s'] as String);
   if (listen > 0) {
     await Future<void>.delayed(Duration(seconds: listen));
+  }
+  final untilFile = args['until-file'] as String?;
+  if (untilFile != null) {
+    // run6 P4: Bob's fixed window ended before Alice's slowed run did, and
+    // four messages sat on the server uncollected.
+    while (!File(untilFile).existsSync()) {
+      await Future<void>.delayed(const Duration(seconds: 1));
+    }
+    log({'event': 'stop-sign', 'file': untilFile});
   }
   await guardedCollect();
   log({'event': 'done'});

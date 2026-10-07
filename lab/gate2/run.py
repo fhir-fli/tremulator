@@ -217,12 +217,13 @@ def run_profile(name, rate, rtt, loss, internal, dead=False):
     d = f"/out/{name}"
     canary = "canary-" + secrets.token_hex(6)
     listen_s = 45 if dead else max(60, int(messages * interval_ms / 1000) + 90)
+    stop = f"{d}/alice.done"
     for c in (alice, bob):
         dx(c, "sh", "-c", f"rm -rf /state; mkdir -p /state; mkdir -p {d}")
-    dx(bob, "sh", "-c", f"rm -f {d}/bob.exit")
+    dx(bob, "sh", "-c", f"rm -f {d}/bob.exit {stop}")
     sh(["docker", "exec", "-d", bob, "sh", "-c",
         f"/client/bin/tremulator_client --server {url} --name bob --state /state --out {d}/bob.jsonl "
-        f"--listen-s {listen_s} --timeout-s 60 > {d}/bob.stdout 2>&1; echo $? > {d}/bob.exit"])
+        f"--listen-s {listen_s} --until-file {stop} --timeout-s 60 > {d}/bob.stdout 2>&1; echo $? > {d}/bob.exit"])
     time.sleep(5)
     t0 = time.time()
     r = dx(alice, "sh", "-c",
@@ -231,6 +232,9 @@ def run_profile(name, rate, rtt, loss, internal, dead=False):
            f"--listen-s 20 --timeout-s 60 --canary {canary} > {d}/alice.stdout 2>&1",
            timeout=listen_s + 600)
     alice_s = round(time.time() - t0, 1)
+    # Alice is done: give Bob one more wake-up and collect, then the stop sign.
+    time.sleep(30 if not dead else 5)
+    dx(bob, "sh", "-c", f"touch {stop}")
     for _ in range(listen_s + 300):
         if not client_running(bob, f"{d}/bob.exit"):
             break
