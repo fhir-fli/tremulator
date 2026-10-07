@@ -173,7 +173,15 @@ class Client {
         await mailbox.acknowledge(e.id);
       }
       for (final c in _conversations.values.toList()) {
-        handled += await _catchUp(c);
+        try {
+          handled += await _catchUp(c);
+        } on KeysError catch (err) {
+          report({
+            'event': 'catch-up-failed',
+            'conversation': conversationKey(c.id),
+            'error': err.message,
+          });
+        }
       }
       return handled;
     } finally {
@@ -212,8 +220,15 @@ class Client {
       case Label.message:
       case Label.call:
         final id = peekConversationId(e.bytes);
-        final c = _conversations[conversationKey(id)] ?? keys.conversation(id);
-        _conversations[conversationKey(id)] = c;
+        var c = _conversations[conversationKey(id)];
+        if (c == null) {
+          // Known to the store (this phone was in it before a restart), or
+          // not ours at all: epoch() throws for an unknown conversation and
+          // the caller reports the blob as undecryptable.
+          c = keys.conversation(id);
+          await c.epoch();
+          _conversations[conversationKey(id)] = c;
+        }
         await _catchUp(c);
         final r = await c.receive(e.bytes);
         if (r is ReceivedMessage) {

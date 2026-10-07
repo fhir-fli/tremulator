@@ -142,32 +142,54 @@ def clear_shaping(cs):
         dx(c, "sh", "-c", f"pkill -f {DUTY_LOOP_MARK}; tc qdisc del dev eth0 root 2>/dev/null; true")
 
 
+PORTS = {"P1": 8081, "P2": 8082, "P3": 8083, "P4": 8084, "P5": 8085, "P0": 8080}
+
+
 def start_server(srv, profile):
+    """A fresh fhirant on its own port, pid recorded for the stop. run3's
+    stop (pkill by name) never killed P1's server, so P2 ran on P1's store
+    and Bob's wiped keys no longer matched his old key packages there."""
     d = f"/out/{profile}"
+    port = PORTS[profile]
     dx(srv, "mkdir", "-p", d, user="0")
     dx(srv, "chown", "-R", "1000:1000", "/out", user="0")
     dx(srv, "sh", "-c", f"rm -rf /data/{profile}; mkdir -p /data/{profile}")
+    if dx(srv, "curl", "-fsS", f"http://127.0.0.1:{port}/health", timeout=10).returncode == 0:
+        raise RuntimeError(f"port {port} already answers: a server is still running")
     sh(["docker", "exec", "-d", "-u", "0", srv, "sh", "-c",
-        f"tcpdump -i eth0 -w {d}/traffic.pcap -U 2>{d}/tcpdump.err"])
+        f"tcpdump -i eth0 -w {d}/traffic.pcap -U 2>{d}/tcpdump.err & echo $! > {d}/tcpdump.pid"])
     sh(["docker", "exec", "-d", srv, "sh", "-c",
-        f"/app/bin/server --dev-mode --port 8080 --db-path /data/{profile} "
-        f"--spec-path /data/empty-spec > {d}/server.log 2>&1"])
-    # wait for /health from inside the container (no shaping on lo)
+        f"/app/bin/server --dev-mode --port {port} --db-path /data/{profile} "
+        f"--spec-path /data/empty-spec > {d}/server.log 2>&1 & echo $! > {d}/server.pid"])
     for _ in range(60):
-        if dx(srv, "curl", "-fsS", "http://127.0.0.1:8080/health", timeout=10).returncode == 0:
-            return
+        if dx(srv, "curl", "-fsS", f"http://127.0.0.1:{port}/health", timeout=10).returncode == 0:
+            break
         time.sleep(1)
-    raise RuntimeError("fhirant did not come up")
+    else:
+        raise RuntimeError("fhirant did not come up")
+    devices = dx(srv, "sh", "-c",
+                 f"curl -s 'http://127.0.0.1:{port}/Device?_summary=count&_format=json'", timeout=20).stdout
+    if '"total":0' not in devices.replace(" ", ""):
+        raise RuntimeError(f"store not fresh at start: {devices[:200]}")
+    return port
 
 
 def stop_server(srv, profile):
     d = f"/out/{profile}"
+    port = PORTS[profile]
     # the server's own view of every blob, then the raw store file
     dx(srv, "sh", "-c",
-       f"curl -s 'http://127.0.0.1:8080/Communication?_count=1000&_format=json' > {d}/server_dump.json")
+       f"curl -s 'http://127.0.0.1:{port}/Communication?_count=1000&_format=json' > {d}/server_dump.json")
     dx(srv, "sh", "-c",
-       f"curl -s 'http://127.0.0.1:8080/Device?_count=1000&_format=json' > {d}/devices_dump.json")
-    dx(srv, "sh", "-c", "pkill -INT -x server; sleep 1; pkill -INT -x tcpdump; sleep 1", user="0")
+       f"curl -s 'http://127.0.0.1:{port}/Device?_count=1000&_format=json' > {d}/devices_dump.json")
+    dx(srv, "sh", "-c", f"kill -INT $(cat {d}/server.pid); sleep 2; kill -KILL $(cat {d}/server.pid) 2>/dev/null; true", user="0")
+    dx(srv, "sh", "-c", f"kill -INT $(cat {d}/tcpdump.pid); sleep 1; true", user="0")
+    for _ in range(20):
+        if dx(srv, "curl", "-fsS", f"http://127.0.0.1:{port}/health", timeout=10).returncode != 0:
+            break
+        time.sleep(1)
+    else:
+        raise RuntimeError(f"server on {port} did not stop")
     dx(srv, "sh", "-c", f"cp /data/{profile}/fhirant.db {d}/fhirant.db", user="0")
     dx(srv, "chown", "-R", f"{os.getuid()}:{os.getgid()}", "/out", user="0")
 
@@ -190,8 +212,8 @@ def run_profile(name, rate, rtt, loss, internal, dead=False):
                 f"sleep 30; tc qdisc replace dev eth0 root netem loss 100%; sleep 60; done")
         for c in (srv, alice, bob):
             sh(["docker", "exec", "-d", c, "sh", "-c", loop])
-    start_server(srv, name)
-    url = f"http://{ip_of(srv)}:8080"
+    port = start_server(srv, name)
+    url = f"http://{ip_of(srv)}:{port}"
     d = f"/out/{name}"
     canary = "canary-" + secrets.token_hex(6)
     listen_s = 45 if dead else max(60, int(messages * interval_ms / 1000) + 90)
