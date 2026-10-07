@@ -237,3 +237,51 @@ message, which also carried the welcome and the join.
 
 Not run: the Docker profiles. A run creates two Docker networks; it waits for
 Grey's go (GATE1.md).
+
+## Step 2 measured, 2026-10-07: text across the six profiles (run5)
+
+One fhirant and two clients in the Docker lab, twenty messages at one a
+second, the fixed client. Raw files in `lab/gate2/results/run5/`; the table
+is `python3 lab/gate2/table.py run5`.
+
+| Profile | tremulator texts | one-way median | one-way max | failed sends | store readable? | WhatsApp (Gate 1) |
+|---|---|---|---|---|---|---|
+| P1 rural 2G | 20/20 | 13.6 s | 25.6 s | 0 | no (scan clean) | 10/10, median 5.3 s |
+| P2 congested 3G | 20/20 | 2.8 s | 3.5 s | 0 | no | 10/10 |
+| P3 satellite | 20/20 | 10.3 s | 15.3 s | 0 | no | 10/10, median 5.7 s, max 8.3 s |
+| P4 dropping link | 20/20 | 4.2 s | 67.2 s | 1 retried | no | 10/10, 53–75 s into an outage |
+| P5 local, no internet | 20/20 | 0.1 s | 0.2 s | 0 | no | 0 delivered |
+| P0 dead link | 0/0 | — | — | — | no | 0 delivered |
+
+Read with care:
+- **P1 and P3 are backlogs, not per-message times.** The first message on
+  P1 took 6.8 s one way (run3); each later one waited longer because a send
+  takes 2.5–5 s on a 50 kbit/s link and the sender offers one a second. The
+  server saw about four requests per message. WhatsApp was measured one text
+  at a time at human pace. run6 (one message every 10 s) measures that.
+- **P4's 67 s** is a message sent into the 60 s outage: it arrived when the
+  link came back. WhatsApp's 53–75 s is the same shape.
+- **P5** works because the server is on the local network (D11); WhatsApp
+  needs Meta's servers and delivered nothing.
+- "Store readable?" is the canary scan over the server's own dump of every
+  stored blob, the store file and the packet capture: zero hits on every
+  profile, with the scanner's positive control passing.
+
+Defects the lab found, all fixed and each with the run that found it
+(`lab/gate2/results/INVALID-RUNS.md` has runs 1–3):
+1. client image: native library not found, then GLIBC 2.38 on bookworm (run1);
+2. scanner handed its own canary list (run1);
+3. Bob's wait exited early, summary cut 13 s short (run2);
+4. the server stop missed, P1's server lived into P2 (run3);
+5. a wake-up ping landing mid-collect was dropped: two P2 messages waited
+   74 s for the final sweep (run4) — client fix with a test that fails
+   without it;
+6. a request timeout escaped as a bare exception through the wake-up handler
+   and killed Bob on P4 (run4);
+7. the client's async log sink threw when a line landed mid-flush and killed
+   Alice on P4 (run4).
+
+Design finding for the next change, after run6: about four server requests
+per message (find the peer's Device, create; then on the receiver a search,
+a commit check and a delete). Cache the peer lookup and check commits once
+per collect, then re-measure P1.
