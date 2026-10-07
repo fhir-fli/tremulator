@@ -56,6 +56,7 @@ class Client {
 
   Wakeup? _wakeup;
   bool _collecting = false;
+  bool _again = false;
   Future<int>? _inFlight;
 
   /// Opens the keys, registers the Device and tops the key package stock up
@@ -145,10 +146,13 @@ class Client {
 
   /// Collects everything waiting on the server, in order: welcomes join,
   /// messages decrypt to [incoming], and each is acknowledged once handled.
-  /// Then walks every conversation forward through newer commits. A second
-  /// call while one runs returns 0 at once.
+  /// Then walks every conversation forward through newer commits. A call
+  /// while one runs returns 0 at once and makes the running one go round
+  /// again when it finishes, so nothing that arrived meanwhile waits for the
+  /// next wake-up (run4 P2: two messages waited 74 s for the final sweep).
   Future<int> collect() {
     if (_collecting) {
+      _again = true;
       return Future.value(0);
     }
     _collecting = true;
@@ -182,6 +186,10 @@ class Client {
             'error': err.message,
           });
         }
+      }
+      if (_again) {
+        _again = false;
+        return handled + await _collectNow();
       }
       return handled;
     } finally {

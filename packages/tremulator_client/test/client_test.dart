@@ -94,4 +94,20 @@ void main() {
     await alice.collect();
     expect(aliceGot, ['me too']);
   });
+  test('a wake-up during a collect is not lost', () async {
+    final c = await alice.open('bob-phone');
+    await bob.collect();
+    final got = <String>[];
+    bob.incoming.listen((m) => got.add(m.text));
+    await alice.send(c, 'first');
+    // Start a collect, and while it runs a second message arrives with a
+    // second wake-up. The second collect call must make the first go round
+    // again rather than be dropped.
+    final running = bob.collect();
+    await alice.send(c, 'second');
+    final dropped = await bob.collect();
+    expect(dropped, 0, reason: 'the call during a collect returns at once');
+    await running;
+    expect(got, ['first', 'second']);
+  });
 }
