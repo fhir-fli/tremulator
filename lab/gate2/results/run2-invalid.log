@@ -1,0 +1,28 @@
+{"run": "run2", "t": "2026-10-06T23:28:28", "event": "start", "profiles": ["P1", "P2", "P3", "P4", "P5", "P0"], "messages": 20, "interval_ms": 1000}
+{"run": "run2", "t": "2026-10-06T23:30:31", "profile": "P1", "sent": 20, "delivered": 14, "one_way_median_ms": 19602, "one_way_max_ms": 26741, "send_failed": 0, "open_failed": 0, "joined": 1, "out_of_step": 0, "undecryptable": 0, "collect_failed": 0, "bob_listen_mode": "wake-up", "alice_exit": 0, "alice_wall_s": 108.8, "canary_scan_exit": 0, "canary_hits": 0}
+{"run": "run2", "t": "2026-10-06T23:31:15", "event": "end"}
+Traceback (most recent call last):
+  File "/home/grey/dev/fhir/tremulator/lab/gate2/run.py", line 265, in <module>
+    setup_all()
+            ^^^^
+  File "/home/grey/dev/fhir/tremulator/lab/gate2/run.py", line 202, in run_profile
+    f"/client/bin/tremulator_client --server {url} --name bob --state /state --out {d}/bob.jsonl "
+  File "/home/grey/dev/fhir/tremulator/lab/gate2/run.py", line 82, in dx
+    return sh(["docker", "exec", *u, c, *args], timeout=timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/grey/dev/fhir/tremulator/lab/gate2/run.py", line 74, in sh
+    r = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout, **kw)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/subprocess.py", line 550, in run
+    stdout, stderr = process.communicate(input, timeout=timeout)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/subprocess.py", line 1209, in communicate
+    stdout, stderr = self._communicate(input, endtime, timeout)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/subprocess.py", line 2115, in _communicate
+    ready = selector.select(timeout)
+            ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/selectors.py", line 415, in select
+    fd_event_list = self._selector.poll(timeout)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+KeyboardInterrupt

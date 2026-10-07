@@ -1,0 +1,16 @@
+Unhandled exception:
+Invalid argument(s): Failed to load dynamic library 'libopenmls_frb.so': libopenmls_frb.so: cannot open shared object file: No such file or directory
+#0      _open (dart:ffi-patch/ffi_dynamic_library_patch.dart:11)
+#1      new DynamicLibrary.open (dart:ffi-patch/ffi_dynamic_library_patch.dart:24)
+#2      new ExternalLibrary.open (package:flutter_rust_bridge/src/platform_types/_io.dart:46)
+#3      loadExternalLibraryRaw.<anonymous closure> (package:flutter_rust_bridge/src/loader/_io.dart:88)
+#4      loadExternalLibraryRaw.tryAssumingNonPackaged (package:flutter_rust_bridge/src/loader/_io.dart:54)
+#5      loadExternalLibraryRaw (package:flutter_rust_bridge/src/loader/_io.dart:86)
+#6      loadExternalLibrary (package:flutter_rust_bridge/src/loader/_io.dart:15)
+#7      Openmls._loadLibrary (package:openmls/src/openmls.dart:130)
+#8      Openmls.init (package:openmls/src/openmls.dart:91)
+#9      Identity.create (package:tremulator_keys/src/identity.dart:41)
+#10     _openKeys (file:///home/grey/dev/fhir/tremulator/packages/tremulator_client/bin/tremulator_client.dart:173)
+#11     main (file:///home/grey/dev/fhir/tremulator/packages/tremulator_client/bin/tremulator_client.dart:45)
+#12     _delayEntrypointInvocation.<anonymous closure> (dart:isolate-patch/isolate_patch.dart:311)
+#13     _RawReceivePort._handleMessage (dart:isolate-patch/isolate_patch.dart:192)

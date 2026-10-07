@@ -1,0 +1,10 @@
+{"run": "run1", "t": "2026-10-06T23:26:01", "event": "start", "profiles": ["P1", "P2", "P3", "P4", "P5", "P0"], "messages": 20, "interval_ms": 1000}
+{"run": "run1", "t": "2026-10-06T23:26:15", "profile": "P1", "sent": 0, "delivered": 0, "one_way_median_ms": null, "one_way_max_ms": null, "send_failed": 0, "open_failed": 0, "joined": 0, "out_of_step": 0, "undecryptable": 0, "collect_failed": 0, "bob_listen_mode": "wake-up", "alice_exit": 255, "alice_wall_s": 0.1, "canary_scan_exit": 1, "canary_hits": 40}
+{"run": "run1", "t": "2026-10-06T23:26:23", "profile": "P2", "sent": 0, "delivered": 0, "one_way_median_ms": null, "one_way_max_ms": null, "send_failed": 0, "open_failed": 0, "joined": 0, "out_of_step": 0, "undecryptable": 0, "collect_failed": 0, "bob_listen_mode": "wake-up", "alice_exit": 255, "alice_wall_s": 0.1, "canary_scan_exit": 1, "canary_hits": 40}
+{"run": "run1", "t": "2026-10-06T23:26:28", "event": "end"}
+Traceback (most recent call last):
+  File "/home/grey/dev/fhir/tremulator/lab/gate2/run.py", line 259, in <module>
+    run_profile(name, *PROFILES[name])
+  File "/home/grey/dev/fhir/tremulator/lab/gate2/run.py", line 200, in run_profile
+    time.sleep(5)
+KeyboardInterrupt
