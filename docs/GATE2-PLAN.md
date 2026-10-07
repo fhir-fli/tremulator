@@ -295,7 +295,7 @@ This is the pace Gate 1 measured WhatsApp at: one text, wait, the next.
 | P1 rural 2G | 10/10 | 4.9 s | 6.2 s | 10/10, median 5.3 s |
 | P2 congested 3G | 10/10 | 1.5 s | 2.4 s | 10/10 |
 | P3 satellite | 10/10 | 3.7 s | 5.4 s | 10/10, median 5.7 s, max 8.3 s |
-| P4 dropping link | see run7 | | | 10/10, 53–75 s into an outage |
+| P4 dropping link | 10/10 (run7) | 3.1 s | 73.0 s | 10/10, 53–75 s into an outage |
 | P5 local, no internet | 10/10 | 0.13 s | 0.16 s | 0 delivered |
 | P0 dead link | 0/0 | — | — | 0 delivered |
 
@@ -312,3 +312,16 @@ exact; Gate 1's WhatsApp times were read off a screen poll with 2.5 s
 resolution. Our server is on the local network in the lab; WhatsApp's is on
 the internet behind the same shaped link in Gate 1, which is a fair match
 for P1–P4 and the whole point of P5.
+
+Run7 (P4 alone, same pace, Bob on the stop sign): 10/10, median 3.1 s, the
+worst 73.0 s for a message sent into the 60 s outage: one 60 s request
+timeout, then the retry went through. Three sends needed a retry; one
+collect failed during an outage and the next wake-up recovered it. Both
+clients ran to the end. The scan was clean.
+
+**Step 2 text result, closed 2026-10-07 00:34:** at WhatsApp's pace the
+first version delivers 10/10 on every profile with a route to the server,
+one-way medians 4.9 / 1.5 / 3.7 / 3.1 / 0.13 s on P1–P5, worst-case 73 s on
+the dropping link, 0 on the dead link, and nothing readable on the server or
+the wire. Remaining for Gate 2: calls (step 4), the 24-hour runs, battery,
+and D4 (steps 5–6), and the iPhone (step 7).
