@@ -32,13 +32,19 @@ Future<void> main(List<String> argv) async {
     ..addFlag('poll', help: 'collect every second instead of on wake-up');
   final args = parser.parse(argv);
 
-  final out = File(args['out'] as String).openWrite(mode: FileMode.append);
+  // Synchronous, flushed, one line per event, so a killed run still has
+  // everything. An async sink threw "StreamSink is bound to a stream" when a
+  // line landed during the previous flush (run4 P4).
+  final out = File(args['out'] as String).openSync(mode: FileMode.append);
   void log(Map<String, Object?> e) {
-    out.writeln(
-      jsonEncode({'t': DateTime.now().toUtc().toIso8601String(), ...e}),
-    );
-    // One line per event, flushed, so a killed run still has everything.
-    unawaited(out.flush());
+    out
+      ..writeStringSync(
+        '${jsonEncode({
+          't': DateTime.now().toUtc().toIso8601String(),
+          ...e,
+        })}\n',
+      )
+      ..flushSync();
   }
 
   final state = Directory(args['state'] as String)..createSync(recursive: true);
@@ -59,7 +65,7 @@ Future<void> main(List<String> argv) async {
   } catch (e) {
     // A dead link ends here: the record says so instead of a crash.
     log({'event': 'start-failed', 'error': '$e'});
-    await out.close();
+    out.closeSync();
     exit(2);
   }
   client.incoming.listen((m) {
@@ -156,7 +162,7 @@ Future<void> main(List<String> argv) async {
   } catch (e) {
     log({'event': 'close-failed', 'error': '$e'});
   }
-  await out.close();
+  out.closeSync();
   exit(0);
 }
 

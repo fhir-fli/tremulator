@@ -71,16 +71,18 @@ class Mailbox {
       ],
       status: FHIRDeviceStatus.active,
     );
-    final r = await FhirCreateRequest(
-      base: base,
-      resourceType: 'Device',
-      resource: device.toJson(),
-      headers: {
-        ..._headers,
-        'If-None-Exist': 'identifier=$deviceNameSystem|$deviceName',
-      },
-      client: _client,
-    ).sendRequest().timeout(requestTimeout);
+    final r = await _send(
+      FhirCreateRequest(
+        base: base,
+        resourceType: 'Device',
+        resource: device.toJson(),
+        headers: {
+          ..._headers,
+          'If-None-Exist': 'identifier=$deviceNameSystem|$deviceName',
+        },
+        client: _client,
+      ).sendRequest(),
+    );
     _check(r, [200, 201]);
     return _device = _idOf(r);
   }
@@ -97,9 +99,9 @@ class Mailbox {
 
   /// The public signing key of Device [deviceId], from its identifier.
   Future<Uint8List?> signingKeyOf(String deviceId) async {
-    final r = await _client
-        .get(_uri('Device/$deviceId'), headers: _headers)
-        .timeout(requestTimeout);
+    final r = await _send(
+      _client.get(_uri('Device/$deviceId'), headers: _headers),
+    );
     _check(r, [200]);
     final d = Device.fromJson(jsonDecode(r.body) as Map<String, dynamic>);
     for (final i in d.identifier ?? const <Identifier>[]) {
@@ -140,13 +142,15 @@ class Mailbox {
       if (id == null) {
         continue;
       }
-      final r = await FhirDeleteRequest(
-        base: base,
-        resourceType: 'Communication',
-        id: id,
-        headers: _headers,
-        client: _client,
-      ).sendRequest().timeout(requestTimeout);
+      final r = await _send(
+        FhirDeleteRequest(
+          base: base,
+          resourceType: 'Communication',
+          id: id,
+          headers: _headers,
+          client: _client,
+        ).sendRequest(),
+      );
       if (r.statusCode == 200 || r.statusCode == 204) {
         return _firstPayload(c);
       }
@@ -197,13 +201,18 @@ class Mailbox {
         value: FhirString(key),
       ),
     );
-    final r = await FhirCreateRequest(
-      base: base,
-      resourceType: 'Communication',
-      resource: c.toJson(),
-      headers: {..._headers, 'If-None-Exist': 'identifier=$commitSystem|$key'},
-      client: _client,
-    ).sendRequest().timeout(requestTimeout);
+    final r = await _send(
+      FhirCreateRequest(
+        base: base,
+        resourceType: 'Communication',
+        resource: c.toJson(),
+        headers: {
+          ..._headers,
+          'If-None-Exist': 'identifier=$commitSystem|$key',
+        },
+        client: _client,
+      ).sendRequest(),
+    );
     _check(r, [200, 201]);
     return r.statusCode == 201;
   }
@@ -244,13 +253,15 @@ class Mailbox {
 
   /// Deletes a collected blob so the server keeps nothing (D8).
   Future<void> acknowledge(String id) async {
-    final r = await FhirDeleteRequest(
-      base: base,
-      resourceType: 'Communication',
-      id: id,
-      headers: _headers,
-      client: _client,
-    ).sendRequest().timeout(requestTimeout);
+    final r = await _send(
+      FhirDeleteRequest(
+        base: base,
+        resourceType: 'Communication',
+        id: id,
+        headers: _headers,
+        client: _client,
+      ).sendRequest(),
+    );
     _check(r, [200, 204, 404, 410]);
   }
 
@@ -290,6 +301,21 @@ class Mailbox {
   void close() => _client.close();
 
   // ---- private ------------------------------------------------------------
+
+  /// Runs one request under [requestTimeout]. A timeout, a refused or
+  /// dropped connection, or any other transport failure comes back as a
+  /// [MailboxError], so callers catch one type. run4 P4: a bare
+  /// TimeoutException escaped through the wake-up handler and killed the
+  /// client.
+  Future<http.Response> _send(Future<http.Response> request) async {
+    try {
+      return await request.timeout(requestTimeout);
+    } on MailboxError {
+      rethrow;
+    } catch (e) {
+      throw MailboxError('request failed: $e');
+    }
+  }
 
   static final String _collectable = [
     for (final l in Label.values)
@@ -353,21 +379,21 @@ class Mailbox {
   }
 
   Future<String> _create(Resource resource) async {
-    final r = await FhirCreateRequest(
-      base: base,
-      resourceType: resource.resourceType.toString(),
-      resource: resource.toJson(),
-      headers: _headers,
-      client: _client,
-    ).sendRequest().timeout(requestTimeout);
+    final r = await _send(
+      FhirCreateRequest(
+        base: base,
+        resourceType: resource.resourceType.toString(),
+        resource: resource.toJson(),
+        headers: _headers,
+        client: _client,
+      ).sendRequest(),
+    );
     _check(r, [201]);
     return _idOf(r);
   }
 
   Future<Bundle> _search(String type, Map<String, String> params) async {
-    final r = await _client
-        .get(_uri(type, params), headers: _headers)
-        .timeout(requestTimeout);
+    final r = await _send(_client.get(_uri(type, params), headers: _headers));
     _check(r, [200]);
     return Bundle.fromJson(jsonDecode(r.body) as Map<String, dynamic>);
   }

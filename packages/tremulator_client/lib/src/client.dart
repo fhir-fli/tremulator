@@ -173,12 +173,26 @@ class Client {
             'label': e.label.code,
             'error': err.message,
           });
+        } on MailboxError catch (err) {
+          // The server went away mid-blob: leave it there for next time.
+          report({
+            'event': 'collect-interrupted',
+            'id': e.id,
+            'error': err.message,
+          });
+          return handled;
         }
         await mailbox.acknowledge(e.id);
       }
       for (final c in _conversations.values.toList()) {
         try {
           handled += await _catchUp(c);
+        } on MailboxError catch (err) {
+          report({
+            'event': 'catch-up-failed',
+            'conversation': conversationKey(c.id),
+            'error': err.message,
+          });
         } on KeysError catch (err) {
           report({
             'event': 'catch-up-failed',
@@ -201,9 +215,17 @@ class Client {
   Future<void> listen() async {
     _wakeup = await mailbox.wakeups();
     report({'event': 'listening', 'subscription': _wakeup!.subscriptionId});
-    _wakeup!.pings.listen((_) {
-      unawaited(collect());
-    });
+    _wakeup!.pings.listen(
+      (_) {
+        unawaited(
+          collect().catchError((Object e) {
+            report({'event': 'collect-failed', 'error': '$e'});
+            return 0;
+          }),
+        );
+      },
+      onError: (Object e) => report({'event': 'wake-up-error', 'error': '$e'}),
+    );
   }
 
   /// Closes everything, after any collect still running.
