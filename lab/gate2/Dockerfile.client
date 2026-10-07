@@ -1,7 +1,11 @@
 # The lab's phone with no screen: the tremulator_client bundle from
 # `dart build cli` (carries libopenmls_frb.so), plus shaping and capture.
 # Build context: packages/tremulator_client (run.py sets it).
-FROM debian:bookworm-slim
+# trixie, not bookworm: the prebuilt libopenmls_frb.so needs GLIBC 2.38 and
+# bookworm ships 2.36 (run1, 2026-10-06). The loader finds the library by
+# name, so its directory goes on LD_LIBRARY_PATH.
+FROM debian:trixie-slim
+ENV LD_LIBRARY_PATH=/client/lib
 RUN apt-get update && apt-get install -y --no-install-recommends \
       iproute2 tcpdump procps curl ca-certificates \
  && rm -rf /var/lib/apt/lists/*

@@ -43,15 +43,25 @@ Future<void> main(List<String> argv) async {
 
   final state = Directory(args['state'] as String)..createSync(recursive: true);
   final keys = await _openKeys(state, args['name'] as String);
-  final client = await Client.start(
-    keys: keys,
-    mailbox: Mailbox(
-      base: Uri.parse(args['server'] as String),
-      token: args['token'] as String?,
-      requestTimeout: Duration(seconds: int.parse(args['timeout-s'] as String)),
-    ),
-    report: log,
-  );
+  final Client client;
+  try {
+    client = await Client.start(
+      keys: keys,
+      mailbox: Mailbox(
+        base: Uri.parse(args['server'] as String),
+        token: args['token'] as String?,
+        requestTimeout: Duration(
+          seconds: int.parse(args['timeout-s'] as String),
+        ),
+      ),
+      report: log,
+    );
+  } catch (e) {
+    // A dead link ends here: the record says so instead of a crash.
+    log({'event': 'start-failed', 'error': '$e'});
+    await out.close();
+    exit(2);
+  }
   client.incoming.listen((m) {
     final now = DateTime.now().toUtc();
     Map<String, Object?> body;

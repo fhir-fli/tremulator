@@ -217,7 +217,13 @@ def run_profile(name, rate, rtt, loss, internal, dead=False):
         for i in range(messages):
             f.write(f"{i}\t{canary}-{i}\n")
     hits = os.path.join(outroot, name, "canary_hits.jsonl")
-    scan = sh(["python3", "-I", SCANNER, canaries, hits, os.path.join(outroot, name)], timeout=1800)
+    # Scan the evidence files by name: never the canary list or the hit list
+    # themselves (run1 scanned the directory and found its own list, 40 hits).
+    evidence = [os.path.join(outroot, name, f) for f in
+                ("server_dump.json", "devices_dump.json", "fhirant.db", "traffic.pcap",
+                 "server.log", "alice.jsonl", "bob.jsonl", "alice.stdout", "bob.stdout")]
+    evidence = [f for f in evidence if os.path.exists(f)]
+    scan = sh(["python3", "-I", SCANNER, canaries, hits, *evidence], timeout=1800)
     rec = summarize(name, os.path.join(outroot, name))
     rec.update({"alice_exit": r.returncode, "alice_wall_s": alice_s,
                 "canary_scan_exit": scan.returncode,
