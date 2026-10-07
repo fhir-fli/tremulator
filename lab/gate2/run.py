@@ -172,8 +172,11 @@ def stop_server(srv, profile):
     dx(srv, "chown", "-R", f"{os.getuid()}:{os.getgid()}", "/out", user="0")
 
 
-def client_running(c):
-    return dx(c, "pgrep", "-x", "tremulator_clie", timeout=10).returncode == 0
+def client_running(c, marker):
+    """Bob is done when the exit-code file his shell writes after him exists.
+    run2 waited on pgrep by process name and returned early (summary logged
+    13 s before Bob's last line; P1 counted 14 of a real 20)."""
+    return dx(c, "test", "-e", marker, timeout=10).returncode != 0
 
 
 def run_profile(name, rate, rtt, loss, internal, dead=False):
@@ -194,9 +197,10 @@ def run_profile(name, rate, rtt, loss, internal, dead=False):
     listen_s = 45 if dead else max(60, int(messages * interval_ms / 1000) + 90)
     for c in (alice, bob):
         dx(c, "sh", "-c", f"rm -rf /state; mkdir -p /state; mkdir -p {d}")
+    dx(bob, "sh", "-c", f"rm -f {d}/bob.exit")
     sh(["docker", "exec", "-d", bob, "sh", "-c",
         f"/client/bin/tremulator_client --server {url} --name bob --state /state --out {d}/bob.jsonl "
-        f"--listen-s {listen_s} --timeout-s 60 > {d}/bob.stdout 2>&1"])
+        f"--listen-s {listen_s} --timeout-s 60 > {d}/bob.stdout 2>&1; echo $? > {d}/bob.exit"])
     time.sleep(5)
     t0 = time.time()
     r = dx(alice, "sh", "-c",
@@ -205,10 +209,11 @@ def run_profile(name, rate, rtt, loss, internal, dead=False):
            f"--listen-s 20 --timeout-s 60 --canary {canary} > {d}/alice.stdout 2>&1",
            timeout=listen_s + 600)
     alice_s = round(time.time() - t0, 1)
-    for _ in range(listen_s + 120):
-        if not client_running(bob):
+    for _ in range(listen_s + 300):
+        if not client_running(bob, f"{d}/bob.exit"):
             break
         time.sleep(1)
+    bob_exit = dx(bob, "cat", f"{d}/bob.exit", timeout=10).stdout.strip()
     stop_server(srv, name)
     clear_shaping((srv, alice, bob))
     # the plaintext hunt
@@ -225,7 +230,7 @@ def run_profile(name, rate, rtt, loss, internal, dead=False):
     evidence = [f for f in evidence if os.path.exists(f)]
     scan = sh(["python3", "-I", SCANNER, canaries, hits, *evidence], timeout=1800)
     rec = summarize(name, os.path.join(outroot, name))
-    rec.update({"alice_exit": r.returncode, "alice_wall_s": alice_s,
+    rec.update({"alice_exit": r.returncode, "alice_wall_s": alice_s, "bob_exit": bob_exit,
                 "canary_scan_exit": scan.returncode,
                 "canary_hits": sum(1 for _ in open(hits)) if os.path.exists(hits) else None})
     log(rec)
