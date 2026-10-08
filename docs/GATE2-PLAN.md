@@ -325,3 +325,18 @@ one-way medians 4.9 / 1.5 / 3.7 / 3.1 / 0.13 s on P1–P5, worst-case 73 s on
 the dropping link, 0 on the dead link, and nothing readable on the server or
 the wire. Remaining for Gate 2: calls (step 4), the 24-hour runs, battery,
 and D4 (steps 5–6), and the iPhone (step 7).
+
+## Fewer requests per message, 2026-10-07 (run8, `c189195`)
+
+Change: the client caches each peer's server id, and the receiver checks for
+commits only when a message is from a newer epoch. Sending is now one server
+request per message per peer, was two (test: 5 messages, 5 requests; the
+old code made 10). Re-measured at one message a second, 20 messages:
+
+| Profile | run5 median / max (before) | run8 median / max (after) | WhatsApp (one at a time) |
+|---|---|---|---|
+| P1 rural 2G | 13.6 s / 25.6 s | 4.7 s / 8.0 s | median 5.3 s |
+| P3 satellite | 10.3 s / 15.3 s | 3.4 s / 4.7 s | median 5.7 s, max 8.3 s |
+
+20/20 delivered on both, scan clean. The backlog at one message a second is
+gone. Not re-run: P2, P4, P5 (unaffected by the request count in run5).
