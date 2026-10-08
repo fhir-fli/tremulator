@@ -1,5 +1,8 @@
+import 'package:http/http.dart' as http;
 import 'package:test/test.dart';
 import 'package:tremulator_client/tremulator_client.dart';
+import 'package:tremulator_keys/tremulator_keys.dart';
+import 'package:tremulator_mailbox/tremulator_mailbox.dart';
 
 import 'helpers.dart';
 import 'server.dart';
@@ -110,4 +113,35 @@ void main() {
     await running;
     expect(got, ['first', 'second']);
   });
+
+  test('sending costs one server request per message per peer', () async {
+    final counter = _Counting();
+    final carol = await Client.start(
+      keys: await KeyStore.open(
+        dbPath: ':memory:',
+        storageKey: randomKey(),
+        identity: await Identity.create('carol-phone'),
+      ),
+      mailbox: Mailbox(base: server.base, client: counter),
+    );
+    addTearDown(carol.close);
+    final c = await carol.open('bob-phone');
+    await carol.send(c, 'warm-up');
+    counter.count = 0;
+    for (var i = 0; i < 5; i++) {
+      await carol.send(c, 'm$i');
+    }
+    expect(counter.count, 5);
+  });
+}
+
+class _Counting extends http.BaseClient {
+  final http.Client _inner = http.Client();
+  int count = 0;
+
+  @override
+  Future<http.StreamedResponse> send(http.BaseRequest request) {
+    count++;
+    return _inner.send(request);
+  }
 }

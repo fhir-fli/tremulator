@@ -54,6 +54,10 @@ class Client {
   Stream<Incoming> get incoming => _incoming.stream;
   final StreamController<Incoming> _incoming = StreamController.broadcast();
 
+  /// Server ids by device name. A device's id never changes (registration
+  /// is a conditional create), so one lookup per peer is enough.
+  final Map<String, String?> _deviceIds = {};
+
   Wakeup? _wakeup;
   bool _collecting = false;
   bool _again = false;
@@ -259,7 +263,11 @@ class Client {
           await c.epoch();
           _conversations[conversationKey(id)] = c;
         }
-        await _catchUp(c);
+        // Only a message from a newer epoch needs the commits before it.
+        // Checking on every message cost two server requests each (run5).
+        if (peekEpoch(e.bytes) > await c.epoch()) {
+          await _catchUp(c);
+        }
         final r = await c.receive(e.bytes);
         if (r is ReceivedMessage) {
           _incoming.add(
@@ -381,7 +389,7 @@ class Client {
     final others = <String>[];
     for (final m in await c.members()) {
       if (m.index != me) {
-        final d = await mailbox.findDevice(m.name);
+        final d = _deviceIds[m.name] ??= await mailbox.findDevice(m.name);
         if (d == null) {
           report({'event': 'member-not-registered', 'name': m.name});
         } else {
