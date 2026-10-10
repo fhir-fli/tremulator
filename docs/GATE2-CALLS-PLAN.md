@@ -23,6 +23,23 @@ it").
 - Client: `Incoming.label` and `Client.sendCall`, so call setup never reaches
   the chat. The in-process test server is now one package,
   `tremulator_test_server` (was two identical copies).
+- **Step 2 done 2026-10-10 (calls5).** `app/` lab mode in Docker
+  (`lab/gate2/calls.py`, `Dockerfile.calls`, Ubuntu 24.04, one network
+  `tremulator-g2c-ext`), no shaping, 30 s call: connected in 453 ms
+  host to host; Bob decoded 850 frames, the stats' freeze count 0; ~1,420
+  audio packets each way. Bob's screen recording shows the test pattern
+  (stills in `results/calls5/none/`). Frozen video by Gate 1's freezedetect
+  (n=-60dB, d=0.5) between connected and ended: Bob 0.13 s (one span, the
+  gap before the first frame), Alice's own screen 0. The DTLS fingerprints
+  of both phones: 0 hits in the server's dump, store and capture; 2 hits in
+  the positive control (Alice's log).
+- calls1–3 are invalid, each for an instrument defect, named in
+  `results/INVALID-RUNS.md`. The text lab was re-proved after its helpers
+  moved to `labkit.py`: run9, P2, 10/10, median 870 ms, canary clean.
+- Open for step 3: P5 needs the internal network in calls.py; the relay
+  (coturn) is in the image but not yet started; a 3-minute call records
+  about 100 MB per profile (Alice's screen ~70%), so the full sweep adds
+  ~1 GB of recordings to the repo (unmeasured beyond the 30 s runs: 25 MB).
 
 
 ## What gets built, and kept (D16)

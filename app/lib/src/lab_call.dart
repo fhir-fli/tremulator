@@ -125,9 +125,19 @@ class _LabCallAppState extends State<LabCallApp> {
   }
 
   @override
+  // Dark grey, not black: a screenshot then tells this window from the bare
+  // screen behind it, which is black.
   Widget build(BuildContext context) => ColoredBox(
-    color: const Color(0xFF000000),
-    child: _ready ? RTCVideoView(_remote) : const SizedBox.expand(),
+    color: const Color(0xFF303030),
+    // RTCVideoView chooses texture or placeholder when it is built, so it is
+    // rebuilt whenever the renderer changes (a stream set, a first frame).
+    // Built once, it kept the placeholder for the whole call (calls1).
+    child: _ready
+        ? ValueListenableBuilder<RTCVideoValue>(
+            valueListenable: _remote,
+            builder: (_, _, _) => RTCVideoView(_remote),
+          )
+        : const SizedBox.expand(),
   );
 }
 
@@ -151,7 +161,7 @@ Future<void> _run(LabOptions o, LabLog log, RTCVideoRenderer remote) async {
     final ringing = calls.ringing.first;
     log({'event': 'waiting-for-call'});
     call = await ringing;
-    _show(call, remote);
+    _show(call, remote, log);
     await call.answer(media: media);
   } else {
     final c = await openWithRetry(client, peer);
@@ -159,7 +169,7 @@ Future<void> _run(LabOptions o, LabLog log, RTCVideoRenderer remote) async {
       throw MailboxError('could not open a conversation with $peer');
     }
     call = await calls.start(c, media: media);
-    _show(call, remote);
+    _show(call, remote, log);
   }
   await call.connected.timeout(const Duration(seconds: 60));
   log({
@@ -206,8 +216,27 @@ Future<void> _run(LabOptions o, LabLog log, RTCVideoRenderer remote) async {
   await client.close();
 }
 
-void _show(Call call, RTCVideoRenderer remote) {
-  call.remoteMedia.listen((s) => remote.srcObject = s);
+void _show(Call call, RTCVideoRenderer remote, LabLog log) {
+  var sized = false;
+  remote.onResize = () {
+    if (!sized && remote.videoWidth > 0) {
+      sized = true;
+      log({
+        'event': 'remote-video-sized',
+        'width': remote.videoWidth,
+        'height': remote.videoHeight,
+        'texture': remote.textureId,
+      });
+    }
+  };
+  call.remoteMedia.listen((s) {
+    log({
+      'event': 'remote-media',
+      'stream': s.id,
+      'tracks': [for (final t in s.getTracks()) t.kind],
+    });
+    remote.srcObject = s;
+  });
 }
 
 /// The media this phone sends: the default microphone, and this whole

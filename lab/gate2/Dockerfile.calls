@@ -1,0 +1,21 @@
+# The lab's phone with a screen: the app's Linux release bundle, a virtual
+# screen (Xvfb :0), a virtual sound card (PulseAudio with two null sinks:
+# "mic", whose monitor is the default microphone, and "speaker", the default
+# output), ffmpeg to play the test picture and record the screen, and coturn
+# for the relay; xdotool to stack windows on that virtual screen (never a
+# real desktop). Ubuntu 24.04, the release the bundle is built on, so every
+# library it links resolves to the same soname.
+# Build context: a staging directory calls.py fills (bundle/, calls_phone.sh).
+FROM ubuntu:24.04
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+      libgtk-3-0t64 libegl1 libgl1 libgles2 libgbm1 libgl1-mesa-dri \
+      libxcomposite1 libxdamage1 libxfixes3 libxrandr2 libxtst6 libxinerama1 \
+      libjpeg-turbo8 libasound2t64 libpulse0 \
+      xvfb x11-utils xdotool pulseaudio pulseaudio-utils ffmpeg sox fonts-dejavu-core \
+      coturn iproute2 tcpdump procps curl ca-certificates \
+ && rm -rf /var/lib/apt/lists/*
+COPY bundle /app
+COPY calls_phone.sh /usr/local/bin/calls_phone.sh
+ENV DISPLAY=:0 XDG_RUNTIME_DIR=/tmp/xdg
+USER ubuntu
+CMD ["/usr/local/bin/calls_phone.sh"]
