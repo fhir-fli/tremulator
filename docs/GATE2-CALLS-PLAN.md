@@ -1,7 +1,29 @@
 # Gate 2 step 4 plan: voice and video calls
 
-Written 2026-10-07. Waiting for Grey's go before any code (it touches more
-than three files and adds a new package).
+Written 2026-10-07. Grey's go 2026-10-10 ("we can give it a try, go for
+it").
+
+## Progress
+
+- **Step 1 done 2026-10-10.** `packages/tremulator_calls`, with the
+  integration tests in its `example/` Linux app, run on a private Xvfb
+  (`lab/tool/xvfb.sh`, no root). Two phones, a real in-process fhirant, the
+  real plugin: a call set up through the mailbox connects over loopback and
+  hangs up; a fingerprint with one hex digit changed reaches "connecting",
+  then "failed", never "connected". Negative control: with the fingerprint
+  left alone the second test fails (the call connects). 5 of 5 runs green.
+- flutter_webrtc is **1.6.2+hotfix.4**, not 1.6.2: 1.6.2's Linux app
+  segfaulted at start, 3 of 3 (null audio device, `flutter_media_stream.cc`
+  line 34). Hotfix 4 also moves libwebrtc 7871.01 → 7871.03; which change
+  fixed it is unknown. Hotfix 4 also fixes a Linux data-channel threading
+  race (#2194), which the control channel would hit.
+- The call tests use a data channel only, no microphone or screen: media
+  comes in step 2 inside Docker. strace of the app's start shows no access
+  to the laptop's sound server; not checked during a call.
+- Client: `Incoming.label` and `Client.sendCall`, so call setup never reaches
+  the chat. The in-process test server is now one package,
+  `tremulator_test_server` (was two identical copies).
+
 
 ## What gets built, and kept (D16)
 

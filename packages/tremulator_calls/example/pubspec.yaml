@@ -1,0 +1,30 @@
+name: tremulator_calls_example
+description: >-
+  Hosts the tremulator_calls integration tests: the calls need the native
+  WebRTC plugin, which only runs inside a Flutter app.
+publish_to: none
+version: 0.1.0
+
+environment:
+  sdk: ^3.10.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  tremulator_calls:
+    path: ..
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  integration_test:
+    sdk: flutter
+  tremulator_client:
+    path: ../../tremulator_client
+  tremulator_keys:
+    path: ../../tremulator_keys
+  tremulator_mailbox:
+    path: ../../tremulator_mailbox
+  tremulator_test_server:
+    path: ../../tremulator_test_server
+  very_good_analysis: ^10.0.0

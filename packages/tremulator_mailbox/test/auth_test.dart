@@ -3,7 +3,7 @@ import 'dart:typed_data';
 import 'package:test/test.dart';
 import 'package:tremulator_mailbox/tremulator_mailbox.dart';
 
-import 'server.dart';
+import 'package:tremulator_test_server/tremulator_test_server.dart';
 
 void main() {
   test(

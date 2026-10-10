@@ -15,6 +15,7 @@ class Incoming {
     required this.conversation,
     required this.from,
     required this.text,
+    this.label = Label.message,
   });
 
   /// The conversation id.
@@ -25,6 +26,11 @@ class Incoming {
 
   /// The plaintext.
   final String text;
+
+  /// [Label.message] for chat, [Label.call] for call setup. The label is
+  /// outside the encryption (the server files blobs by it); the call setup
+  /// itself is inside.
+  final Label label;
 }
 
 /// One phone's worth of behaviour, with no screen.
@@ -119,12 +125,25 @@ class Client {
   }
 
   /// Encrypts [text] and sends it to every other member of [conversation].
-  Future<void> send(Conversation conversation, String text) async {
+  Future<void> send(Conversation conversation, String text) =>
+      _sendAs(Label.message, conversation, text);
+
+  /// Encrypts call setup [text] and sends it to every other member of
+  /// [conversation], labelled [Label.call] so the receiver hands it to the
+  /// call code and not to the chat.
+  Future<void> sendCall(Conversation conversation, String text) =>
+      _sendAs(Label.call, conversation, text);
+
+  Future<void> _sendAs(
+    Label label,
+    Conversation conversation,
+    String text,
+  ) async {
     final blob = await conversation.encrypt(
       Uint8List.fromList(utf8.encode(text)),
     );
     for (final to in await _others(conversation)) {
-      await mailbox.send(to: to, label: Label.message, bytes: blob);
+      await mailbox.send(to: to, label: label, bytes: blob);
     }
   }
 
@@ -275,6 +294,7 @@ class Client {
               conversation: id,
               from: e.from,
               text: utf8.decode(r.bytes),
+              label: e.label,
             ),
           );
         }

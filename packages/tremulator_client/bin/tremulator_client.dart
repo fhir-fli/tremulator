@@ -72,7 +72,7 @@ Future<void> main(List<String> argv) async {
     out.closeSync();
     exit(2);
   }
-  client.incoming.listen((m) {
+  client.incoming.where((m) => m.label == Label.message).listen((m) {
     final now = DateTime.now().toUtc();
     Map<String, Object?> body;
     try {

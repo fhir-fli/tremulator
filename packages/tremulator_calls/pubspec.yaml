@@ -1,0 +1,29 @@
+name: tremulator_calls
+description: >-
+  Voice and video calls between two phones. The call setup each phone sends
+  the other travels as an encrypted `call` message through the mailbox, so
+  the server never sees it; the media goes phone to phone, or through a relay
+  when it must.
+version: 0.1.0
+publish_to: none
+repository: https://github.com/fhir-fli/tremulator
+
+environment:
+  sdk: ^3.10.0
+  flutter: ">=3.38.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_webrtc: 1.6.2+hotfix.4
+  tremulator_client:
+    path: ../tremulator_client
+  tremulator_keys:
+    path: ../tremulator_keys
+  tremulator_mailbox:
+    path: ../tremulator_mailbox
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  very_good_analysis: ^10.0.0

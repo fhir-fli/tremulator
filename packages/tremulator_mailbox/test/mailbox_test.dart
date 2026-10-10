@@ -6,7 +6,7 @@ import 'package:http/http.dart' as http;
 import 'package:test/test.dart';
 import 'package:tremulator_mailbox/tremulator_mailbox.dart';
 
-import 'server.dart';
+import 'package:tremulator_test_server/tremulator_test_server.dart';
 
 Uint8List bytes(String s) => Uint8List.fromList(s.codeUnits);
 

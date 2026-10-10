@@ -3,9 +3,9 @@ import 'package:test/test.dart';
 import 'package:tremulator_client/tremulator_client.dart';
 import 'package:tremulator_keys/tremulator_keys.dart';
 import 'package:tremulator_mailbox/tremulator_mailbox.dart';
+import 'package:tremulator_test_server/tremulator_test_server.dart';
 
 import 'helpers.dart';
-import 'server.dart';
 
 void main() {
   late TestServer server;
@@ -112,6 +112,19 @@ void main() {
     expect(dropped, 0, reason: 'the call during a collect returns at once');
     await running;
     expect(got, ['first', 'second']);
+  });
+
+  test('call setup arrives labelled as a call, chat as a message', () async {
+    final c = await alice.open('bob-phone');
+    final got = <(Label, String)>[];
+    bob.incoming.listen((m) => got.add((m.label, m.text)));
+    await alice.send(c, 'hello');
+    await alice.sendCall(c, '{"type":"offer"}');
+    await bob.collect();
+    expect(got, [
+      (Label.message, 'hello'),
+      (Label.call, '{"type":"offer"}'),
+    ]);
   });
 
   test('sending costs one server request per message per peer', () async {

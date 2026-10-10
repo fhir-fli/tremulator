@@ -8,8 +8,13 @@ import 'package:fhirant_server/fhirant_server.dart';
 class TestServer {
   TestServer._(this.server, this.db, this.base);
 
+  /// The running server.
   final FhirAntServer server;
+
+  /// Its store, in memory.
   final FhirAntDb db;
+
+  /// Where to reach it.
   final Uri base;
 
   /// Starts one. [devMode] true turns authentication off.
@@ -28,6 +33,7 @@ class TestServer {
     return TestServer._(server, db, Uri.parse('http://127.0.0.1:$port'));
   }
 
+  /// Stops the server and closes the store.
   Future<void> stop() async {
     await server.stop();
     await db.close();
