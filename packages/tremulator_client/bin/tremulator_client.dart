@@ -1,12 +1,9 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-import 'dart:math';
-import 'dart:typed_data';
 
 import 'package:args/args.dart';
 import 'package:tremulator_client/tremulator_client.dart';
-import 'package:tremulator_keys/tremulator_keys.dart';
 import 'package:tremulator_mailbox/tremulator_mailbox.dart';
 
 /// A phone with no screen, for the lab.
@@ -36,23 +33,10 @@ Future<void> main(List<String> argv) async {
     ..addFlag('poll', help: 'collect every second instead of on wake-up');
   final args = parser.parse(argv);
 
-  // Synchronous, flushed, one line per event, so a killed run still has
-  // everything. An async sink threw "StreamSink is bound to a stream" when a
-  // line landed during the previous flush (run4 P4).
-  final out = File(args['out'] as String).openSync(mode: FileMode.append);
-  void log(Map<String, Object?> e) {
-    out
-      ..writeStringSync(
-        '${jsonEncode({
-          't': DateTime.now().toUtc().toIso8601String(),
-          ...e,
-        })}\n',
-      )
-      ..flushSync();
-  }
+  final log = LabLog(args['out'] as String);
 
   final state = Directory(args['state'] as String)..createSync(recursive: true);
-  final keys = await _openKeys(state, args['name'] as String);
+  final keys = await openLabKeys(state, args['name'] as String);
   final Client client;
   try {
     client = await Client.start(
@@ -64,12 +48,12 @@ Future<void> main(List<String> argv) async {
           seconds: int.parse(args['timeout-s'] as String),
         ),
       ),
-      report: log,
+      report: log.call,
     );
   } catch (e) {
     // A dead link ends here: the record says so instead of a crash.
     log({'event': 'start-failed', 'error': '$e'});
-    out.closeSync();
+    log.close();
     exit(2);
   }
   client.incoming.where((m) => m.label == Label.message).listen((m) {
@@ -92,26 +76,7 @@ Future<void> main(List<String> argv) async {
     });
   });
 
-  Future<void> guardedCollect() async {
-    try {
-      await client.collect();
-    } catch (e) {
-      log({'event': 'collect-failed', 'error': '$e'});
-    }
-  }
-
-  if (args['poll'] as bool) {
-    Timer.periodic(const Duration(seconds: 1), (_) => guardedCollect());
-  } else {
-    try {
-      await client.listen();
-    } catch (e) {
-      // No wake-up connection: poll instead, so the run still measures
-      // what arrives.
-      log({'event': 'listen-failed', 'error': '$e'});
-      Timer.periodic(const Duration(seconds: 1), (_) => guardedCollect());
-    }
-  }
+  await keepCollecting(client, poll: args['poll'] as bool);
 
   final peer = args['peer'] as String?;
   final count = int.parse(args['send'] as String);
@@ -120,15 +85,7 @@ Future<void> main(List<String> argv) async {
     final gap = Duration(
       milliseconds: int.parse(args['interval-ms'] as String),
     );
-    Conversation? c;
-    for (var attempt = 1; c == null && attempt <= 5; attempt++) {
-      try {
-        c = await client.open(peer);
-      } catch (e) {
-        log({'event': 'open-failed', 'attempt': attempt, 'error': '$e'});
-        await Future<void>.delayed(gap);
-      }
-    }
+    final c = await openWithRetry(client, peer, gap: gap);
     for (var i = 0; c != null && i < count; i++) {
       final sentAt = DateTime.now().toUtc().toIso8601String();
       final body = {
@@ -163,55 +120,15 @@ Future<void> main(List<String> argv) async {
   if (untilFile != null) {
     // run6 P4: Bob's fixed window ended before Alice's slowed run did, and
     // four messages sat on the server uncollected.
-    while (!File(untilFile).existsSync()) {
-      await Future<void>.delayed(const Duration(seconds: 1));
-    }
-    log({'event': 'stop-sign', 'file': untilFile});
+    await waitForFile(untilFile, log.call);
   }
-  await guardedCollect();
+  await guardedCollect(client);
   log({'event': 'done'});
   try {
     await client.close();
   } catch (e) {
     log({'event': 'close-failed', 'error': '$e'});
   }
-  out.closeSync();
+  log.close();
   exit(0);
-}
-
-/// Keys live in --state: a 32-byte storage key and the identity, written on
-/// first run. In the app these go in secure storage; the lab has none.
-Future<KeyStore> _openKeys(Directory state, String name) async {
-  final keyFile = File('${state.path}/storage.key');
-  final idFile = File('${state.path}/identity.json');
-  late Uint8List storageKey;
-  late Identity identity;
-  if (keyFile.existsSync() && idFile.existsSync()) {
-    storageKey = keyFile.readAsBytesSync();
-    final j = jsonDecode(idFile.readAsStringSync()) as Map<String, dynamic>;
-    identity = Identity.restore(
-      name: j['name'] as String,
-      publicKey: base64.decode(j['public'] as String),
-      secret: base64.decode(j['secret'] as String),
-    );
-  } else {
-    final rng = Random.secure();
-    storageKey = Uint8List.fromList(
-      List.generate(32, (_) => rng.nextInt(256)),
-    );
-    identity = await Identity.create(name);
-    keyFile.writeAsBytesSync(storageKey);
-    idFile.writeAsStringSync(
-      jsonEncode({
-        'name': name,
-        'public': base64.encode(identity.publicKey),
-        'secret': base64.encode(identity.secret),
-      }),
-    );
-  }
-  return KeyStore.open(
-    dbPath: '${state.path}/keys.db',
-    storageKey: storageKey,
-    identity: identity,
-  );
 }

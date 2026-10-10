@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:http/http.dart' as http;
 import 'package:test/test.dart';
 import 'package:tremulator_client/tremulator_client.dart';
@@ -125,6 +127,18 @@ void main() {
       (Label.message, 'hello'),
       (Label.call, '{"type":"offer"}'),
     ]);
+  });
+
+  test('lab keys written on first run come back the same', () async {
+    final dir = Directory.systemTemp.createTempSync('tremulator-keys-');
+    addTearDown(() => dir.deleteSync(recursive: true));
+    final first = await openLabKeys(dir, 'dana-phone');
+    final public = first.identity.publicKey;
+    await first.close();
+    final again = await openLabKeys(dir, 'ignored-on-reopen');
+    addTearDown(again.close);
+    expect(again.identity.name, 'dana-phone');
+    expect(again.identity.publicKey, public);
   });
 
   test('sending costs one server request per message per peer', () async {
