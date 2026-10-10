@@ -1,0 +1,32 @@
+name: tremulator
+description: >-
+  Secure clinician-to-clinician messaging and calls. For now: a lab mode,
+  driven by command-line flags, that places or answers one call and logs
+  what it measures. The screens come before the Android step.
+publish_to: none
+version: 0.1.0+1
+
+environment:
+  sdk: ^3.10.0
+
+dependencies:
+  args: ^2.7.0
+  flutter:
+    sdk: flutter
+  flutter_webrtc: 1.6.2+hotfix.4
+  tremulator_calls:
+    path: ../packages/tremulator_calls
+  tremulator_client:
+    path: ../packages/tremulator_client
+  tremulator_keys:
+    path: ../packages/tremulator_keys
+  tremulator_mailbox:
+    path: ../packages/tremulator_mailbox
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  very_good_analysis: ^10.0.0
+
+flutter:
+  uses-material-design: false

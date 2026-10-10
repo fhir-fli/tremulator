@@ -155,8 +155,8 @@ class Call {
   RTCPeerConnection? _pc;
   RTCDataChannel? _control;
   final String? _remoteOffer;
-  bool _ended = false;
   final Completer<void> _connected = Completer();
+  final Completer<String> _ended = Completer();
   final StreamController<MediaStream> _remoteMedia =
       StreamController.broadcast();
 
@@ -164,6 +164,11 @@ class Call {
   /// certificate that does not match the fingerprint in the setup ends here,
   /// RFC 8122 section 6.2) or the call ends first.
   Future<void> get connected => _connected.future;
+
+  /// Completes with why the call ended: `hangup` (this phone),
+  /// `remote-hangup`, or `failed` (the connection failed after connecting
+  /// or never connected).
+  Future<String> get ended => _ended.future;
 
   /// The other side's media, as it arrives.
   Stream<MediaStream> get remoteMedia => _remoteMedia.stream;
@@ -316,6 +321,7 @@ class Call {
         if (!_connected.isCompleted) {
           _connected.completeError(StateError('connection failed'));
         }
+        unawaited(_end('failed', tell: false));
       case RTCPeerConnectionState.RTCPeerConnectionStateClosed:
       case RTCPeerConnectionState.RTCPeerConnectionStateDisconnected:
       case RTCPeerConnectionState.RTCPeerConnectionStateNew:
@@ -325,12 +331,12 @@ class Call {
   }
 
   Future<void> _end(String why, {required bool tell}) async {
-    if (_ended) {
+    if (_ended.isCompleted) {
       return;
     }
-    _ended = true;
     _calls._calls.remove(id);
     _calls.report({'event': 'call-ended', 'call': id, 'why': why});
+    _ended.complete(why);
     if (tell) {
       final control = _control;
       if (control?.state == RTCDataChannelState.RTCDataChannelOpen) {
