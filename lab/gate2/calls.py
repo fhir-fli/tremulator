@@ -243,7 +243,7 @@ def run_profile(name):
     # and ended times (same clock: the containers share the host's). The
     # sound is recorded the same way: Alice's microphone (what went in) and
     # Bob's speaker (what came out), each stamped by ffmpeg with the wall
-    # clock of its first sample (-copyts keeps the stamp).
+    # clock of its first sample, printed in its log as the input's start.
     rec_s = call_s + 60
     for c, who in ((bob, "bob"), (alice, "alice")):
         sh(["docker", "exec", "-d", c, "sh", "-c",
@@ -252,7 +252,7 @@ def run_profile(name):
             f"-preset ultrafast -crf 30 -pix_fmt yuv420p {d}/{who}_screen.mp4 > {d}/{who}_record.log 2>&1"])
     for c, who, source in ((bob, "bob_heard", "speaker.monitor"), (alice, "alice_sent", "mic.monitor")):
         sh(["docker", "exec", "-d", c, "sh", "-c",
-            f"exec ffmpeg -y -loglevel error -f pulse -i {source} -ac 1 -t {rec_s} -copyts "
+            f"exec ffmpeg -y -nostdin -hide_banner -nostats -f pulse -i {source} -ac 1 -t {rec_s} "
             f"-c:a pcm_s16le {d}/{who}.mkv > {d}/{who}_record.log 2>&1"])
     # The test pattern is up and moving before Alice's app starts; once her
     # app's window exists the pattern is raised above it (no window manager:
@@ -268,17 +268,18 @@ def run_profile(name):
         f"/app/tremulator --lab --server {url} --name alice --state /tmp/state --out {d}/alice.jsonl "
         f"--peer bob --video --audio --turn '{relay}' --call-s {call_s} "
         f"> {d}/alice.stdout 2>&1; echo $? > {d}/alice.exit"])
-    raised = False
-    for _ in range(40):
-        if dx(alice, "xdotool", "search", "--name", "^tremulator$", timeout=10).returncode == 0:
-            raised = dx(alice, "xdotool", "search", "--class", "ffplay", "windowraise",
-                        timeout=10).returncode == 0
-            break
-        time.sleep(0.25)
+    # calls6 `none`: the raise ran, yet her app window ended on top and both
+    # screens were grey all call. The raise is now repeated until the stack
+    # itself shows the pattern above her window, and the stack is read again
+    # when the call connects.
+    raised = raise_pattern(alice, 40)
     # The click track starts when Alice's call connects: a 30 ms tone 5 s
     # into every 10 s, ending before her call does.
     clicks = max(1, call_s // 10 - 1)
     clicked = wait_for(alice, f"{d}/alice.jsonl", '"event": *"connected"', 90)
+    on_top_at_connect = pattern_on_top(alice)
+    if not on_top_at_connect:
+        raise_pattern(alice, 8)
     if clicked:
         track = " ".join(click_track_cmd("/tmp/click.wav", clicks))
         sh(["docker", "exec", "-d", alice, "sh", "-c",
@@ -311,6 +312,7 @@ def run_profile(name):
     dx(srv, "chown", "-R", f"{os.getuid()}:{os.getgid()}", "/out", user="0")
 
     rec = {"profile": name, "alice_wall_s": alice_s, "pattern_raised": raised,
+           "pattern_on_top_at_connect": on_top_at_connect,
            "direct_blocked": block, "clicks_started": clicked,
            "alice_exit": read(alice, f"{d}/alice.exit"), "bob_exit": read(bob, f"{d}/bob.exit"),
            **relay_facts}
@@ -324,6 +326,32 @@ def run_profile(name):
     rec["voice"] = voice_facts(host_d)
     rec.update(fingerprint_hunt(host_d))
     log(rec)
+
+
+def pattern_on_top(c):
+    """True when the test pattern is above the app's window. xwininfo lists
+    the root's children top of the stack first (checked in the phone image:
+    a later window is listed first, and a raised one moves to the front)."""
+    out = dx(c, "xwininfo", "-root", "-children", timeout=10).stdout
+    for line in out.splitlines():
+        if '("ffplay"' in line:
+            return True
+        if '"tremulator"' in line:
+            return False
+    return False
+
+
+def raise_pattern(c, tries):
+    """Once the app's window is visible, raise the pattern until the stack
+    shows it on top, every 0.25 s for up to `tries` attempts."""
+    for _ in range(tries):
+        if dx(c, "xdotool", "search", "--onlyvisible", "--name", "^tremulator$",
+              timeout=10).returncode == 0:
+            dx(c, "xdotool", "search", "--class", "ffplay", "windowraise", timeout=10)
+            if pattern_on_top(c):
+                return True
+        time.sleep(0.25)
+    return False
 
 
 def read(c, path):

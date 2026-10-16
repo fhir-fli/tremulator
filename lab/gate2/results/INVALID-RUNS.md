@@ -42,3 +42,27 @@
   put her window under the pattern called `xdotool windowlower`, which
   Ubuntu 24.04's xdotool (3.20160805) does not have. Fixed in the next
   commit: the pattern window is raised instead (`windowraise` exists).
+- **calls6-invalid** (2026-10-16 19:25): the first run of the step-3
+  pieces, profiles none, none-blocked, plus500, P5 at 30 s. Three lab
+  defects, no app defect found:
+  1. Sound: both recordings are 520-byte headers with no sound, so no voice
+     delay. `-copyts` kept the wall-clock stamp but made `-t` count from 0,
+     so ffmpeg stopped at once. Reproduced in a scratch container (no
+     network). Fixed: no `-copyts`; the stamp is read from the `start:`
+     ffmpeg prints for its PulseAudio input.
+  2. Shaping: `plus500` stopped the run, "netem on g2c-turn: Operation not
+     permitted". The calls image runs as `ubuntu`; NET_ADMIN reaches only
+     root. calls1-5 ran unshaped only, so this never showed. Reproduced
+     both ways in a scratch container. Fixed: labkit's tc commands run as
+     root. P5 never ran.
+  3. Picture, `none` only: Alice's app window sat above the test pattern
+     all call, so both screens are one grey picture (60 s frozen per minute
+     on each; the two-screen control caught it). The raise had run
+     (`pattern_raised` true) but too early. Fixed: the raise waits for the
+     app window to be visible and repeats until the window stack shows the
+     pattern on top; the stack is read again when the call connects.
+  Valid in it: `none` connected direct in 537 ms; `none-blocked` (direct
+  route blackholed, proved by a refused-then-invalid TCP probe) connected
+  through the relay in 570 ms, Bob decoded 775 frames at 960x540, 0.16 s
+  frozen (0.32 s per minute); fingerprints 0 hits on the server, 2 in the
+  control, in both.

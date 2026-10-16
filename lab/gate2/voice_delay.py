@@ -7,7 +7,8 @@ sender's microphone and what came out of the receiver's speaker.
 
 Each recording is made in its container by ffmpeg's PulseAudio input, which
 stamps the first sample with the wall clock (its `wallclock` option, on by
-default); the containers share the host's clock. Onsets come from Gate 1's
+default) and prints that stamp as the input's `start:` in the recording's
+log (<recording>_record.log); the containers share the host's clock. Onsets come from Gate 1's
 amplitude detector (lab/tool/bin/baseline_onsets.dart, threshold 0.5 of the
 file's peak, 150 ms dead time), so the instrument is the one that measured
 WhatsApp. Each click sent is paired with the first click heard within 3 s
@@ -51,9 +52,16 @@ def click_track_cmd(path, clicks):
 
 
 def start_time(path):
-    """The wall-clock time of the first sample, from the container's ffmpeg."""
-    return float(sh(["ffprobe", "-v", "error", "-show_entries", "format=start_time",
-                     "-of", "csv=p=0", path]).strip())
+    """The wall-clock time of the first sample: the `start:` ffmpeg prints
+    for its PulseAudio input, kept in <recording>_record.log beside it.
+    calls6 asked the output file instead (-copyts): with -copyts, -t counts
+    from 0, so ffmpeg wrote a 520-byte header and no sound."""
+    log = os.path.splitext(path)[0] + "_record.log"
+    m = re.search(r"^Input #0, pulse.*\n\s+Duration: [^,]+, start: ([\d.]+)",
+                  open(log).read(), re.M)
+    if m is None:
+        raise RuntimeError(f"{os.path.basename(log)}: no 'start:' for the pulse input")
+    return float(m.group(1))
 
 
 def to_wav(path):
@@ -86,7 +94,7 @@ def pair(sent, heard):
 def measure(sent_path, heard_path, out_path):
     sent_wav, heard_wav = to_wav(sent_path), to_wav(heard_path)
     t_sent, t_heard = start_time(sent_path), start_time(heard_path)
-    # ffmpeg drops the wall-clock stamp without -copyts and starts at 0.
+    # A stamp that is not a wall-clock time means the instrument is broken.
     for path, t in ((sent_path, t_sent), (heard_path, t_heard)):
         if t < 1e9:
             raise RuntimeError(f"{os.path.basename(path)} starts at {t}: no wall-clock stamp")
@@ -113,14 +121,18 @@ def self_check(d):
     sh(click_track_cmd(track, 9))
     sent = os.path.join(d, "sent.mkv")
     heard = os.path.join(d, "heard.mkv")
-    # The same recording twice, stamped T and T + 0.300 s with T a wall-clock
-    # time: what the container's ffmpeg stamp does.
+    # The same recording twice, logged as starting at T and T + 0.300 s with
+    # T a wall-clock time, in the form ffmpeg's pulse input logs it.
     t = 1_800_000_000
-    sh(["ffmpeg", "-y", "-loglevel", "error", "-i", track, "-output_ts_offset", str(t), sent])
+    def logged(path, start):
+        with open(os.path.splitext(path)[0] + "_record.log", "w") as f:
+            f.write(f"Input #0, pulse, from 'mic.monitor':\n  Duration: N/A, start: {start:.6f}, bitrate: 1536 kb/s\n")
+    sh(["ffmpeg", "-y", "-loglevel", "error", "-i", track, sent])
+    logged(sent, t)
     # Clicks 3, 6, 9 (at 25, 55, 85 s) silenced in the heard copy.
     mute = "+".join(f"between(t,{10 * k - 5 - 0.1},{10 * k - 5 + 0.2})" for k in (3, 6, 9))
-    sh(["ffmpeg", "-y", "-loglevel", "error", "-i", track, "-af", f"volume=enable='{mute}':volume=0",
-        "-output_ts_offset", str(t + 0.3), heard])
+    sh(["ffmpeg", "-y", "-loglevel", "error", "-i", track, "-af", f"volume=enable='{mute}':volume=0", heard])
+    logged(heard, t + 0.3)
     got = measure(sent, heard, os.path.join(d, "pairs.jsonl"))
     want = {"clicks_sent": 9, "clicks_heard": 6, "delay_median_ms": 300}
     ok = all(got[k] == v for k, v in want.items()) and got["delay_min_ms"] == got["delay_max_ms"] == 300

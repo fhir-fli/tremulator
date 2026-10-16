@@ -57,7 +57,9 @@ def netem(c, rate, delay_ms, loss):
             "delay", f"{delay_ms}ms", "loss", f"{loss}%"]
     if rate:
         args += ["rate", f"{rate}kbit"]
-    r = dx(c, *args)
+    # As root: the calls image runs as `ubuntu`, and NET_ADMIN reaches only
+    # root inside the container (calls6: "Operation not permitted").
+    r = dx(c, *args, user="0")
     if r.returncode:
         raise RuntimeError(f"netem on {c}: {r.stderr.strip()}")
 
@@ -65,7 +67,8 @@ def netem(c, rate, delay_ms, loss):
 def clear_shaping(cs):
     # The duty loop is killed by the tag it carries, inside the container.
     for c in cs:
-        dx(c, "sh", "-c", f"pkill -f {DUTY_LOOP_MARK}; tc qdisc del dev eth0 root 2>/dev/null; true")
+        dx(c, "sh", "-c", f"pkill -f {DUTY_LOOP_MARK}; tc qdisc del dev eth0 root 2>/dev/null; true",
+           user="0")
 
 
 PORTS = {"P1": 8081, "P2": 8082, "P3": 8083, "P4": 8084, "P5": 8085, "P0": 8080,
@@ -131,7 +134,7 @@ def start_duty_loop(cs, rate, rtt, loss):
             f"tc qdisc replace dev eth0 root netem delay {rtt/2}ms loss {loss}% rate {rate}kbit; "
             f"sleep 30; tc qdisc replace dev eth0 root netem loss 100%; sleep 60; done")
     for c in cs:
-        sh(["docker", "exec", "-d", c, "sh", "-c", loop])
+        sh(["docker", "exec", "-d", "-u", "0", c, "sh", "-c", loop])
 
 
 def build_server():
