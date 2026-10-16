@@ -79,6 +79,28 @@ it").
   video caps. Each needs Grey's go.
 
 
+## Endpoints the calls must meet (Grey 2026-10-16: "as thorough and as robust as possible")
+
+Each is a pass or fail that someone other than us defined, or a defect we
+plant on purpose. Order is the build order; none started yet.
+
+| # | Test | Passes when | Who defines it |
+|---|---|---|---|
+| E1 | A browser calls the app | Chrome (headless, in the lab) and the Linux app connect; each shows and plays the other's test picture and clicks; the identity check holds | Chrome's WebRTC, the shipped reference |
+| E2 | Encryption known answers | the MLS working group's published test vectors pass through `tremulator_keys` (as far as the Dart `openmls` package exposes the steps; what it does not expose is listed, not skipped silently) | mlswg/mls-implementations `test-vectors.md` |
+| E3 | Planted defects, each must turn a test red | (a) identity check off: a swapped fingerprint connects, test fails; (b) call setup sent unencrypted: the canary scan finds it on the server; (c) a server that swaps the offer: call refused; (d) relay given wrong credentials: no relayed call, and the app says so; (e) Bob answers a call from a device not in the conversation: refused | us, from the threat model; each defect named before it is planted |
+| E4 | The relay sees only encrypted media | a capture at the relay holds no click-track audio and no fingerprint; positive control: the same scan finds the click in Alice's microphone recording | the adversary harness |
+| E5 | The WhatsApp numbers | connect time, relayed share, voice delay, frozen video, survival across P4's drop, per profile, against `GATE1.md` | Gate 1 measurements |
+| E6 | Completion rate | 50 calls on P1 (Gate 4), completion at or above WhatsApp's on P1 | `SUCCESS.md` Gate 4 |
+| E7 | Video falls back to audio | on P1 with video on, the call keeps sound and says video is off, rather than freezing | `SUCCESS.md` Gate 5, `DESIGN.md` |
+| E8 | Failure modes | network lost mid-call then back (call resumes or ends cleanly, both sides agree); far phone killed mid-call; relay down at call start | `SUCCESS.md` standing categories |
+
+Unknown until looked at: how much of the MLS key schedule the Dart
+`openmls` package exposes (its source was not in the local package cache
+on 2026-10-16); whether a lab bridge between Chrome and our mailbox needs
+anything in the app beyond the existing signal format.
+
+
 ## What gets built, and kept (D16)
 
 | Where | What it does |
