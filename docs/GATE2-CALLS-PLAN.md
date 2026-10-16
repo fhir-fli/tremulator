@@ -36,10 +36,30 @@ it").
 - calls1–3 are invalid, each for an instrument defect, named in
   `results/INVALID-RUNS.md`. The text lab was re-proved after its helpers
   moved to `labkit.py`: run9, P2, 10/10, median 870 ms, canary clean.
-- Open for step 3: P5 needs the internal network in calls.py; the relay
-  (coturn) is in the image but not yet started; a 3-minute call records
-  about 100 MB per profile (Alice's screen ~70%), so the full sweep adds
-  ~1 GB of recordings to the repo (unmeasured beyond the 30 s runs: 25 MB).
+- Recordings stay on disk only (Grey 2026-10-16): a 3-minute call records
+  Alice's screen at ~105 MB (17 MB per 30 s in calls5), over GitHub's
+  100 MiB file limit. `.gitignore` keeps `*.mp4`, `*.mkv`, `*.wav` under
+  `lab/gate2/results/` out; the numbers taken from them are committed.
+- **Step 3 pieces written 2026-10-16, not yet run** (each Docker run needs
+  Grey's go):
+  - P5 runs on a second network created `--internal`, its own server,
+    relay and phones, as `run.py` does.
+  - A relay (coturn 4.6.1, the phone image with no screen) per network,
+    fresh per profile, shaped like the server; both phones always get it.
+    `<profile>-blocked` blackholes the phones' route to each other (proved
+    by a TCP probe: refused before, not refused after), so the call must
+    use the relay. Relayed or not: the call's own stats and the count of
+    successful allocations in the relay's log.
+  - Voice delay: a click track (30 ms tone, one per 10 s) into Alice's
+    microphone once her call connects; Alice's microphone and Bob's
+    speaker recorded with the wall-clock stamp of ffmpeg's PulseAudio
+    input; onsets by Gate 1's detector; `lab/gate2/voice_delay.py`. Its
+    offline self-check reads a known 300 ms and 3 of 9 clicks lost exactly;
+    swapped files pair nothing. Untested: whether the stamp in the
+    container is the wall clock. `plus500` (500 ms one way, nothing else)
+    is the in-lab check: it must read ~500 ms more than `none`.
+- Proposed first run, 30 s each: `none`, `none-blocked`, `plus500`, `P5`.
+  Then the sweep at 3 minutes.
 
 
 ## What gets built, and kept (D16)

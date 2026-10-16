@@ -32,8 +32,10 @@ __pycache__/
 .dart_tool/
 # The unpacked xvfb package; lab/tool/xvfb.sh rebuilds it.
 lab/tool/.xvfb/
-# Call recordings stay on disk only (Grey 2026-10-16): a 3-minute Alice
+# Call recordings (screen and sound) stay on disk only (Grey 2026-10-16): a 3-minute Alice
 # recording is ~105 MB, over GitHub's 100 MiB file limit. The numbers taken
 # from them go in results/<label>.jsonl, which is committed. The 30-second
 # recordings from calls1-5 were committed before this rule and stay.
 lab/gate2/results/**/*.mp4
+lab/gate2/results/**/*.mkv
+lab/gate2/results/**/*.wav

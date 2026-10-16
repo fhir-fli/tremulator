@@ -69,15 +69,18 @@ def clear_shaping(cs):
 
 
 PORTS = {"P1": 8081, "P2": 8082, "P3": 8083, "P4": 8084, "P5": 8085, "P0": 8080,
-         "none": 8086}
+         "none": 8086, "plus500": 8087}
 
 
-def start_server(srv, profile):
+def start_server(srv, profile, port=None):
     """A fresh fhirant on its own port, pid recorded for the stop. run3's
     stop (pkill by name) never killed P1's server, so P2 ran on P1's store
-    and Bob's wiped keys no longer matched his old key packages there."""
+    and Bob's wiped keys no longer matched his old key packages there.
+    `port` defaults to the profile's own; calls.py passes the base profile's
+    for its variants (P2-blocked runs on P2's port, after P2's server is
+    proved stopped)."""
     d = f"/out/{profile}"
-    port = PORTS[profile]
+    port = port or PORTS[profile]
     dx(srv, "mkdir", "-p", d, user="0")
     dx(srv, "chown", "-R", "1000:1000", "/out", user="0")
     dx(srv, "sh", "-c", f"rm -rf /data/{profile}; mkdir -p /data/{profile}")
@@ -101,9 +104,9 @@ def start_server(srv, profile):
     return port
 
 
-def stop_server(srv, profile):
+def stop_server(srv, profile, port=None):
     d = f"/out/{profile}"
-    port = PORTS[profile]
+    port = port or PORTS[profile]
     # the server's own view of every blob, then the raw store file
     dx(srv, "sh", "-c",
        f"curl -s 'http://127.0.0.1:{port}/Communication?_count=1000&_format=json' > {d}/server_dump.json")
