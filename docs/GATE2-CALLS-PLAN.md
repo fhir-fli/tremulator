@@ -58,8 +58,25 @@ it").
     swapped files pair nothing. Untested: whether the stamp in the
     container is the wall clock. `plus500` (500 ms one way, nothing else)
     is the in-lab check: it must read ~500 ms more than `none`.
-- Proposed first run, 30 s each: `none`, `none-blocked`, `plus500`, `P5`.
-  Then the sweep at 3 minutes.
+- calls6 invalid (three lab defects, `results/INVALID-RUNS.md`).
+- **calls7 (2026-10-16), 30 s each, 2 clicks per call:**
+
+  | Profile | Route | Connect (Alice) | Bob frames | Frozen s/min | Voice delay median (range) |
+  |---|---|---|---|---|---|
+  | none | direct | 485 ms | 806 | 0.21 | 109 ms (88–129) |
+  | none-blocked | relay | 567 ms | 756 | 0.24 | 112 ms (107–117) |
+  | plus500 | direct | 13.4 s | 778 | 1.88 | 651 ms (651) |
+  | P5 | direct | 679 ms | 763 | 0.33 | 115 ms (99–132) |
+
+  Instrument check: plus500 reads 542 ms more than none, against 500 ms
+  added; 2 clicks each, so n is small. ~110 ms is the floor of the lab
+  with no shaping (pulse buffers, jitter buffer, codec). Video arrives at
+  960x540 in every profile. The pattern was on top at connect in all
+  four; Alice's own screen 0 s frozen in all four. Fingerprints 0 server
+  hits, 2 in the control, every profile. plus500's 13.4 s connect is
+  setup through the mailbox at 1 s round trip, not media.
+- Next: the sweep at 3 minutes (P1–P4, P0, blocked variants), then the
+  video caps. Each needs Grey's go.
 
 
 ## What gets built, and kept (D16)
