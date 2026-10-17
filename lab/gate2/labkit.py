@@ -23,7 +23,13 @@ PROFILES = {  # name: (rate_kbit, rtt_ms, loss_pct, internal_network)
     "P4": (300, 250, 2, False),
     "P5": (10000, 5, 0, True),
 }
-DUTY_LOOP_MARK = "tremulator-duty-loop"  # a tag the loop carries, for its kill
+# Each shaping loop (P4's duty cycle, calls.py's link cuts) writes its shell's
+# pid here, inside its container, and clear_shaping kills by it. Until
+# 2026-10-17 the loops carried a tag and clear_shaping killed by matching the
+# tag in command lines, from an `sh -c` whose own command line held the tag:
+# it killed itself (exit 143, reproduced in g2c-turn) before `tc qdisc del`
+# ran, so neither the loops nor any shaping were cleared between profiles.
+LOOP_PIDS = "/tmp/shaping-loop.pids"
 
 
 def sh(cmd, timeout=600, check=False, **kw):
@@ -65,10 +71,22 @@ def netem(c, rate, delay_ms, loss):
 
 
 def clear_shaping(cs):
-    # The duty loop is killed by the tag it carries, inside the container.
+    """Kills every shaping loop by its recorded pid, removes the shaping, and
+    proves it: no netem left on any interface and no loop pid on record."""
     for c in cs:
-        dx(c, "sh", "-c", f"pkill -f {DUTY_LOOP_MARK}; tc qdisc del dev eth0 root 2>/dev/null; true",
-           user="0")
+        dx(c, "sh", "-c", f"[ -f {LOOP_PIDS} ] && kill $(cat {LOOP_PIDS}) 2>/dev/null; "
+                          f"rm -f {LOOP_PIDS}; tc qdisc del dev eth0 root 2>/dev/null; true", user="0")
+    for c in cs:
+        left = dx(c, "tc", "qdisc", "show", "dev", "eth0", user="0").stdout
+        loops = dx(c, "sh", "-c", f"cat {LOOP_PIDS} 2>/dev/null; true", user="0").stdout.strip()
+        if "netem" in left or loops:
+            raise RuntimeError(f"shaping not cleared on {c}: {left.strip()} loops={loops!r}")
+
+
+def start_loop(c, body):
+    """Runs shell `body` in container c as root, its pid recorded for
+    clear_shaping."""
+    sh(["docker", "exec", "-d", "-u", "0", c, "sh", "-c", f"echo $$ >> {LOOP_PIDS}; {body}"])
 
 
 PORTS = {"P1": 8081, "P2": 8082, "P3": 8083, "P4": 8084, "P5": 8085, "P0": 8080,
@@ -129,12 +147,12 @@ def stop_server(srv, profile, port=None):
 
 def start_duty_loop(cs, rate, rtt, loss):
     """P4: 30 s of link, then 60 s of nothing, over and over, on every
-    container; killed by clear_shaping through the tag it carries."""
-    loop = (f"MARK={DUTY_LOOP_MARK}; while true; do "
+    container; killed by clear_shaping by its recorded pid."""
+    loop = ("while true; do "
             f"tc qdisc replace dev eth0 root netem delay {rtt/2}ms loss {loss}% rate {rate}kbit; "
             f"sleep 30; tc qdisc replace dev eth0 root netem loss 100%; sleep 60; done")
     for c in cs:
-        sh(["docker", "exec", "-d", "-u", "0", c, "sh", "-c", loop])
+        start_loop(c, loop)
 
 
 def build_server():

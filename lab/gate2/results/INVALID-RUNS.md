@@ -82,3 +82,19 @@
   +542 ms, n=2) until re-measured. Valid in calls9-before: every call
   survival and timing fact (cut20, cut60, cut120 on the build before
   reconnection: each call ended "failed" 16 s after the link went).
+- **Shaping never cleared between profiles, every run up to calls9**
+  (found 2026-10-17): labkit.clear_shaping killed the shaping loops by
+  matching their tag in command lines, from a shell whose own command line
+  held the tag, so it killed itself (exit 143, reproduced in g2c-turn)
+  before removing the shaping. A profile that sets its own shaping replaced
+  the old (tc replace), so shaped-after-shaped profiles were unaffected.
+  Affected: (1) calls9 from cut20 on: the server and relay kept plus500's
+  500 ms each way (read with tc in the running containers); stopped there,
+  re-run as calls10; calls9 `none` and `plus500` are valid. (2) calls8
+  P4-blocked and P0: P4's 30 s up / 60 s down loop kept running, and
+  P4-blocked started a second one over it. (3) run4-run6 P0 (text): P4's
+  loop was still running on those containers; not yet checked how much
+  of P0 it reached. Fixed: each loop records its pid and clear_shaping
+  kills by it, then fails unless no netem and no loop is left;
+  `shaping_check.py` (one container, netem + duty loop + cut, cleared,
+  watched 40 s) passes.

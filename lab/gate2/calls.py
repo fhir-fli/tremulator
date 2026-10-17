@@ -45,9 +45,9 @@ import shutil
 import sys
 import time
 
-from labkit import (DUTY_LOOP_MARK, PORTS, PROFILES, REPO, build_server, clear_shaping, dx,
+from labkit import (PORTS, PROFILES, REPO, build_server, clear_shaping, dx,
                     freeze_spans, ip_of,
-                    netem, pin_neighbours, sh, start_duty_loop, start_server, stop_server, utc)
+                    netem, pin_neighbours, sh, start_duty_loop, start_loop, start_server, stop_server, utc)
 from voice_delay import click_track_cmd, measure as voice_delay, record_cmd
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -359,13 +359,12 @@ def run_profile(name):
 def cut_links(phones, d, seconds):
     """CUT_AT_S from now, each phone's own interface drops every packet for
     `seconds`, then is cleared; the times are written beside the logs. Runs
-    in each container, as root (tc), tagged so clear_shaping kills it."""
+    in each container, as root (tc), its pid recorded for clear_shaping."""
     for c in phones:
         who = c.split("-")[-1].rstrip("5")
-        sh(["docker", "exec", "-d", "-u", "0", c, "sh", "-c",
-            f"MARK={DUTY_LOOP_MARK}; sleep {CUT_AT_S}; date +%s.%N > {d}/{who}_cut.start; "
-            f"tc qdisc replace dev eth0 root netem loss 100%; sleep {seconds}; "
-            f"tc qdisc del dev eth0 root; date +%s.%N > {d}/{who}_cut.end"])
+        start_loop(c, f"sleep {CUT_AT_S}; date +%s.%N > {d}/{who}_cut.start; "
+                      f"tc qdisc replace dev eth0 root netem loss 100%; sleep {seconds}; "
+                      f"tc qdisc del dev eth0 root; date +%s.%N > {d}/{who}_cut.end")
 
 
 def cut_facts(host_d, seconds):
