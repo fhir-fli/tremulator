@@ -83,6 +83,186 @@ void main() {
   });
 
   testWidgets(
+    "the far phone's connection vanishes: the caller tries to reconnect, "
+    'then ends the call as lost',
+    (_) async {
+      final aliceCalls = Calls(alice);
+      final bobCalls = Calls(bob);
+      final bobsCall = Completer<Call>();
+      bobCalls.ringing.listen((c) async {
+        await c.answer();
+        bobsCall.complete(c);
+      });
+      final call = await aliceCalls.start(conversation);
+      await call.connected.timeout(const Duration(seconds: 30));
+      final answered = await bobsCall.future;
+      await answered.connected.timeout(const Duration(seconds: 30));
+
+      // Bob's connection goes with no hang-up, as when his phone dies.
+      await answered.connection!.close();
+
+      final why = await call.ended.timeout(const Duration(seconds: 150));
+      expect(why, 'lost');
+      expect(
+        aliceLog.where(
+          (e) => e['event'] == 'reconnecting' && e['call'] == call.id,
+        ),
+        hasLength(1),
+      );
+      expect(
+        aliceLog.where(
+          (e) => e['event'] == 'restart-sent' && e['call'] == call.id,
+        ),
+        isNotEmpty,
+      );
+      await aliceCalls.close();
+      await bobCalls.close();
+    },
+  );
+
+  testWidgets(
+    'a restart on a working call is answered and the call carries on',
+    (_) async {
+      final aliceCalls = Calls(alice);
+      final bobCalls = Calls(bob);
+      final (call, answered) = await _connect(
+        aliceCalls,
+        bobCalls,
+        conversation,
+      );
+
+      call.debugLinkLost();
+      await _until(
+        () => aliceLog.any(
+          (e) => e['event'] == 'answer-applied' && e['n'] == 1,
+        ),
+      );
+      expect(
+        aliceLog.where(
+          (e) => e['event'] == 'reconnected' && e['call'] == call.id,
+        ),
+        hasLength(1),
+      );
+      // Offer 1 went out and Bob answered offer 1, both through the mailbox.
+      expect(
+        aliceLog.where(
+          (e) => e['event'] == 'offer-sent' && e['n'] == 1,
+        ),
+        hasLength(1),
+      );
+      expect(
+        bobLog.where(
+          (e) => e['event'] == 'answer-sent' && e['n'] == 1,
+        ),
+        hasLength(1),
+      );
+      final back = aliceLog.lastWhere((e) => e['event'] == 'reconnected');
+      expect(back['control'], 'RTCDataChannelOpen');
+      expect((await call.route())?.relayed, isFalse);
+
+      // Still a call: the hang-up reaches Bob.
+      await call.hangUp();
+      expect(
+        await answered.ended.timeout(const Duration(seconds: 30)),
+        'remote-hangup',
+      );
+      await aliceCalls.close();
+      await bobCalls.close();
+    },
+  );
+
+  testWidgets(
+    'a restart answer with a different certificate fingerprint ends the call',
+    (_) async {
+      // Bob's first answer arrives as sent; the answer to the restart has
+      // one fingerprint digit changed, as a different phone's would.
+      var answers = 0;
+      final aliceCalls = Calls(
+        alice,
+        alterRemoteSdp: (sdp) => ++answers == 1 ? sdp : _changeFingerprint(sdp),
+      );
+      final bobCalls = Calls(bob);
+      final (call, answered) = await _connect(
+        aliceCalls,
+        bobCalls,
+        conversation,
+      );
+
+      call.debugLinkLost();
+      expect(
+        await call.ended.timeout(const Duration(seconds: 30)),
+        'fingerprint-changed',
+      );
+      expect(
+        await answered.ended.timeout(const Duration(seconds: 30)),
+        'remote-hangup',
+      );
+      await aliceCalls.close();
+      await bobCalls.close();
+    },
+  );
+
+  testWidgets(
+    'a restart offer with a different certificate fingerprint ends the call',
+    (_) async {
+      var offers = 0;
+      final aliceCalls = Calls(alice);
+      final bobCalls = Calls(
+        bob,
+        alterRemoteSdp: (sdp) => ++offers == 1 ? sdp : _changeFingerprint(sdp),
+      );
+      final (call, answered) = await _connect(
+        aliceCalls,
+        bobCalls,
+        conversation,
+      );
+
+      call.debugLinkLost();
+      expect(
+        await answered.ended.timeout(const Duration(seconds: 30)),
+        'fingerprint-changed',
+      );
+      expect(
+        await call.ended.timeout(const Duration(seconds: 30)),
+        'remote-hangup',
+      );
+      // Bob refused the offer, so he never answered it.
+      expect(
+        bobLog.where((e) => e['event'] == 'answer-sent' && e['n'] == 1),
+        isEmpty,
+      );
+      await aliceCalls.close();
+      await bobCalls.close();
+    },
+  );
+
+  testWidgets(
+    'a restart offer for a call this phone does not have does not ring',
+    (_) async {
+      final bobCalls = Calls(bob);
+      final rang = <Call>[];
+      bobCalls.ringing.listen(rang.add);
+
+      await alice.sendCall(
+        conversation,
+        const Signal(
+          type: SignalType.offer,
+          call: 'no-such-call',
+          sdp: 'v=0\r\n',
+          number: 1,
+        ).encode(),
+      );
+      await _until(
+        () => bobLog.any(
+          (e) => e['event'] == 'restart-ignored' && e['call'] == 'no-such-call',
+        ),
+      );
+      expect(rang, isEmpty);
+      await bobCalls.close();
+    },
+  );
+
+  testWidgets(
     'a changed certificate fingerprint in the setup is refused',
     (_) async {
       // Alice reads Bob's answer with one hex digit of its fingerprint
@@ -110,6 +290,24 @@ void main() {
       await bobCalls.close();
     },
   );
+}
+
+/// Alice calls Bob and he answers; both are connected.
+Future<(Call, Call)> _connect(
+  Calls aliceCalls,
+  Calls bobCalls,
+  Conversation conversation,
+) async {
+  final bobsCall = Completer<Call>();
+  bobCalls.ringing.listen((c) async {
+    await c.answer();
+    bobsCall.complete(c);
+  });
+  final call = await aliceCalls.start(conversation);
+  await call.connected.timeout(const Duration(seconds: 30));
+  final answered = await bobsCall.future;
+  await answered.connected.timeout(const Duration(seconds: 30));
+  return (call, answered);
 }
 
 Future<Client> _phone(

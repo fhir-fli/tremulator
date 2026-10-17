@@ -2,10 +2,12 @@ import 'dart:convert';
 
 /// What a piece of call setup is.
 enum SignalType {
-  /// The caller's connection details.
+  /// The caller's connection details. A call's first offer is number 0;
+  /// each restart of the connection (see `Call`) sends the next number.
   offer,
 
-  /// The callee's connection details, in reply to an offer.
+  /// The callee's connection details, in reply to the offer of the same
+  /// number.
   answer,
 
   /// Either side ending the call.
@@ -22,7 +24,12 @@ enum SignalType {
 /// offer and one answer beat a stream of address messages.
 class Signal {
   /// A signal of [type] for call [call].
-  const Signal({required this.type, required this.call, this.sdp});
+  const Signal({
+    required this.type,
+    required this.call,
+    this.sdp,
+    this.number,
+  });
 
   /// Reads one from the plaintext of a `call` message.
   /// Throws [FormatException] if [text] is not one.
@@ -36,6 +43,7 @@ class Signal {
         .firstOrNull;
     final call = json['call'];
     final sdp = json['sdp'];
+    final number = json['n'];
     if (type == null || call is! String) {
       throw FormatException('call setup lacks a type or a call id', text);
     }
@@ -46,7 +54,18 @@ class Signal {
         text,
       );
     }
-    return Signal(type: type, call: call, sdp: sdp as String?);
+    if (needsSdp ? (number is! int || number < 0) : number != null) {
+      throw FormatException(
+        'an offer or answer carries a number of 0 or more, a hang-up none',
+        text,
+      );
+    }
+    return Signal(
+      type: type,
+      call: call,
+      sdp: sdp as String?,
+      number: number as int?,
+    );
   }
 
   /// What this is.
@@ -58,10 +77,16 @@ class Signal {
   /// The session description (RFC 8866) for an offer or an answer.
   final String? sdp;
 
+  /// Which offer of the call this is, or answers: 0 for the first, one more
+  /// for each restart. A stale answer (one whose offer has been replaced) is
+  /// recognised by it and ignored. None for a hang-up.
+  final int? number;
+
   /// The plaintext for a `call` message.
   String encode() => jsonEncode({
     'type': type.name,
     'call': call,
     if (sdp != null) 'sdp': sdp,
+    if (number != null) 'n': number,
   });
 }

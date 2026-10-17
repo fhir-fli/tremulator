@@ -36,6 +36,9 @@ class Calls {
     this.client, {
     this.iceServers = const [],
     this.gatherTimeout = const Duration(seconds: 5),
+    this.reconnectGrace = const Duration(seconds: 90),
+    this.restartDelay = const Duration(seconds: 2),
+    this.restartRetry = const Duration(seconds: 30),
     Report? report,
     @visibleForTesting this.alterRemoteSdp,
   }) : report = report ?? client.report {
@@ -54,6 +57,27 @@ class Calls {
   /// has.
   final Duration gatherTimeout;
 
+  /// How long a connected call that has lost its link keeps trying to
+  /// reconnect before both phones end it as `lost`. 90 s outlasts the
+  /// longest outage in the lab's network profiles (P4: 60 s of no link,
+  /// docs/SUCCESS.md).
+  final Duration reconnectGrace;
+
+  /// How long the link must stay "disconnected" before the caller restarts
+  /// the connection. Source, W3C WebRTC 1.0, the note under
+  /// RTCOfferOptions.iceRestart (read whole from w3.org/TR/webrtc,
+  /// 2026-10-17): a restart "is recommended when iceConnectionState
+  /// transitions to failed", and an application "may additionally choose to
+  /// listen for the iceConnectionState transition to disconnected and then
+  /// use other sources of information" to decide. Still disconnected after
+  /// this long is that information.
+  final Duration restartDelay;
+
+  /// How long the caller waits for a restart to reconnect before sending
+  /// another. Long enough for an offer and an answer to cross the mailbox on
+  /// the slowest profile (call setup took 23.7 s on P1 relayed, calls8).
+  final Duration restartRetry;
+
   /// Where events go.
   final Report report;
 
@@ -63,6 +87,7 @@ class Calls {
 
   late final StreamSubscription<Incoming> _subscription;
   final Map<String, Call> _calls = {};
+  final Set<Future<void>> _ending = {};
   final StreamController<Call> _ringing = StreamController.broadcast();
 
   /// Calls arriving, not yet answered.
@@ -85,6 +110,8 @@ class Calls {
     for (final c in _calls.values.toList()) {
       await c.hangUp();
     }
+    // Calls ended by a timer (`lost`) may still be sending their hang-up.
+    await Future.wait(_ending.toList());
     await _ringing.close();
   }
 
@@ -101,6 +128,15 @@ class Calls {
     switch (s.type) {
       case SignalType.offer:
         if (known != null) {
+          if (!known.outgoing) {
+            await known._serial(() => known._restartOffer(s.sdp!, s.number!));
+          }
+          return;
+        }
+        if (s.number != 0) {
+          // A restart for a call this phone does not have (ended, or never
+          // rang here) must not ring as a new call.
+          report({'event': 'restart-ignored', 'call': s.call, 'n': s.number});
           return;
         }
         final call = Call._(
@@ -116,7 +152,7 @@ class Calls {
         if (known == null || !known.outgoing) {
           return;
         }
-        await known._remote(RTCSessionDescription(s.sdp, 'answer'));
+        await known._serial(() => known._answer(s.sdp!, s.number!));
       case SignalType.hangup:
         await known?._end('remote-hangup', tell: false);
     }
@@ -156,6 +192,23 @@ class Call {
   RTCDataChannel? _control;
   final String? _remoteOffer;
   final Completer<void> _connected = Completer();
+
+  /// The caller's latest offer number; the callee's latest answered one.
+  int _number = 0;
+
+  /// The number of the offer whose answer the caller has applied.
+  int _answered = -1;
+
+  /// The other phone's certificate fingerprints, from its first
+  /// description; every later description must carry the same.
+  String? _remoteFingerprints;
+
+  /// Set while a call that had connected has lost its link.
+  DateTime? _lostAt;
+  Timer? _grace;
+  Timer? _restartTimer;
+  Completer<void>? _back;
+  Future<void> _queue = Future.value();
   final Completer<String> _ended = Completer();
   final StreamController<MediaStream> _remoteMedia =
       StreamController.broadcast();
@@ -166,8 +219,10 @@ class Call {
   Future<void> get connected => _connected.future;
 
   /// Completes with why the call ended: `hangup` (this phone),
-  /// `remote-hangup`, or `failed` (the connection failed after connecting
-  /// or never connected).
+  /// `remote-hangup`, `failed` (the connection never connected), `lost`
+  /// (it connected, lost its link and did not reconnect within
+  /// [Calls.reconnectGrace]) or `fingerprint-changed` (a later description
+  /// carried a different certificate fingerprint from the first).
   Future<String> get ended => _ended.future;
 
   /// The other side's media, as it arrives.
@@ -183,7 +238,9 @@ class Call {
       throw StateError('only a ringing incoming call can be answered');
     }
     await _open(media);
-    await _remote(RTCSessionDescription(offer, 'offer'));
+    if (!await _remote(RTCSessionDescription(offer, 'offer'))) {
+      return;
+    }
     final answer = await _pc!.createAnswer();
     await _sendDescription(answer, SignalType.answer);
   }
@@ -297,33 +354,187 @@ class Call {
     });
     await _calls.client.sendCall(
       conversation,
-      Signal(type: type, call: id, sdp: full!.sdp).encode(),
+      Signal(type: type, call: id, sdp: full!.sdp, number: _number).encode(),
     );
-    _calls.report({'event': '${type.name}-sent', 'call': id});
+    _calls.report({'event': '${type.name}-sent', 'call': id, 'n': _number});
   }
 
-  Future<void> _remote(RTCSessionDescription description) async {
+  /// Applies the other phone's [description]. Returns false, having ended
+  /// the call, if its certificate fingerprints differ from the first
+  /// description's. A restart replaces only the ICE credentials (the
+  /// restartIce() steps, W3C WebRTC 1.0, read whole 2026-10-17), so the
+  /// same phone sends the same fingerprint; a new one means a different
+  /// certificate answering.
+  Future<bool> _remote(RTCSessionDescription description) async {
     final alter = _calls.alterRemoteSdp;
     final sdp = alter == null ? description.sdp! : alter(description.sdp!);
+    final fingerprints = _fingerprints(sdp);
+    _remoteFingerprints ??= fingerprints;
+    if (fingerprints != _remoteFingerprints) {
+      _calls.report({'event': 'fingerprint-changed', 'call': id});
+      await _end('fingerprint-changed', tell: true);
+      return false;
+    }
     await _pc!.setRemoteDescription(
       RTCSessionDescription(sdp, description.type),
     );
+    return true;
+  }
+
+  static String _fingerprints(String sdp) {
+    final lines = [
+      for (final l in sdp.split(RegExp(r'\r?\n')))
+        if (l.toLowerCase().startsWith('a=fingerprint:')) l.trim(),
+    ]..sort();
+    return lines.join('\n');
+  }
+
+  /// Runs [step] after every earlier one for this call, so two setup
+  /// messages arriving together are applied in order.
+  Future<void> _serial(Future<void> Function() step) {
+    final next = _queue.then((_) => _ended.isCompleted ? null : step());
+    return _queue = next.catchError((Object e) {
+      _calls.report({'event': 'setup-failed', 'call': id, 'error': '$e'});
+    });
+  }
+
+  /// The caller: applies the answer to its latest offer, ignoring any
+  /// answer to an offer since replaced.
+  Future<void> _answer(String sdp, int number) async {
+    if (number != _number || number == _answered) {
+      _calls.report({'event': 'answer-ignored', 'call': id, 'n': number});
+      return;
+    }
+    if (await _remote(RTCSessionDescription(sdp, 'answer'))) {
+      _answered = number;
+      _calls.report({'event': 'answer-applied', 'call': id, 'n': number});
+      // A restart applied while the transport still works brings no state
+      // change, so no "connected" event would end the grace period.
+      if (_pc?.connectionState ==
+          RTCPeerConnectionState.RTCPeerConnectionStateConnected) {
+        _reconnected();
+      }
+    }
+  }
+
+  /// The callee: answers a restart offer newer than any it has answered.
+  Future<void> _restartOffer(String sdp, int number) async {
+    if (number <= _number || _pc == null) {
+      _calls.report({'event': 'offer-ignored', 'call': id, 'n': number});
+      return;
+    }
+    _number = number;
+    if (!await _remote(RTCSessionDescription(sdp, 'offer'))) {
+      return;
+    }
+    await _sendDescription(await _pc!.createAnswer(), SignalType.answer);
+    if (_pc?.connectionState ==
+        RTCPeerConnectionState.RTCPeerConnectionStateConnected) {
+      _reconnected();
+    }
+  }
+
+  /// The link of a connected call is gone: both phones start the grace
+  /// period, and the caller restarts the connection. Only the caller
+  /// offers, so the two never offer at once.
+  void _onLost(RTCPeerConnectionState s) {
+    if (_lostAt != null || _ended.isCompleted) {
+      return;
+    }
+    _lostAt = DateTime.now();
+    _calls.report({'event': 'reconnecting', 'call': id, 'state': s.name});
+    _grace = Timer(_calls.reconnectGrace, () {
+      unawaited(_end('lost', tell: true));
+    });
+    if (outgoing) {
+      unawaited(_restartLoop());
+    }
+  }
+
+  /// The link is back: ends the grace period and the caller's restarts.
+  void _reconnected() {
+    final lostAt = _lostAt;
+    if (lostAt == null) {
+      return;
+    }
+    _lostAt = null;
+    _grace?.cancel();
+    _calls.report({
+      'event': 'reconnected',
+      'call': id,
+      'ms': DateTime.now().difference(lostAt).inMilliseconds,
+      'control': _control?.state?.name,
+    });
+    if (_back?.isCompleted == false) {
+      _back!.complete();
+    }
+  }
+
+  /// Acts as if the link had just been lost, so a test on a working
+  /// connection can drive a restart.
+  @visibleForTesting
+  void debugLinkLost() =>
+      _onLost(RTCPeerConnectionState.RTCPeerConnectionStateDisconnected);
+
+  Future<void> _restartLoop() async {
+    var attempt = 0;
+    while (_lostAt != null && !_ended.isCompleted) {
+      attempt++;
+      _number++;
+      final back = _back = Completer<void>();
+      try {
+        // restartIce(), W3C WebRTC 1.0 (read whole 2026-10-17): "Subsequent
+        // calls to createOffer will create descriptions that will restart
+        // ICE".
+        await _pc!.restartIce();
+        _calls.report({
+          'event': 'restart-sent',
+          'call': id,
+          'n': _number,
+          'attempt': attempt,
+        });
+        await _sendDescription(await _pc!.createOffer(), SignalType.offer);
+      } on Object catch (e) {
+        // While the link is down the mailbox is out of reach as well.
+        _calls.report({
+          'event': 'restart-failed',
+          'call': id,
+          'n': _number,
+          'error': '$e',
+        });
+      }
+      if (_lostAt == null || _ended.isCompleted) {
+        return;
+      }
+      await back.future.timeout(_calls.restartRetry, onTimeout: () {});
+    }
   }
 
   void _onState(RTCPeerConnectionState s) {
     _calls.report({'event': 'call-state', 'call': id, 'state': s.name});
     switch (s) {
       case RTCPeerConnectionState.RTCPeerConnectionStateConnected:
+        _restartTimer?.cancel();
         if (!_connected.isCompleted) {
           _connected.complete();
         }
+        _reconnected();
       case RTCPeerConnectionState.RTCPeerConnectionStateFailed:
+        _restartTimer?.cancel();
         if (!_connected.isCompleted) {
+          // Never connected: a refused certificate ends here (RFC 8122
+          // section 6.2), as does having no route at all.
           _connected.completeError(StateError('connection failed'));
+          unawaited(_end('failed', tell: false));
+        } else {
+          _onLost(s);
         }
-        unawaited(_end('failed', tell: false));
-      case RTCPeerConnectionState.RTCPeerConnectionStateClosed:
       case RTCPeerConnectionState.RTCPeerConnectionStateDisconnected:
+        if (_connected.isCompleted && _lostAt == null) {
+          _restartTimer?.cancel();
+          _restartTimer = Timer(_calls.restartDelay, () => _onLost(s));
+        }
+      case RTCPeerConnectionState.RTCPeerConnectionStateClosed:
       case RTCPeerConnectionState.RTCPeerConnectionStateNew:
       case RTCPeerConnectionState.RTCPeerConnectionStateConnecting:
         break;
@@ -337,22 +548,51 @@ class Call {
     _calls._calls.remove(id);
     _calls.report({'event': 'call-ended', 'call': id, 'why': why});
     _ended.complete(why);
+    final done = Completer<void>();
+    _calls._ending.add(done.future);
+    try {
+      await _finish(why, tell: tell);
+    } finally {
+      _calls._ending.remove(done.future);
+      done.complete();
+    }
+  }
+
+  Future<void> _finish(String why, {required bool tell}) async {
+    _grace?.cancel();
+    _restartTimer?.cancel();
+    _lostAt = null;
+    if (_back?.isCompleted == false) {
+      _back!.complete();
+    }
     if (tell) {
-      final control = _control;
-      if (control?.state == RTCDataChannelState.RTCDataChannelOpen) {
-        await control!.send(RTCDataChannelMessage('hangup'));
+      try {
+        final control = _control;
+        if (control?.state == RTCDataChannelState.RTCDataChannelOpen) {
+          await control!.send(RTCDataChannelMessage('hangup'));
+        }
+        // Through the mailbox as well, in case the control channel never
+        // opened or the link drops the message.
+        await _calls.client.sendCall(
+          conversation,
+          Signal(type: SignalType.hangup, call: id).encode(),
+        );
+      } on Object catch (e) {
+        // With the link gone the hang-up may not get out; the other phone
+        // then ends the call itself when its grace period runs out.
+        _calls.report({'event': 'hangup-not-sent', 'call': id, 'error': '$e'});
       }
-      // Through the mailbox as well, in case the control channel never
-      // opened or the link drops the message.
-      await _calls.client.sendCall(
-        conversation,
-        Signal(type: SignalType.hangup, call: id).encode(),
-      );
     }
     if (!_connected.isCompleted) {
       _connected.completeError(StateError('call ended: $why'));
     }
-    await _pc?.close();
+    try {
+      await _pc?.close();
+    } on Object catch (e) {
+      // Already closed underneath the call (the plugin then has no
+      // connection by this id); the call is over either way.
+      _calls.report({'event': 'close-failed', 'call': id, 'error': '$e'});
+    }
     await _remoteMedia.close();
   }
 }

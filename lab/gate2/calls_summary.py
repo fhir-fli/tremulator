@@ -36,4 +36,14 @@ for path in sys.argv[1:]:
         "audio-packets": a.get("packetsReceived"),
         "failed": [e for e in events if e["event"] in ("run-failed", "start-failed")][:1],
         "ended": first.get("call-ended", {}).get("why"),
+        # Reconnection (E8): each loss of a connected call's link, each
+        # return with how long it took, and the caller's restarts.
+        "reconnecting": [e.get("state") for e in events if e["event"] == "reconnecting"],
+        "reconnected-ms": [e.get("ms") for e in events if e["event"] == "reconnected"],
+        "reconnected-control": [e.get("control") for e in events if e["event"] == "reconnected"],
+        "restarts-sent": sum(e["event"] == "restart-sent" for e in events),
+        "restarts-failed": sum(e["event"] == "restart-failed" for e in events),
+        "answers-applied": [e.get("n") for e in events if e["event"] == "answer-applied"],
+        "answers-sent": [e.get("n") for e in events if e["event"] == "answer-sent"],
+        "hangup-not-sent": sum(e["event"] == "hangup-not-sent" for e in events),
     }), flush=True)

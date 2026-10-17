@@ -12,7 +12,11 @@ screen and speaker are recorded.
 Profiles: `none` (no shaping), P1-P5 and P0 from labkit.PROFILES, and
 `plus500`, the instrument check: 500 ms one way on every container and
 nothing else, so the voice delay must read about 500 ms more than `none` on
-a direct call. Any profile with `-blocked` appended (`P2-blocked`) also
+a direct call. `cut20`, `cut60` and `cut120`: no shaping, and 30 s after
+Alice's call connects both phones lose their link (100% loss on their own
+interfaces; the server and relay keep theirs) for 20, 60 or 120 s, so the
+call must reconnect, or with 120 s outlast its 90 s grace and end as lost
+on both phones (E8 in docs/GATE2-CALLS-PLAN.md). Any profile with `-blocked` appended (`P2-blocked`) also
 blocks the two phones' direct route to each other, so the call must go
 through the relay. P5 runs on a second network created with `--internal`
 (no route out), as run.py does.
@@ -41,7 +45,8 @@ import shutil
 import sys
 import time
 
-from labkit import (PORTS, PROFILES, REPO, build_server, clear_shaping, dx, freeze_spans, ip_of,
+from labkit import (DUTY_LOOP_MARK, PORTS, PROFILES, REPO, build_server, clear_shaping, dx,
+                    freeze_spans, ip_of,
                     netem, pin_neighbours, sh, start_duty_loop, start_server, stop_server, utc)
 from voice_delay import click_track_cmd, measure as voice_delay
 
@@ -59,6 +64,8 @@ NODES = {  # internal network?: (server, relay, alice, bob)
     True: ("g2c-srv5", "g2c-turn5", "g2c-alice5", "g2c-bob5"),
 }
 CHECKS = {"plus500": (0, 1000, 0, False)}  # name: as PROFILES
+CUTS = {"cut20": 20, "cut60": 60, "cut120": 120}  # name: seconds of no link
+CUT_AT_S = 30  # after Alice's call connects
 TURN_PORT = 3478
 
 
@@ -94,6 +101,8 @@ def parse(name):
         shape = PROFILES[base]
     elif base in CHECKS:
         shape = CHECKS[base]
+    elif base in CUTS:
+        shape = None
     else:
         raise ValueError(f"unknown profile {name}")
     return base, shape, bool(shape and shape[3]), variant == "blocked"
@@ -292,6 +301,8 @@ def run_profile(name):
     on_top_at_connect = pattern_on_top(alice)
     if not on_top_at_connect:
         raise_pattern(alice, 8)
+    if clicked and base in CUTS:
+        cut_links((alice, bob), d, CUTS[base])
     if clicked:
         track = " ".join(click_track_cmd("/tmp/click.wav", clicks))
         sh(["docker", "exec", "-d", alice, "sh", "-c",
@@ -339,8 +350,49 @@ def run_profile(name):
     rec["recording_bob"] = recording_facts(host_d, "bob")
     rec["recording_alice"] = recording_facts(host_d, "alice")
     rec["voice"] = voice_facts(host_d)
+    if base in CUTS:
+        rec["cut"] = cut_facts(host_d, CUTS[base])
     rec.update(fingerprint_hunt(host_d))
     log(rec)
+
+
+def cut_links(phones, d, seconds):
+    """CUT_AT_S from now, each phone's own interface drops every packet for
+    `seconds`, then is cleared; the times are written beside the logs. Runs
+    in each container, as root (tc), tagged so clear_shaping kills it."""
+    for c in phones:
+        who = c.split("-")[-1].rstrip("5")
+        sh(["docker", "exec", "-d", "-u", "0", c, "sh", "-c",
+            f"MARK={DUTY_LOOP_MARK}; sleep {CUT_AT_S}; date +%s.%N > {d}/{who}_cut.start; "
+            f"tc qdisc replace dev eth0 root netem loss 100%; sleep {seconds}; "
+            f"tc qdisc del dev eth0 root; date +%s.%N > {d}/{who}_cut.end"])
+
+
+def cut_facts(host_d, seconds):
+    """When each phone's link went and came back, and the clicks sent before
+    the cut and after it with how many were heard (voice_delay.jsonl)."""
+    times = {}
+    for who in ("alice", "bob"):
+        for edge in ("start", "end"):
+            p = os.path.join(host_d, f"{who}_cut.{edge}")
+            times[f"{who}_{edge}"] = float(open(p).read()) if os.path.exists(p) else None
+    out = {"planned_s": seconds, **times}
+    starts = [times[f"{w}_start"] for w in ("alice", "bob") if times[f"{w}_start"]]
+    ends = [times[f"{w}_end"] for w in ("alice", "bob") if times[f"{w}_end"]]
+    pairs_p = os.path.join(host_d, "voice_delay.jsonl")
+    if starts and ends and os.path.exists(pairs_p):
+        pairs = [json.loads(l) for l in open(pairs_p)]
+        before = [p for p in pairs if p["sent"] < min(starts)]
+        after = [p for p in pairs if p["sent"] > max(ends)]
+        heard_after = sorted(p["delay_ms"] for p in after if p["delay_ms"] is not None)
+        out.update({
+            "clicks_before": len(before),
+            "heard_before": sum(p["delay_ms"] is not None for p in before),
+            "clicks_after": len(after), "heard_after": len(heard_after),
+            "first_heard_after_s": next((round(p["sent"] - max(ends), 1) for p in after
+                                         if p["delay_ms"] is not None), None),
+            "delay_after_median_ms": heard_after[len(heard_after) // 2] if heard_after else None})
+    return out
 
 
 def pattern_on_top(c):

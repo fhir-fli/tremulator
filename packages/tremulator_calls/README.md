@@ -16,6 +16,15 @@ offer and one answer beat a stream of address messages.
 The media goes phone to phone, or through a TURN relay passed in
 `iceServers`.
 
+When a connected call loses its link, it is kept, not ended. The caller
+restarts the connection (W3C WebRTC `restartIce()`, then a new offer) and
+sends the offer through the mailbox again, retrying until the link is back
+or `reconnectGrace` (90 s) runs out; then both phones end the call as
+`lost`. Offers and answers carry a number, so an answer to a replaced offer
+is ignored. Every description after the first must carry the same
+certificate fingerprints as the first, or the call ends as
+`fingerprint-changed`.
+
 ## Tests
 
 `flutter test` runs the setup-format tests. The call tests need the native
