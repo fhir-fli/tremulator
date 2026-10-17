@@ -75,8 +75,34 @@ it").
   four; Alice's own screen 0 s frozen in all four. Fingerprints 0 server
   hits, 2 in the control, every profile. plus500's 13.4 s connect is
   setup through the mailbox at 1 s round trip, not media.
-- Next: the sweep at 3 minutes (P1–P4, P0, blocked variants), then the
-  video caps. Each needs Grey's go.
+- **calls8 (2026-10-16), the 3-minute sweep, Grey's go.** Recomputed with
+  the fixed timing (`--reanalyse`; frozen video from connect to the first
+  hang-up of either phone). 17 clicks sent per call.
+
+  | Profile | Route | Connect | Call | Frozen s/min | Voice median (range), heard | WhatsApp (GATE1.md) |
+  |---|---|---|---|---|---|---|
+  | P1 | direct | 19.5 s | held 3 min | 55.6 | 663 ms, 1 of 17 | frozen 14.2; voice 690–696 ms |
+  | P1-blocked | relay | 23.7 s | **dropped at 17 s** | — | 0 of 17 | relayed every time |
+  | P2 | direct | 5.1 s | held | 0.07 | 428 (273–458), 17 | frozen 3.4; voice unresolved |
+  | P2-blocked | relay | 5.7 s | held | 1.67 | 519 (392–574), 17 | |
+  | P3 | direct | 12.0 s | held | 0.79 | 688 (545–776), 17 | frozen 6.0 |
+  | P3-blocked | relay | 13.5 s | held | 6.12 | 1,047 (835–1,170), 17 | |
+  | P4 | direct | 6.3 s | **dropped at the first outage, 22 s** | — | 0 of 17 | dies ~25 s after the cut |
+  | P4-blocked | relay | 8.3 s | **dropped at the first outage, 19 s** | — | 0 of 17 | |
+  | P0 | — | not placed: Bob cannot reach the server (known negative) | | | | |
+
+  Fingerprints: 0 server hits, 2 in the control, every call. Findings:
+  1. No call recovers from a lost link: three of eight dropped, each ~10 s
+     after the link went, and nothing reconnects. First thing to build (E8).
+  2. P1 with video carries almost no sound: 41% of Bob's audio packets
+     lost, video 164 frames. E7 (video gives way to audio) is the fix.
+  3. The hang-up travels through the mailbox: on P1 Bob learned of it 61 s
+     late.
+  4. Unknown: the lab shapes the relay like a phone, so a relayed packet
+     crosses two slow links; a deployed relay sits on the server's link.
+     The relayed rows may be worse than the field. Not yet checked.
+  5. Unknown: on P4 direct the first click was due ~5 s before the cut and
+     was not heard.
 
 
 ## Endpoints the calls must meet (Grey 2026-10-16: "as thorough and as robust as possible")

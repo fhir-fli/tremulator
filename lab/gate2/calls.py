@@ -235,7 +235,18 @@ def run_profile(name):
         f"/app/tremulator --lab --server {url} --name bob --state /tmp/state --out {d}/bob.jsonl "
         f"--audio --turn '{relay}' --until-file {stop} > {d}/bob.stdout 2>&1; echo $? > {d}/bob.exit"])
     if not wait_for(bob, f"{d}/bob.jsonl", "waiting-for-call", 90):
-        raise RuntimeError("bob never got to waiting-for-call")
+        # P0 is the known negative: Bob cannot reach the server, so no call
+        # can be placed. That is a result, logged; calls8 raised here and
+        # left P0 without a summary line.
+        stop_server(srv, name, port)
+        relay_facts = stop_relay(turn, d, host_d)
+        clear_shaping(nodes)
+        unblock_direct(alice, bob)
+        bob_log = os.path.join(host_d, "bob.jsonl")
+        first = open(bob_log).readline().strip() if os.path.exists(bob_log) else None
+        log({"profile": name, "placed": False, "bob_exit": read(bob, f"{d}/bob.exit"),
+             "bob_first_line": first and json.loads(first), **relay_facts})
+        return
 
     # Both screens are recorded from before the call to after it: Bob's is
     # what arrived, Alice's what was sent, so a freeze on Bob's alone is the
