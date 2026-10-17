@@ -362,9 +362,15 @@ def cut_links(phones, d, seconds):
     in each container, as root (tc), its pid recorded for clear_shaping."""
     for c in phones:
         who = c.split("-")[-1].rstrip("5")
-        start_loop(c, f"sleep {CUT_AT_S}; date +%s.%N > {d}/{who}_cut.start; "
+        # Each time is written to a temporary file and renamed, so a loop
+        # killed mid-write by clear_shaping leaves no file rather than an
+        # empty one (calls10 cut120-blocked: the cut ended as the profile's
+        # clean-up ran, and an empty bob_cut.end stopped the run).
+        start_loop(c, f"sleep {CUT_AT_S}; date +%s.%N > {d}/{who}_cut.start.tmp && "
+                      f"mv {d}/{who}_cut.start.tmp {d}/{who}_cut.start; "
                       f"tc qdisc replace dev eth0 root netem loss 100%; sleep {seconds}; "
-                      f"tc qdisc del dev eth0 root; date +%s.%N > {d}/{who}_cut.end")
+                      f"tc qdisc del dev eth0 root; date +%s.%N > {d}/{who}_cut.end.tmp && "
+                      f"mv {d}/{who}_cut.end.tmp {d}/{who}_cut.end")
 
 
 def cut_facts(host_d, seconds):
@@ -374,7 +380,10 @@ def cut_facts(host_d, seconds):
     for who in ("alice", "bob"):
         for edge in ("start", "end"):
             p = os.path.join(host_d, f"{who}_cut.{edge}")
-            times[f"{who}_{edge}"] = float(open(p).read()) if os.path.exists(p) else None
+            text = open(p).read().strip() if os.path.exists(p) else ""
+            # No time: the loop was killed first (the profile ended before
+            # the cut did, and its clean-up restored the link).
+            times[f"{who}_{edge}"] = float(text) if text else None
     out = {"planned_s": seconds, **times}
     starts = [times[f"{w}_start"] for w in ("alice", "bob") if times[f"{w}_start"]]
     ends = [times[f"{w}_end"] for w in ("alice", "bob") if times[f"{w}_end"]]

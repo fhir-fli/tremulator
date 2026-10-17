@@ -98,3 +98,12 @@
   kills by it, then fails unless no netem and no loop is left;
   `shaping_check.py` (one container, netem + duty loop + cut, cleared,
   watched 40 s) passes.
+- **calls10 stopped after cut120-blocked** (2026-10-17 13:44): the cut's end
+  and the profile's clean-up (the call had already ended as lost) came at
+  the same second; the clean-up killed the cut loop as it wrote its end
+  time, leaving an empty `bob_cut.end`, and calls.py failed reading it.
+  The call itself ran (files in calls10/cut120-blocked, no summary line);
+  P4, P4-blocked and P1-blocked never ran. Fixed: the times are written to
+  a temporary file and renamed, and a missing time reads as not recorded.
+  Re-run as calls11. Valid in calls10: cut20, cut20-blocked, cut60,
+  cut60-blocked, cut120.
