@@ -7,6 +7,7 @@ screen and speaker are recorded.
 
     python3 lab/gate2/calls.py --label calls1 [--profiles none] [--call-s 30]
                                [--skip-build]
+    python3 lab/gate2/calls.py --label calls8 --reanalyse   (files on disk only)
 
 Profiles: `none` (no shaping), P1-P5 and P0 from labkit.PROFILES, and
 `plus500`, the instrument check: 500 ms one way on every container and
@@ -244,7 +245,7 @@ def run_profile(name):
     # sound is recorded the same way: Alice's microphone (what went in) and
     # Bob's speaker (what came out), each stamped by ffmpeg with the wall
     # clock of its first sample, printed in its log as the input's start.
-    rec_s = call_s + 60
+    rec_s = call_s + 900
     for c, who in ((bob, "bob"), (alice, "alice")):
         sh(["docker", "exec", "-d", c, "sh", "-c",
             f"date -u +%Y-%m-%dT%H:%M:%S.%NZ > {d}/{who}_record.start; exec ffmpeg -y -loglevel error "
@@ -289,20 +290,23 @@ def run_profile(name):
             break
         time.sleep(1)
     alice_s = round(time.time() - t0, 1)
-    dx(alice, "sh", "-c", "pkill -x ffplay; true")
-    for _ in range(rec_s + 30):
-        if dx(alice, "pgrep", "-x", "ffmpeg", timeout=10).returncode != 0:
-            break
-        time.sleep(1)
+    # The recordings run until Bob's call has ended too, then 5 s more, and
+    # are stopped with SIGINT so ffmpeg closes the files. calls8 P1: Bob
+    # heard the hang-up 61 s after Alice sent it, past a fixed-length
+    # recording's end. rec_s is only a cap.
+    bob_ended = wait_for(bob, f"{d}/bob.jsonl", '"event": *"call-ended"', 300)
     time.sleep(5)
+    for c in (alice, bob):
+        dx(c, "sh", "-c", "pkill -INT -x ffmpeg; true")
+    dx(alice, "sh", "-c", "pkill -x ffplay; true")
+    for c in (alice, bob):
+        for _ in range(60):
+            if dx(c, "pgrep", "-x", "ffmpeg", timeout=10).returncode != 0:
+                break
+            time.sleep(1)
     dx(bob, "touch", stop)
     for _ in range(120):
         if dx(bob, "test", "-e", f"{d}/bob.exit", timeout=10).returncode == 0:
-            break
-        time.sleep(1)
-    # let the recordings reach their end and close the files
-    for _ in range(rec_s + 30):
-        if dx(bob, "pgrep", "-x", "ffmpeg", timeout=10).returncode != 0:
             break
         time.sleep(1)
     stop_server(srv, name, port)
@@ -313,7 +317,7 @@ def run_profile(name):
 
     rec = {"profile": name, "alice_wall_s": alice_s, "pattern_raised": raised,
            "pattern_on_top_at_connect": on_top_at_connect,
-           "direct_blocked": block, "clicks_started": clicked,
+           "direct_blocked": block, "clicks_started": clicked, "bob_call_ended_seen": bob_ended,
            "alice_exit": read(alice, f"{d}/alice.exit"), "bob_exit": read(bob, f"{d}/bob.exit"),
            **relay_facts}
     for line in sh(["python3", "-I", SUMMARY, os.path.join(host_d, "alice.jsonl"),
@@ -371,8 +375,11 @@ def voice_facts(host_d):
 
 def recording_facts(host_d, who):
     """Frozen video on one phone's screen during the call, by ffmpeg
-    freezedetect (the Gate 1 instrument), between that phone's connected and
-    call-ended lines; plus three stills from the call to look at."""
+    freezedetect (the Gate 1 instrument), from that phone's connected line
+    to the FIRST call-ended line of either phone (media stops when either
+    hangs up; calls8 P1's Bob logged the end 61 s after Alice and was
+    divided by his longer call), clipped to the recording; plus three stills
+    from the call to look at."""
     mp4 = os.path.join(host_d, f"{who}_screen.mp4")
     start_file = os.path.join(host_d, f"{who}_record.start")
     if not os.path.exists(mp4) or not os.path.exists(start_file):
@@ -387,10 +394,15 @@ def recording_facts(host_d, who):
     rec_start = utc(open(start_file).read())
     events = [json.loads(l) for l in open(os.path.join(host_d, f"{who}.jsonl"))]
     conn = next((e for e in events if e["event"] == "connected"), None)
-    end = next((e for e in events if e["event"] == "call-ended"), None)
-    if conn is None or end is None:
+    ends = []
+    for w in ("alice", "bob"):
+        p = os.path.join(host_d, f"{w}.jsonl")
+        if os.path.exists(p):
+            ends += [utc(json.loads(l)["t"]) for l in open(p) if '"call-ended"' in l]
+    if conn is None or not ends:
         return {"length_s": length, "call_window": None}
-    a, b = utc(conn["t"]) - rec_start, utc(end["t"]) - rec_start
+    a, b_end = utc(conn["t"]) - rec_start, min(ends) - rec_start
+    b = min(b_end, length)
     inside = [(max(s0, a), min(s1, b)) for s0, s1 in freeze_spans(fd, length) if s1 > a and s0 < b]
     frozen = sum(s1 - s0 for s0, s1 in inside)
     call = b - a
@@ -401,6 +413,8 @@ def recording_facts(host_d, who):
             "-frames:v", "1", png])
         stills.append(os.path.basename(png))
     return {"length_s": length, "call_window_s": [round(a, 2), round(b, 2)],
+            "window_cut_by_recording_s": round(b_end - b, 2),
+            "hangup_lag_s": round(max(ends) - min(ends), 2) if len(ends) > 1 else None,
             "freezes": len(inside), "frozen_s": round(frozen, 2),
             "frozen_s_per_min": round(frozen / call * 60, 2) if call > 0 else None,
             "stills": stills}
@@ -440,7 +454,29 @@ def fingerprint_hunt(host_d):
             "fingerprint_hits": count(hits), "fingerprint_control_hits": count(control)}
 
 
+def reanalyse():
+    """`--reanalyse --label L`: the frozen-video and voice numbers again from
+    a finished run's files on disk, with today's code, into
+    results/L-reanalysed.jsonl. Nothing runs in Docker."""
+    out = open(os.path.join(HERE, "results", f"{label}-reanalysed.jsonl"), "a")
+    for l in open(os.path.join(HERE, "results", f"{label}.jsonl")):
+        r = json.loads(l)
+        if "profile" not in r:
+            continue
+        host_d = os.path.join(outroot, r["profile"])
+        rec = {"run": label, "profile": r["profile"], "reanalysed": time.strftime("%Y-%m-%dT%H:%M:%S"),
+               "recording_bob": recording_facts(host_d, "bob"),
+               "recording_alice": recording_facts(host_d, "alice"),
+               "voice": voice_facts(host_d)}
+        out.write(json.dumps(rec) + "\n")
+        out.flush()
+        print(json.dumps(rec), flush=True)
+
+
 if __name__ == "__main__":
+    if "--reanalyse" in sys.argv:
+        reanalyse()
+        sys.exit(0)
     for name in profiles:
         parse(name)  # an unknown name fails before anything is built
     if "--skip-build" not in sys.argv:
