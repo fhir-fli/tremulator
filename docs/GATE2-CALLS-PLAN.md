@@ -108,6 +108,49 @@ it").
      The relayed rows may be worse than the field. Not yet checked.
   5. Unknown: on P4 direct the first click was due ~5 s before the cut and
      was not heard.
+  6. (2026-10-17) P4-blocked and P0 ran with P4's on/off loop still going
+     (INVALID-RUNS.md, shaping never cleared).
+- **Reconnection (E8), built 2026-10-17 (`e539ea1`).** A connected call that
+  loses its link restarts the connection through the mailbox and waits up to
+  90 s. 300 s calls; both phones' links cut 30 s after connecting (server
+  and relay keep theirs). Before the change (calls9-before) every cut, even
+  20 s, ended the call "failed" 16 s after the link went. "Back" is from
+  each phone noticing the loss (6-9 s after the cut) to reconnected.
+
+  | Profile | Route | Call | Back (Alice / Bob) | Restarts sent (failed) | Clicks after the cut | First click after the link returned | Voice after | Bob frozen s/min |
+  |---|---|---|---|---|---|---|---|---|
+  | cut20 | direct | held | 11.7 / 11.8 s | 1 (0) | 24 of 24 | 5.5 s | 254 ms | 4.86 |
+  | cut20-blocked | relay | held | 11.9 / 11.9 s | 1 (0) | 24 of 24 | 5.7 s | 342 ms | 4.57 |
+  | cut60 | direct | held | 52.6 / 53.1 s | 2 (1) | 20 of 20 | 5.8 s | 216 ms | 12.66 |
+  | cut60-blocked | relay | held | 65.3 / 65.5 s | 2 (1) | 19 of 20 | 15.5 s | 278 ms | 15.26 |
+  | cut120 | direct | ended `lost` on both, 90 s after noticing, 0.35 s apart | — | 3 (3) | — | — | — | — |
+  | cut120-blocked | relay | ended `lost` on both, 0.09 s apart | — | 2 (2) | — | — | — | — |
+  | P4 | direct | **never connected**: the link went during setup | — | — | — | — | — | — |
+  | P4-blocked | relay | **never connected**: same | — | — | — | — | — | — |
+  | P1-blocked | relay | held 300 s (calls8: dropped at 17 s); lost twice, back both times | 6.6 and 79.7 / 55.5 s | 3 (2) | 2 of 29 clicks heard in the whole call | — | 845 ms | 59.81 |
+
+  Instrument checks in the same build (calls9): `none` 103 ms (65–227),
+  29 of 29; `plus500` 847 ms (605–1,060), 29 of 29, so +744 ms for +500 ms
+  added. Across two containers the voice clock agrees to 0-1 ms (one trial
+  64 ms; `cross_stamp_check.py`), so the extra 244 ms is the call, not the
+  instrument. Fingerprints 0 server hits, 2 in the control, every call.
+  Findings:
+  1. A link lost mid-call now recovers, up to 60 s cut, direct and relayed;
+     past the 90 s grace both phones end it alike.
+  2. A link lost DURING setup still ends the call: the answer (P4) or its
+     delivery (P4-blocked) falls in the outage, the setup message is sent
+     once and never retried, and a connection that never connected ends as
+     `failed`, the rule that catches a wrong fingerprint. Next to build.
+  3. Voice delay after a cut stays higher than before it (216-342 ms
+     against 103 ms on an uncut call); unexplained.
+  4. P1 relayed now survives but carries 2 of 29 clicks: video starves the
+     audio (E7).
+  5. A mailbox send can time out on the sender yet reach the server (P1:
+     Bob answered a restart Alice logged as failed); the offer numbers kept
+     the stale answer out.
+  6. The lab app exits with an error when its last mailbox fetch after the
+     call fails in the outage (cut120: exit 2 on both); the call result is
+     unaffected. Lab harness, to fix.
 
 
 ## Endpoints the calls must meet (Grey 2026-10-16: "as thorough and as robust as possible")
