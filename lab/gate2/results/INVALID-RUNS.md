@@ -66,3 +66,19 @@
   through the relay in 570 ms, Bob decoded 775 frames at 960x540, 0.16 s
   frozen (0.32 s per minute); fingerprints 0 hits on the server, 2 in the
   control, in both.
+- **Voice delay, calls6 to calls9-before** (found 2026-10-17): the start
+  time of each sound recording came from the `start:` ffmpeg prints for
+  its PulseAudio input. Measured under a known condition
+  (`pulse_stamp_check.py`, one sound recorded twice in one container,
+  true difference 0): off by 273-722 ms over 8 trials, and 60-719 ms with
+  a 10 ms buffer, different on every recording. So each call's voice
+  delay carries its own unknown offset of up to about 0.7 s; the spread
+  of clicks inside one call is not affected (one offset per call). Seen
+  in calls9-before: Bob "heard" clicks 0.27-0.46 s before Alice sent
+  them on cut60 and cut120. Fixed: every 10 ms packet is stamped with its
+  arrival and the start is the earliest (arrival - audio before it); the
+  same check then reads 0 ms in 8 of 8 trials (24 clicks). Still invalid:
+  the voice-delay medians of calls7 and calls8 (and the plus500 check's
+  +542 ms, n=2) until re-measured. Valid in calls9-before: every call
+  survival and timing fact (cut20, cut60, cut120 on the build before
+  reconnection: each call ended "failed" 16 s after the link went).

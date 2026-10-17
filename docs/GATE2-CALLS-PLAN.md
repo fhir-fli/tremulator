@@ -61,6 +61,11 @@ it").
 - calls6 invalid (three lab defects, `results/INVALID-RUNS.md`).
 - **calls7 (2026-10-16), 30 s each, 2 clicks per call:**
 
+  ⚠️ 2026-10-17: the voice-delay medians in the calls7 and calls8 tables
+  below carry an unknown per-call offset of up to about 0.7 s (recording
+  start stamps, `lab/gate2/results/INVALID-RUNS.md`); fixed, not yet
+  re-measured.
+
   | Profile | Route | Connect (Alice) | Bob frames | Frozen s/min | Voice delay median (range) |
   |---|---|---|---|---|---|
   | none | direct | 485 ms | 806 | 0.21 | 109 ms (88–129) |

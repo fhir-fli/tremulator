@@ -5,10 +5,15 @@ sender's microphone and what came out of the receiver's speaker.
     voice_delay.py SENT.mkv RECEIVED.mkv OUT.jsonl     a call's two recordings
     voice_delay.py --self-check DIR                    the instrument, offline
 
-Each recording is made in its container by ffmpeg's PulseAudio input, which
-stamps the first sample with the wall clock (its `wallclock` option, on by
-default) and prints that stamp as the input's `start:` in the recording's
-log (<recording>_record.log); the containers share the host's clock. Onsets come from Gate 1's
+Each recording is made in its container by ffmpeg's PulseAudio input
+(record_cmd) with every 10 ms packet stamped with its arrival on the wall
+clock (`-use_wallclock_as_timestamps 1`) and listed in the recording's log
+(<recording>_record.log, ashowinfo lines); the containers share the host's
+clock. The recording's start is the earliest of (arrival - audio before the
+packet): a packet can arrive late, never early, so the earliest bounds the
+true start most tightly. The start stamp ffmpeg prints by default was wrong
+by 60-722 ms, varying per recording (pulse_stamp_check.py, 2026-10-17, two
+recordings of one sound in one container: 16 of 16 trials). Onsets come from Gate 1's
 amplitude detector (lab/tool/bin/baseline_onsets.dart, threshold 0.5 of the
 file's peak, 150 ms dead time), so the instrument is the one that measured
 WhatsApp. Each click sent is paired with the first click heard within 3 s
@@ -51,17 +56,40 @@ def click_track_cmd(path, clicks):
             "synth", "0.03", "sine", "1000", "vol", "0.8", "pad", "5", "4.97", "repeat", str(clicks - 1)]
 
 
+FRAGMENT_BYTES = 1920  # 10 ms of 48 kHz stereo 16-bit, the pulse default format
+FRAME = re.compile(r"Parsed_ashowinfo_\d+ @ \S+\] n:(\d+) pts:(-?\d+) .*? rate:(\d+) nb_samples:(\d+)")
+
+
+def record_cmd(source, stem, cap_s):
+    """The shell command recording PulseAudio `source` to <stem>.mkv with
+    each packet's arrival logged to <stem>_record.log. No -t: with -copyts
+    (which keeps the arrival stamps) -t counts from 0 and the file came out
+    empty (calls6), so `timeout -s INT` is the cap and the caller stops it
+    with SIGINT. ashowinfo's pts is in units of 1/rate (its first value
+    divided by 48000 equals ffmpeg's printed start, checked 2026-10-17)."""
+    return (f"exec timeout -s INT {cap_s} ffmpeg -y -nostdin -hide_banner -nostats "
+            f"-use_wallclock_as_timestamps 1 -f pulse -fragment_size {FRAGMENT_BYTES} -i {source} "
+            f"-copyts -af ashowinfo -ac 1 -c:a pcm_s16le {stem}.mkv > {stem}_record.log 2>&1")
+
+
 def start_time(path):
-    """The wall-clock time of the first sample: the `start:` ffmpeg prints
-    for its PulseAudio input, kept in <recording>_record.log beside it.
-    calls6 asked the output file instead (-copyts): with -copyts, -t counts
-    from 0, so ffmpeg wrote a 520-byte header and no sound."""
+    """The wall-clock time of the recording's first sample: the earliest
+    (packet arrival - audio before that packet) over the packets in
+    <recording>_record.log."""
     log = os.path.splitext(path)[0] + "_record.log"
-    m = re.search(r"^Input #0, pulse.*\n\s+Duration: [^,]+, start: ([\d.]+)",
-                  open(log).read(), re.M)
-    if m is None:
-        raise RuntimeError(f"{os.path.basename(log)}: no 'start:' for the pulse input")
-    return float(m.group(1))
+    best, before = None, 0
+    with open(log, errors="replace") as f:
+        for line in f:
+            m = FRAME.search(line)
+            if m is None:
+                continue
+            _, pts, rate, samples = (int(g) for g in m.groups())
+            t = (pts - before) / rate
+            best = t if best is None else min(best, t)
+            before += samples
+    if best is None:
+        raise RuntimeError(f"{os.path.basename(log)}: no packet times (ashowinfo lines)")
+    return best
 
 
 def to_wav(path):
@@ -107,7 +135,8 @@ def measure(sent_path, heard_path, out_path):
             f.write(json.dumps({"sent": round(s, 4), "delay_ms": None if d is None else round(d * 1000)}) + "\n")
             f.flush()
     delays = sorted(d * 1000 for _, d in pairs if d is not None)
-    return {"clicks_sent": len(sent_on), "clicks_heard": len(delays),
+    return {"sent_start": round(t_sent, 4), "heard_start": round(t_heard, 4),
+            "clicks_sent": len(sent_on), "clicks_heard": len(delays),
             "heard_peak": heard_peak, "heard_onsets": len(heard_on),
             "delay_median_ms": round(statistics.median(delays)) if delays else None,
             "delay_min_ms": round(delays[0]) if delays else None,
@@ -122,20 +151,29 @@ def self_check(d):
     sent = os.path.join(d, "sent.mkv")
     heard = os.path.join(d, "heard.mkv")
     # The same recording twice, logged as starting at T and T + 0.300 s with
-    # T a wall-clock time, in the form ffmpeg's pulse input logs it.
+    # T a wall-clock time, as ffmpeg's ashowinfo lists packets: 480 samples
+    # each, every one arriving 2-40 ms late except one 2 ms late, so the
+    # start must come out exactly 2 ms after T (and after T + 0.3).
     t = 1_800_000_000
     def logged(path, start):
         with open(os.path.splitext(path)[0] + "_record.log", "w") as f:
-            f.write(f"Input #0, pulse, from 'mic.monitor':\n  Duration: N/A, start: {start:.6f}, bitrate: 1536 kb/s\n")
+            for k in range(9000):
+                late = 0.002 if k == 4000 else 0.002 + 0.038 * ((k * 7919) % 97) / 96 + 0.001
+                pts = round((start + (k + 1) * 0.01 - 0.01 + late) * 48000)
+                f.write(f"[Parsed_ashowinfo_0 @ 0x5] n:{k} pts:{pts} pts_time:1.8e+09 fmt:s16 "
+                        f"channels:2 chlayout:stereo rate:48000 nb_samples:480 checksum:0\n")
     sh(["ffmpeg", "-y", "-loglevel", "error", "-i", track, sent])
     logged(sent, t)
     # Clicks 3, 6, 9 (at 25, 55, 85 s) silenced in the heard copy.
     mute = "+".join(f"between(t,{10 * k - 5 - 0.1},{10 * k - 5 + 0.2})" for k in (3, 6, 9))
     sh(["ffmpeg", "-y", "-loglevel", "error", "-i", track, "-af", f"volume=enable='{mute}':volume=0", heard])
     logged(heard, t + 0.3)
+    starts_ok = (abs(start_time(sent) - (t + 0.002)) < 1e-4
+                 and abs(start_time(heard) - (t + 0.302)) < 1e-4)
     got = measure(sent, heard, os.path.join(d, "pairs.jsonl"))
     want = {"clicks_sent": 9, "clicks_heard": 6, "delay_median_ms": 300}
-    ok = all(got[k] == v for k, v in want.items()) and got["delay_min_ms"] == got["delay_max_ms"] == 300
+    ok = (starts_ok and all(got[k] == v for k, v in want.items())
+          and got["delay_min_ms"] == got["delay_max_ms"] == 300)
     print(json.dumps({"self_check": "pass" if ok else "FAIL", "got": got, "want": want}), flush=True)
     return ok
 

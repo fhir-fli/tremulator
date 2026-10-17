@@ -48,7 +48,7 @@ import time
 from labkit import (DUTY_LOOP_MARK, PORTS, PROFILES, REPO, build_server, clear_shaping, dx,
                     freeze_spans, ip_of,
                     netem, pin_neighbours, sh, start_duty_loop, start_server, stop_server, utc)
-from voice_delay import click_track_cmd, measure as voice_delay
+from voice_delay import click_track_cmd, measure as voice_delay, record_cmd
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 APP = os.path.join(REPO, "app")
@@ -264,7 +264,9 @@ def run_profile(name):
     # and ended times (same clock: the containers share the host's). The
     # sound is recorded the same way: Alice's microphone (what went in) and
     # Bob's speaker (what came out), each stamped by ffmpeg with the wall
-    # clock of its first sample, printed in its log as the input's start.
+    # clock: every packet's arrival is logged and the start is derived from
+    # them (voice_delay.record_cmd). calls1-calls9-before used the start
+    # ffmpeg prints, which was off by up to 722 ms (pulse_stamp_check.py).
     rec_s = call_s + 900
     for c, who in ((bob, "bob"), (alice, "alice")):
         sh(["docker", "exec", "-d", c, "sh", "-c",
@@ -272,9 +274,7 @@ def run_profile(name):
             f"-f x11grab -framerate 30 -video_size 1280x720 -i :0 -t {rec_s} -c:v libx264 "
             f"-preset ultrafast -crf 30 -pix_fmt yuv420p {d}/{who}_screen.mp4 > {d}/{who}_record.log 2>&1"])
     for c, who, source in ((bob, "bob_heard", "speaker.monitor"), (alice, "alice_sent", "mic.monitor")):
-        sh(["docker", "exec", "-d", c, "sh", "-c",
-            f"exec ffmpeg -y -nostdin -hide_banner -nostats -f pulse -i {source} -ac 1 -t {rec_s} "
-            f"-c:a pcm_s16le {d}/{who}.mkv > {d}/{who}_record.log 2>&1"])
+        sh(["docker", "exec", "-d", c, "sh", "-c", record_cmd(source, f"{d}/{who}", rec_s)])
     # The test pattern is up and moving before Alice's app starts; once her
     # app's window exists the pattern is raised above it (no window manager:
     # a new window maps on top). calls2 started the pattern 3 s after the
