@@ -1,0 +1,36 @@
+{"trial": 0, "onsets_alice": 3, "onsets_bob": 3, "alice_minus_bob_ms": [-64, -64, -64], "alice_minus_scheduled_ms": [11, 11, 11]}
+{"trial": 1, "onsets_alice": 3, "onsets_bob": 3, "alice_minus_bob_ms": [1, 1, 1], "alice_minus_scheduled_ms": [7, 7, 7]}
+{"trial": 2, "onsets_alice": 3, "onsets_bob": 3, "alice_minus_bob_ms": [0, 0, 0], "alice_minus_scheduled_ms": [10, 10, 10]}
+{"trial": 3, "onsets_alice": 3, "onsets_bob": 3, "alice_minus_bob_ms": [1, 1, 1], "alice_minus_scheduled_ms": [11, 11, 11]}
+{"trial": 4, "onsets_alice": 3, "onsets_bob": 3, "alice_minus_bob_ms": [1, 1, 1], "alice_minus_scheduled_ms": [11, 11, 11]}
+Traceback (most recent call last):
+  File "/home/grey/dev/fhir/tremulator/lab/gate2/cross_stamp_check.py", line 92, in <module>
+    main()
+  File "/home/grey/dev/fhir/tremulator/lab/gate2/cross_stamp_check.py", line 77, in main
+    got[stem] = [t0 + x for x in onsets(to_wav(mkv))]
+                                 ^^^^^^^^^^^^^^^^^^^
+  File "/home/grey/dev/fhir/tremulator/lab/gate2/voice_delay.py", line 109, in onsets
+    out = sh(["dart", "run", "bin/baseline_onsets.dart", os.path.abspath(wav)], cwd=TOOL)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/grey/dev/fhir/tremulator/lab/gate2/voice_delay.py", line 46, in sh
+    r = subprocess.run(cmd, capture_output=True, text=True, timeout=600, **kw)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/subprocess.py", line 550, in run
+    stdout, stderr = process.communicate(input, timeout=timeout)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/subprocess.py", line 1209, in communicate
+    stdout, stderr = self._communicate(input, endtime, timeout)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/subprocess.py", line 2116, in _communicate
+    self._check_timeout(endtime, orig_timeout, stdout, stderr)
+  File "/usr/lib/python3.12/subprocess.py", line 1253, in _check_timeout
+    raise TimeoutExpired(
+subprocess.TimeoutExpired: Command '['dart', 'run', 'bin/baseline_onsets.dart', '/home/grey/dev/fhir/tremulator/lab/gate2/results/cross-stamp-check/alice_sent.wav']' timed out after 600 seconds
+{"trial": 0, "onsets_alice": 3, "onsets_bob": 3, "alice_minus_bob_ms": [-76, -76, -76], "alice_minus_scheduled_ms": [21, 21, 21]}
+{"trial": 1, "onsets_alice": 3, "onsets_bob": 3, "alice_minus_bob_ms": [-3, -3, -3], "alice_minus_scheduled_ms": [21, 21, 21]}
+{"trial": 2, "onsets_alice": 3, "onsets_bob": 3, "alice_minus_bob_ms": [-1, -1, -1], "alice_minus_scheduled_ms": [26, 26, 26]}
+{"trial": 3, "onsets_alice": 3, "onsets_bob": 3, "alice_minus_bob_ms": [1, 1, 1], "alice_minus_scheduled_ms": [17, 17, 17]}
+{"trial": 4, "onsets_alice": 3, "onsets_bob": 3, "alice_minus_bob_ms": [1, 1, 1], "alice_minus_scheduled_ms": [26, 26, 26]}
+{"trial": 5, "onsets_alice": 3, "onsets_bob": 3, "alice_minus_bob_ms": [0, 0, 0], "alice_minus_scheduled_ms": [18, 18, 18]}
+{"trial": 6, "onsets_alice": 3, "onsets_bob": 3, "alice_minus_bob_ms": [2, 1, 1], "alice_minus_scheduled_ms": [16, 15, 15]}
+{"trial": 7, "onsets_alice": 3, "onsets_bob": 3, "alice_minus_bob_ms": [0, 0, 0], "alice_minus_scheduled_ms": [18, 18, 18]}
