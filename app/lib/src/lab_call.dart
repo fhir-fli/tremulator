@@ -36,6 +36,11 @@ class LabOptions {
       )
       ..addOption('opus-ptime', help: 'ptime this phone asks for (RFC 7587)')
       ..addFlag('opus-dtx', help: 'ask for usedtx=1 (RFC 7587)')
+      ..addMultiOption(
+        'audio-drop',
+        allowed: _audioExtensions.keys,
+        help: 'leave this header extension out of the audio section (RFC 8285)',
+      )
       ..addOption(
         'until-file',
         help: "the callee stays until this file exists (the lab's stop sign)",
@@ -100,6 +105,13 @@ class LabOptions {
       dtx: (_a['opus-dtx'] as bool) ? true : null,
     );
   }
+
+  /// Header extensions this phone leaves out of its audio section.
+  AudioExtensions get audioExtensions => AudioExtensions(
+    drop: {
+      for (final n in _a['audio-drop'] as List<String>) _audioExtensions[n]!,
+    },
+  );
 
   /// The stop sign.
   String? get untilFile => _a['until-file'] as String?;
@@ -202,6 +214,7 @@ Future<void> _run(
     'maxaveragebitrate': o.opus.maxAverageBitrate,
     'ptime': o.opus.ptime,
     'usedtx': o.opus.dtx,
+    'audio-drop': o.audioExtensions.drop.toList(),
   });
   final keys = await openLabKeys(
     Directory(o.state)..createSync(recursive: true),
@@ -217,6 +230,7 @@ Future<void> _run(
     client,
     iceServers: o.iceServers,
     opus: o.opus,
+    audioExtensions: o.audioExtensions,
     report: log.call,
   );
   final media = await _media(o, log);
@@ -393,3 +407,9 @@ class _Notice {
   final String text;
   final VoidCallback? retry;
 }
+
+/// The lab's names for the header extensions it can leave out.
+const Map<String, String> _audioExtensions = {
+  'abs-send-time': AudioExtensions.absSendTime,
+  'transport-cc': AudioExtensions.transportCc,
+};

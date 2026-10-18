@@ -8,6 +8,7 @@ screen and speaker are recorded.
     python3 lab/gate2/calls.py --label calls1 [--profiles none] [--call-s 30]
                                [--skip-build] [--no-video]
                                [--opus-max-bitrate N] [--opus-ptime MS] [--opus-dtx]
+                               [--audio-drop abs-send-time,transport-cc]
                                [--speech] [--relay-link field|decent]
     python3 lab/gate2/calls.py --label calls8 --reanalyse   (files on disk only)
 
@@ -96,6 +97,10 @@ opus_args = "".join(f"--{k} {v} " for k, v in opus.items() if v is not None)
 opus["opus-dtx"] = "--opus-dtx" in sys.argv
 if opus["opus-dtx"]:
     opus_args += "--opus-dtx "
+# `--audio-drop`: header extensions both phones leave out of the audio
+# section of what they send (RFC 8285; AudioExtensions in the app).
+opus["audio-drop"] = [x for x in argval("--audio-drop", "").split(",") if x]
+opus_args += "".join(f"--audio-drop {x} " for x in opus["audio-drop"])
 # `--speech`: real speech between the clicks (voice_delay.speech_track), so
 # the call carries a talker's load; the clicks still time the voice.
 speech = "--speech" in sys.argv

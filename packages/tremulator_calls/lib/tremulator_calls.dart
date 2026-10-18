@@ -1,6 +1,7 @@
 /// Voice and video calls whose setup travels through the encrypted mailbox.
 library;
 
+export 'src/audio_extensions.dart';
 export 'src/calls.dart';
 export 'src/opus.dart';
 export 'src/signal.dart';

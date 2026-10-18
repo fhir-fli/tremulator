@@ -10,7 +10,11 @@ min, max) and the median of the last five clicks heard (the queue may drain
 during a call); Alice's sound as sent (payload kbit/s; all-in kbit/s =
 payload + RTP headers + 28 bytes of IP and UDP per packet, without the SRTP
 tag; packets per second; Opus's target) from stats line 40 to the last;
-the round trip at 60, 150 and 290 s of stats; Alice's video stopping and
+the round trip at 60, 150 and 290 s of stats; for each phone, everything
+it put on the wire (the transport's bytes, all streams, RTCP and checks)
+from stats line 40 to the last, its audio header bytes per packet (W3C
+webrtc-stats headerBytesSent: "RTP header and padding bytes") and its most
+audio packets in one second (padding bursts); Alice's video stopping and
 starting (seconds after connected, sending, round trip) and when Bob was
 told; reconnects; fingerprint hits in the server's data; exits.
 """
@@ -67,6 +71,23 @@ def rtts(stats, at=(60, 150, 290)):
     return out
 
 
+def wire(stats):
+    tr, au = [], []
+    for e in stats:
+        for r in e["reports"]:
+            if r["type"] == "transport":
+                tr.append((e["t"], r["bytesSent"]))
+            if r["type"] == "outbound-rtp" and r.get("kind") == "audio":
+                au.append((r["packetsSent"], r.get("headerBytesSent", 0)))
+    if len(tr) < 42 or len(au) < 42:
+        return None
+    (t0, b0), (t1, b1) = tr[40], tr[-1]
+    (n0, h0), (n1, h1) = au[40], au[-1]
+    return {"wire_kbps": round((b1 - b0) * 8 / (ts(t1) - ts(t0)) / 1000, 1),
+            "audio_hdr_B": round((h1 - h0) / max(n1 - n0, 1), 1),
+            "most_pps": max(b[0] - a[0] for a, b in zip(au, au[1:]))}
+
+
 def last_five(d):
     p = os.path.join(d, "voice_delay.jsonl")
     if not os.path.exists(p):
@@ -79,6 +100,7 @@ def last_five(d):
 def row(label, rec):
     d = os.path.join(HERE, "results", label, rec["profile"])
     stats = stats_lines(os.path.join(d, "alice.jsonl"))
+    bob_stats = stats_lines(os.path.join(d, "bob.jsonl"))
     v, a, b = rec.get("voice") or {}, rec.get("alice") or {}, rec.get("bob") or {}
     return {
         "run": label, "profile": rec["profile"], "opus": rec.get("opus"),
@@ -88,6 +110,7 @@ def row(label, rec):
         "delay_ms": [v.get("delay_median_ms"), v.get("delay_min_ms"), v.get("delay_max_ms")],
         "last5_ms": last_five(d),
         "alice_sound": sound(stats),
+        "wire": {"alice": wire(stats), "bob": wire(bob_stats)},
         "rtt_s": rtts(stats),
         "video": a.get("video-sending"), "bob_told": b.get("remote-video"),
         "reconnecting": [a.get("reconnecting"), b.get("reconnecting")],

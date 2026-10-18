@@ -3,6 +3,7 @@ import 'dart:math';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
+import 'package:tremulator_calls/src/audio_extensions.dart';
 import 'package:tremulator_calls/src/opus.dart';
 import 'package:tremulator_calls/src/signal.dart';
 import 'package:tremulator_calls/src/video_guard.dart';
@@ -44,6 +45,7 @@ class Calls {
     this.setupDeadline = const Duration(seconds: 90),
     this.sendRetry = const Duration(seconds: 2),
     this.opus = const OpusReceive(),
+    this.audioExtensions = const AudioExtensions(),
     this.videoGuard = VideoGuard.new,
     this.guardEvery = const Duration(seconds: 1),
     Report? report,
@@ -105,6 +107,10 @@ class Calls {
   /// How this phone asks the other to send its sound, put into every offer
   /// and answer this phone sends.
   final OpusReceive opus;
+
+  /// Header extensions left out of the audio section of every offer and
+  /// answer this phone sends.
+  final AudioExtensions audioExtensions;
 
   /// Makes the guard that stops this phone's video when the link cannot
   /// carry it (one per call); null sends video whatever the link.
@@ -473,7 +479,13 @@ class Call {
       'ms': DateTime.now().difference(started).inMilliseconds,
       'timed-out': timedOut,
     });
-    unawaited(_deliver(type, _calls.opus.applyTo(full!.sdp!), _number));
+    unawaited(
+      _deliver(
+        type,
+        _calls.audioExtensions.applyTo(_calls.opus.applyTo(full!.sdp!)),
+        _number,
+      ),
+    );
   }
 
   /// Sends an offer or answer through the mailbox, again every
