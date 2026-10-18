@@ -4,6 +4,18 @@ sender's microphone and what came out of the receiver's speaker.
 
     voice_delay.py SENT.mkv RECEIVED.mkv OUT.jsonl     a call's two recordings
     voice_delay.py --self-check DIR                    the instrument, offline
+    voice_delay.py --self-check-speech DIR             the same, with speech
+
+With speech (E7, `speech_track`): the same clicks with real speech between
+them, so the call carries the load of a person talking. The speech is ITU-T
+P.501 (07/2026) clause 7.3.2, the British English single-talk sequence
+(speech/, with ITU's notice), looped, at half its level, stopping 1 s before
+each click and resuming 1 s after it. Both recordings are then band-passed
+around the click's 1 kHz before onsets are found: on the track itself speech
+peaks at 0.38 of the click's peak unfiltered and 0.10 filtered, against the
+detector's 0.5 (measured 2026-10-18). A heard recording whose filtered peak
+is under a quarter of the sent one's holds no click, only speech, and yields
+no pairs, as a silent one does.
 
 Each recording is made in its container by ffmpeg's PulseAudio input
 (record_cmd) with every 10 ms packet stamped with its arrival on the wall
@@ -28,6 +40,7 @@ copy with every third click removed, and must read back 300 ms and the loss
 count; it is the known condition the instrument is tested under first.
 """
 import json
+import math
 import os
 import re
 import statistics
@@ -40,6 +53,11 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 TOOL = os.path.abspath(os.path.join(HERE, "..", "tool"))
 SILENT_PEAK = 1000
 PAIR_WINDOW_S = 3.0
+SPEECH = os.path.join(HERE, "speech", "P501_7.3.2_FB_male_female_single-talk_seq.wav")
+SPEECH_GAIN = 0.5
+SPEECH_GAP_S = 1.0  # quiet either side of each click
+BAND = "bandpass=f=1000:t=q:w=8"
+CLICK_FRACTION = 0.25  # of the sent recording's filtered peak
 
 
 def sh(cmd, **kw):
@@ -54,6 +72,32 @@ def click_track_cmd(path, clicks):
     10 s of silence around each clap)."""
     return ["sox", "-n", "-r", "48000", "-c", "1", "-b", "16", path,
             "synth", "0.03", "sine", "1000", "vol", "0.8", "pad", "5", "4.97", "repeat", str(clicks - 1)]
+
+
+def speech_track(path, clicks):
+    """The click track of click_track_cmd (a 30 ms 1 kHz tone at 0.8 of full
+    scale, 5 s into every 10 s) with SPEECH looped in between, at SPEECH_GAIN,
+    SPEECH_GAP_S clear of each click. 48 kHz mono 16-bit, as the click track."""
+    with wave.open(SPEECH) as w:
+        if (w.getframerate(), w.getnchannels(), w.getsampwidth()) != (48000, 1, 2):
+            raise RuntimeError(f"{SPEECH}: not 48 kHz mono 16-bit")
+        speech = array("h", w.readframes(w.getnframes()))
+    rate = 48000
+    out = array("h", bytes(2 * clicks * 10 * rate))
+    k = 0
+    for c in range(clicks):
+        base = c * 10 * rate
+        for a, b in ((0, 5 - SPEECH_GAP_S), (5 + SPEECH_GAP_S, 10)):
+            for i in range(base + int(a * rate), base + int(b * rate)):
+                out[i] = int(speech[k % len(speech)] * SPEECH_GAIN)
+                k += 1
+        for i in range(int(0.03 * rate)):
+            out[base + 5 * rate + i] = int(0.8 * 32767 * math.sin(2 * math.pi * 1000 * i / rate))
+    with wave.open(path, "wb") as w:
+        w.setnchannels(1)
+        w.setsampwidth(2)
+        w.setframerate(rate)
+        w.writeframes(out.tobytes())
 
 
 FRAGMENT_BYTES = 1920  # 10 ms of 48 kHz stereo 16-bit, the pulse default format
@@ -92,10 +136,10 @@ def start_time(path):
     return best
 
 
-def to_wav(path):
-    wav = os.path.splitext(path)[0] + ".wav"
+def to_wav(path, band=False):
+    wav = os.path.splitext(path)[0] + ("_band.wav" if band else ".wav")
     sh(["ffmpeg", "-y", "-loglevel", "error", "-i", path, "-ac", "1", "-ar", "48000",
-        "-c:a", "pcm_s16le", wav])
+        *(["-af", BAND] if band else []), "-c:a", "pcm_s16le", wav])
     return wav
 
 
@@ -119,16 +163,17 @@ def pair(sent, heard):
     return out
 
 
-def measure(sent_path, heard_path, out_path):
-    sent_wav, heard_wav = to_wav(sent_path), to_wav(heard_path)
+def measure(sent_path, heard_path, out_path, speech=False):
+    sent_wav, heard_wav = to_wav(sent_path, speech), to_wav(heard_path, speech)
     t_sent, t_heard = start_time(sent_path), start_time(heard_path)
     # A stamp that is not a wall-clock time means the instrument is broken.
     for path, t in ((sent_path, t_sent), (heard_path, t_heard)):
         if t < 1e9:
             raise RuntimeError(f"{os.path.basename(path)} starts at {t}: no wall-clock stamp")
     heard_peak = peak(heard_wav)
+    floor = max(SILENT_PEAK, CLICK_FRACTION * peak(sent_wav)) if speech else SILENT_PEAK
     sent_on = [t_sent + t for t in onsets(sent_wav)]
-    heard_on = [] if heard_peak < SILENT_PEAK else [t_heard + t for t in onsets(heard_wav)]
+    heard_on = [] if heard_peak < floor else [t_heard + t for t in onsets(heard_wav)]
     pairs = pair(sent_on, heard_on)
     with open(out_path, "w") as f:
         for s, d in pairs:
@@ -137,17 +182,22 @@ def measure(sent_path, heard_path, out_path):
     delays = sorted(d * 1000 for _, d in pairs if d is not None)
     return {"sent_start": round(t_sent, 4), "heard_start": round(t_heard, 4),
             "clicks_sent": len(sent_on), "clicks_heard": len(delays),
-            "heard_peak": heard_peak, "heard_onsets": len(heard_on),
+            "speech": speech, "heard_peak": heard_peak, "heard_onsets": len(heard_on),
             "delay_median_ms": round(statistics.median(delays)) if delays else None,
             "delay_min_ms": round(delays[0]) if delays else None,
             "delay_max_ms": round(delays[-1]) if delays else None}
 
 
-def self_check(d):
-    """Known condition: a 0.300 s delay and 3 of 9 clicks removed."""
+def self_check(d, speech=False):
+    """Known condition: a 0.300 s delay and 3 of 9 clicks removed; with
+    speech, the same on the speech track, and a heard copy with every click
+    removed must read no clicks heard, never speech taken for one."""
     os.makedirs(d, exist_ok=True)
     track = os.path.join(d, "track.wav")
-    sh(click_track_cmd(track, 9))
+    if speech:
+        speech_track(track, 9)
+    else:
+        sh(click_track_cmd(track, 9))
     sent = os.path.join(d, "sent.mkv")
     heard = os.path.join(d, "heard.mkv")
     # The same recording twice, logged as starting at T and T + 0.300 s with
@@ -170,10 +220,18 @@ def self_check(d):
     logged(heard, t + 0.3)
     starts_ok = (abs(start_time(sent) - (t + 0.002)) < 1e-4
                  and abs(start_time(heard) - (t + 0.302)) < 1e-4)
-    got = measure(sent, heard, os.path.join(d, "pairs.jsonl"))
+    got = measure(sent, heard, os.path.join(d, "pairs.jsonl"), speech)
     want = {"clicks_sent": 9, "clicks_heard": 6, "delay_median_ms": 300}
     ok = (starts_ok and all(got[k] == v for k, v in want.items())
           and got["delay_min_ms"] == got["delay_max_ms"] == 300)
+    if speech:
+        every = "+".join(f"between(t,{10 * k - 5 - 0.1},{10 * k - 5 + 0.2})" for k in range(1, 10))
+        none = os.path.join(d, "none.mkv")
+        sh(["ffmpeg", "-y", "-loglevel", "error", "-i", track, "-af",
+            f"volume=enable='{every}':volume=0", none])
+        logged(none, t + 0.3)
+        got["all_clicks_removed"] = measure(sent, none, os.path.join(d, "pairs_none.jsonl"), True)
+        ok = ok and got["all_clicks_removed"]["clicks_heard"] == 0
     print(json.dumps({"self_check": "pass" if ok else "FAIL", "got": got, "want": want}), flush=True)
     return ok
 
@@ -181,4 +239,6 @@ def self_check(d):
 if __name__ == "__main__":
     if sys.argv[1:2] == ["--self-check"]:
         sys.exit(0 if self_check(sys.argv[2]) else 1)
+    if sys.argv[1:2] == ["--self-check-speech"]:
+        sys.exit(0 if self_check(sys.argv[2], speech=True) else 1)
     print(json.dumps(measure(*sys.argv[1:4])), flush=True)

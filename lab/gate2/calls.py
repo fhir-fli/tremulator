@@ -8,6 +8,7 @@ screen and speaker are recorded.
     python3 lab/gate2/calls.py --label calls1 [--profiles none] [--call-s 30]
                                [--skip-build] [--no-video]
                                [--opus-max-bitrate N] [--opus-ptime MS]
+                               [--speech] [--relay-link field|decent]
     python3 lab/gate2/calls.py --label calls8 --reanalyse   (files on disk only)
 
 Profiles: `none` (no shaping), P1-P5 and P0 from labkit.PROFILES, and
@@ -54,7 +55,7 @@ import time
 from labkit import (PORTS, PROFILES, REPO, build_server, clear_shaping, dx,
                     freeze_spans, ip_of,
                     netem, pin_neighbours, sh, start_duty_loop, start_loop, start_server, stop_server, utc)
-from voice_delay import click_track_cmd, measure as voice_delay, record_cmd
+from voice_delay import click_track_cmd, measure as voice_delay, record_cmd, speech_track
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 APP = os.path.join(REPO, "app")
@@ -91,6 +92,16 @@ alice_video = "--no-video" not in sys.argv
 # receive parameters, E7); both phones ask the same. Unset: the app default.
 opus = {k: argval(f"--{k}", None) for k in ("opus-max-bitrate", "opus-ptime")}
 opus_args = "".join(f"--{k} {v} " for k, v in opus.items() if v is not None)
+# `--speech`: real speech between the clicks (voice_delay.speech_track), so
+# the call carries a talker's load; the clicks still time the voice.
+speech = "--speech" in sys.argv
+# `--relay-link decent`: the relay is not slowed, as on a cloud server or a
+# ground server with good internet. `field` (the default, and every run
+# before calls17): the relay is slowed like the phones, as a ground server
+# behind the field site's own weak link, carrying both directions on it.
+relay_link = argval("--relay-link", "field")
+if relay_link not in ("field", "decent"):
+    raise SystemExit(f"--relay-link {relay_link}: field or decent")
 outroot = os.path.join(HERE, "results", label)
 os.makedirs(outroot, exist_ok=True)
 summary = open(os.path.join(HERE, "results", f"{label}.jsonl"), "a")
@@ -241,12 +252,13 @@ def run_profile(name):
     clear_shaping(nodes)
     unblock_direct(alice, bob)
     block = block_direct(alice, bob) if blocked else None
+    shaped = nodes if relay_link == "field" else (srv, alice, bob)
     if shape is not None:
         rate, rtt, loss, _internal = shape
-        for c in nodes:
+        for c in shaped:
             netem(c, rate, rtt / 2, loss)
         if base == "P4":
-            start_duty_loop(nodes, rate, rtt, loss)
+            start_duty_loop(shaped, rate, rtt, loss)
     srv_port = start_server(srv, name, port)
     url = f"http://{ip_of(srv)}:{srv_port}"
     relay = start_relay(turn, d, internal)
@@ -322,7 +334,11 @@ def run_profile(name):
         raise_pattern(alice, 8)
     if clicked and base in CUTS:
         cut_links((alice, bob), d, CUTS[base])
-    if clicked:
+    if clicked and speech:
+        speech_track(os.path.join(host_d, "speech_track.wav"), clicks)
+        sh(["docker", "exec", "-d", alice, "sh", "-c",
+            f"paplay --device=mic {d}/speech_track.wav > {d}/click.log 2>&1"])
+    elif clicked:
         track = " ".join(click_track_cmd("/tmp/click.wav", clicks))
         sh(["docker", "exec", "-d", alice, "sh", "-c",
             f"{track} && paplay --device=mic /tmp/click.wav > {d}/click.log 2>&1"])
@@ -356,7 +372,7 @@ def run_profile(name):
     unblock_direct(alice, bob)
     dx(srv, "chown", "-R", f"{os.getuid()}:{os.getgid()}", "/out", user="0")
 
-    rec = {"profile": name, "alice_video": alice_video, "opus": opus, "alice_wall_s": alice_s, "pattern_raised": raised,
+    rec = {"profile": name, "alice_video": alice_video, "opus": opus, "speech": speech, "relay_link": relay_link, "shaped": list(shaped) if shape else [], "alice_wall_s": alice_s, "pattern_raised": raised,
            "pattern_on_top_at_connect": on_top_at_connect,
            "direct_blocked": block, "clicks_started": clicked, "bob_call_ended_seen": bob_ended,
            "alice_exit": read(alice, f"{d}/alice.exit"), "bob_exit": read(bob, f"{d}/bob.exit"),
@@ -368,7 +384,7 @@ def run_profile(name):
         rec[who] = {k: v for k, v in s.items() if k != "log"}
     rec["recording_bob"] = recording_facts(host_d, "bob")
     rec["recording_alice"] = recording_facts(host_d, "alice")
-    rec["voice"] = voice_facts(host_d)
+    rec["voice"] = voice_facts(host_d, speech)
     if base in CUTS:
         rec["cut"] = cut_facts(host_d, CUTS[base])
     if base in SETUP_CUTS:
@@ -469,13 +485,13 @@ def read(c, path):
     return dx(c, "cat", path, timeout=10).stdout.strip() or None
 
 
-def voice_facts(host_d):
+def voice_facts(host_d, speech=False):
     """One-way voice delay per click (voice_delay.py), or why there is none."""
     sent, heard = (os.path.join(host_d, f) for f in ("alice_sent.mkv", "bob_heard.mkv"))
     if not (os.path.exists(sent) and os.path.exists(heard)):
         return {"missing": [os.path.basename(p) for p in (sent, heard) if not os.path.exists(p)]}
     try:
-        return voice_delay(sent, heard, os.path.join(host_d, "voice_delay.jsonl"))
+        return voice_delay(sent, heard, os.path.join(host_d, "voice_delay.jsonl"), speech)
     except RuntimeError as e:
         return {"error": str(e)[:500]}
 
@@ -574,7 +590,7 @@ def reanalyse():
         rec = {"run": label, "profile": r["profile"], "reanalysed": time.strftime("%Y-%m-%dT%H:%M:%S"),
                "recording_bob": recording_facts(host_d, "bob"),
                "recording_alice": recording_facts(host_d, "alice"),
-               "voice": voice_facts(host_d)}
+               "voice": voice_facts(host_d, r.get("speech", False))}
         out.write(json.dumps(rec) + "\n")
         out.flush()
         print(json.dumps(rec), flush=True)
