@@ -408,7 +408,7 @@ def qdisc_watch(nodes, d):
     50 kbit/s relay link, and nothing measured the relay's queue."""
     for c in nodes:
         sh(["docker", "exec", "-d", "-u", "0", c, "sh", "-c",
-            f"echo $$ > {d}/{c}_qdisc.pid; while :; do echo t=$(date +%s.%N); "
+            f"mkdir -p {d}; echo $$ > {d}/{c}_qdisc.pid; while :; do echo t=$(date +%s.%N); "
             f"tc -s qdisc show dev eth0; sleep 5; done > {d}/{c}_qdisc.log 2>&1"])
 
 
