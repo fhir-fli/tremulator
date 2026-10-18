@@ -48,6 +48,7 @@ Do not start a run without Grey's go (docs/GATE1.md).
 import ipaddress
 import json
 import os
+import re
 import shutil
 import sys
 import time
@@ -259,6 +260,7 @@ def run_profile(name):
             netem(c, rate, rtt / 2, loss)
         if base == "P4":
             start_duty_loop(shaped, rate, rtt, loss)
+    qdisc_watch(nodes, d)
     srv_port = start_server(srv, name, port)
     url = f"http://{ip_of(srv)}:{srv_port}"
     relay = start_relay(turn, d, internal)
@@ -368,6 +370,7 @@ def run_profile(name):
         time.sleep(1)
     stop_server(srv, name, port)
     relay_facts = stop_relay(turn, d, host_d)
+    qdisc_stop(nodes, d)
     clear_shaping(nodes)
     unblock_direct(alice, bob)
     dx(srv, "chown", "-R", f"{os.getuid()}:{os.getgid()}", "/out", user="0")
@@ -389,8 +392,48 @@ def run_profile(name):
         rec["cut"] = cut_facts(host_d, CUTS[base])
     if base in SETUP_CUTS:
         rec["cut"] = cut_facts(host_d, SETUP_CUTS[base][0])
+    rec["qdisc"] = qdisc_facts(nodes, host_d)
     rec.update(fingerprint_hunt(host_d))
     log(rec)
+
+
+QDISC = re.compile(r"Sent (\d+) bytes (\d+) pkt \(dropped (\d+), overlimits (\d+) requeues (\d+)\)\s+backlog (\d+)b (\d+)p")
+
+
+def qdisc_watch(nodes, d):
+    """Every 5 s, each machine's own shaping counters (tc -s qdisc on eth0:
+    bytes and packets sent, dropped, and the queue held) with the time, to
+    <node>_qdisc.log; the loop's pid in <node>_qdisc.pid. calls20 P1-blocked:
+    the round trip reached 15 s with only sound (~16 kbit/s each way) on a
+    50 kbit/s relay link, and nothing measured the relay's queue."""
+    for c in nodes:
+        sh(["docker", "exec", "-d", "-u", "0", c, "sh", "-c",
+            f"echo $$ > {d}/{c}_qdisc.pid; while :; do echo t=$(date +%s.%N); "
+            f"tc -s qdisc show dev eth0; sleep 5; done > {d}/{c}_qdisc.log 2>&1"])
+
+
+def qdisc_stop(nodes, d):
+    for c in nodes:
+        dx(c, "sh", "-c", f"kill $(cat {d}/{c}_qdisc.pid) 2>/dev/null; true", user="0")
+
+
+def qdisc_facts(nodes, host_d):
+    """Per machine: the last counters read, and the largest queue seen."""
+    out = {}
+    for c in nodes:
+        p = os.path.join(host_d, f"{c}_qdisc.log")
+        if not os.path.exists(p):
+            out[c] = None
+            continue
+        rows = [tuple(int(g) for g in m.groups()) for m in QDISC.finditer(open(p).read())]
+        if not rows:
+            out[c] = {"samples": 0}
+            continue
+        sent_b, sent_p, dropped, _, _, _, _ = rows[-1]
+        out[c] = {"samples": len(rows), "sent_bytes": sent_b, "sent_pkts": sent_p,
+                  "dropped": dropped, "max_backlog_bytes": max(r[5] for r in rows),
+                  "max_backlog_pkts": max(r[6] for r in rows)}
+    return out
 
 
 def cut_links(phones, d, seconds):
