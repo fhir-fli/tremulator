@@ -12,6 +12,12 @@
 /// the profile's own. WebRTC's bandwidth estimate could not serve: on P1 it
 /// stayed at 84.4 kbit/s throughout.
 ///
+/// A call starts with sound only, and video starts once the round trip has
+/// stayed near its lowest for [startHold]: in calls18-19 the video sent
+/// before the guard first stopped it (8-60 s) filled the link's queue, and
+/// on P1 that queue took the whole 300 s call to drain, with the sound
+/// waiting behind it (calls19a P1: round trip 15 s falling to 0.53 s).
+///
 /// The thresholds and times are choices, not measurements; the lab runs of
 /// E7 test them.
 class VideoGuard {
@@ -23,7 +29,10 @@ class VideoGuard {
     this.firstHold = const Duration(seconds: 30),
     this.maxHold = const Duration(seconds: 240),
     this.probe = const Duration(seconds: 20),
-  });
+    this.startHold = const Duration(seconds: 10),
+    this.startSending = false,
+  }) : _sending = startSending,
+       _starting = !startSending;
 
   /// How many weak samples in a row stop the video.
   final int weakSamples;
@@ -42,13 +51,22 @@ class VideoGuard {
   /// See [firstHold].
   final Duration maxHold;
 
+  /// How long a call that starts with sound only waits, with no weak sample,
+  /// before it first sends video.
+  final Duration startHold;
+
+  /// Whether video is sent from the start, as before calls20.
+  final bool startSending;
+
   /// How long video sent again must go without stopping for the try to count
   /// as good, which resets the hold to [firstHold].
   final Duration probe;
 
   double? _lowest;
   int _weak = 0;
-  bool _sending = true;
+  bool _sending;
+  bool _starting;
+  DateTime? _quietSince;
   late DateTime _offSince;
   DateTime? _onSince;
   late Duration _hold = firstHold;
@@ -86,6 +104,25 @@ class VideoGuard {
         seconds > lowest * ratio &&
         seconds > lowest + margin.inMicroseconds / 1e6;
     _weak = weak ? _weak + 1 : 0;
+    if (_starting) {
+      // Sound only so far, and nothing said: the link is either shown weak
+      // (video stays off, and now it is said) or quiet long enough to try.
+      if (_weak >= weakSamples) {
+        _starting = false;
+        _offSince = now;
+        _weak = 0;
+        return false;
+      }
+      final quiet = _quietSince = weak ? null : (_quietSince ?? now);
+      if (quiet != null && now.difference(quiet) >= startHold) {
+        _starting = false;
+        _sending = true;
+        _onSince = now;
+        _weak = 0;
+        return true;
+      }
+      return null;
+    }
     if (_sending) {
       final on = _onSince;
       if (on != null && now.difference(on) >= probe) {

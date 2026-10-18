@@ -372,8 +372,16 @@ class Call {
       }
       ..onDataChannel = _adopt;
     if (media != null) {
+      final guarded = _calls.videoGuard != null;
       for (final t in media.getTracks()) {
-        await pc.addTrack(t, media);
+        final sender = await pc.addTrack(t, media);
+        if (guarded && t.kind == 'video') {
+          // Sound first: the video track is held back until the guard
+          // starts it (VideoGuard.startSending). The sender, and the video
+          // in the offer or answer, stay.
+          _videoSenders[sender] = t;
+          await sender.replaceTrack(null);
+        }
       }
     }
     if (outgoing) {
@@ -821,16 +829,13 @@ class Call {
     if (make == null || pc == null || _ended.isCompleted) {
       return;
     }
-    for (final s in await pc.getSenders()) {
-      final track = s.track;
-      if (track != null && track.kind == 'video') {
-        _videoSenders[s] = track;
-      }
-    }
     if (_videoSenders.isEmpty) {
       return;
     }
     final guard = _guard = make();
+    if (guard.startSending) {
+      await _sendVideo(true, 0, guard.hold);
+    }
     await _routeToGuard();
     _guardTimer = Timer.periodic(_calls.guardEvery, (_) async {
       if (_guardBusy || _ended.isCompleted || _lostAt != null) {

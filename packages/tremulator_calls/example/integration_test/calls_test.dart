@@ -439,6 +439,7 @@ void main() {
         videoGuard: () => VideoGuard(
           firstHold: const Duration(seconds: 2),
           probe: const Duration(seconds: 2),
+          startHold: const Duration(seconds: 3),
         ),
         guardEvery: const Duration(milliseconds: 200),
         roundTrip: (_) async => slow ? 9.0 : 0.4,
@@ -481,22 +482,29 @@ void main() {
         return await framesAtBob() > before;
       }
 
+      // Sound first: no video until the round trip has been quiet for the
+      // start hold.
+      expect(await framesAtBob(), 0, reason: 'no video at the start');
       for (var i = 0; i < 100 && await framesAtBob() == 0; i++) {
         await Future<void>.delayed(const Duration(milliseconds: 100));
       }
       expect(await framesFlow(), isTrue, reason: 'video flows at first');
 
+      expect(
+        aliceLog.where((e) => e['event'] == 'video-sending').single['sending'],
+        isTrue,
+      );
       slow = true;
       await _until(() => bobSays.contains(false));
-      final off = aliceLog.singleWhere((e) => e['event'] == 'video-sending');
+      final off = aliceLog.lastWhere((e) => e['event'] == 'video-sending');
       expect(off['sending'], isFalse);
       // Frames already on the way may still land; then none.
       await Future<void>.delayed(const Duration(seconds: 1));
       expect(await framesFlow(), isFalse, reason: 'video stopped');
 
       slow = false;
-      await _until(() => bobSays.length == 2);
-      expect(bobSays, [false, true]);
+      await _until(() => bobSays.length == 3);
+      expect(bobSays, [true, false, true]);
       expect(await framesFlow(), isTrue, reason: 'video back');
       expect(
         aliceLog.where((e) => e['event'] == 'video-guard-failed'),
