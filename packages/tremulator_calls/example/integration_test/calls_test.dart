@@ -386,6 +386,45 @@ void main() {
       await bobCalls.close();
     },
   );
+
+  testWidgets(
+    'a hang-up sent while the link is down is sent again and reaches the '
+    'other phone',
+    (_) async {
+      // Bob's phone rings and he has not answered, so there is no control
+      // channel: only the mailbox can carry Alice's hang-up.
+      final aliceCalls = Calls(
+        alice,
+        sendRetry: const Duration(milliseconds: 200),
+      );
+      final bobCalls = Calls(bob);
+      final ringing = bobCalls.ringing.first;
+      final call = await aliceCalls.start(conversation);
+      final bobsCall = await ringing.timeout(const Duration(seconds: 30));
+      // Hung up before it connected: `connected` fails with the reason.
+      final neverConnected = expectLater(
+        call.connected,
+        throwsA(isA<StateError>()),
+      );
+
+      aliceLink.down = true;
+      final hangingUp = aliceCalls.close();
+      await _until(
+        () => aliceLog.any((e) => e['event'] == 'hangup-not-sent'),
+      );
+      aliceLink.down = false;
+      await hangingUp;
+      await neverConnected;
+
+      expect(
+        await bobsCall.ended.timeout(const Duration(seconds: 30)),
+        'remote-hangup',
+      );
+      final sent = aliceLog.singleWhere((e) => e['event'] == 'hangup-sent');
+      expect(sent['attempt'], greaterThan(1));
+      await bobCalls.close();
+    },
+  );
 }
 
 /// A connection to the server that can be cut: while [down], every request

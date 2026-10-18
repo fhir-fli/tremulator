@@ -196,7 +196,12 @@ class Call {
     this.id, {
     required this.outgoing,
     String? remoteOffer,
-  }) : _remoteOffer = remoteOffer;
+  }) : _remoteOffer = remoteOffer {
+    // A call can end before it connects (hung up while ringing) with no one
+    // waiting on [connected]; its failure must not then surface as an
+    // unhandled error. Whoever does wait on it still gets the error.
+    _connected.future.ignore();
+  }
 
   final Calls _calls;
 
@@ -698,6 +703,35 @@ class Call {
     }
   }
 
+  /// Sends the hang-up through the mailbox as well, in case the control
+  /// channel never opened or the link drops the message: again every
+  /// [Calls.sendRetry] while the send fails, for up to
+  /// [Calls.reconnectGrace], after which the other phone has ended the call
+  /// as `lost` by itself. calls12 P4: the one send fell in an outage and Bob
+  /// heard the hang-up 70 s late, as `lost`.
+  Future<void> _deliverHangUp() async {
+    final text = Signal(type: SignalType.hangup, call: id).encode();
+    final until = DateTime.now().add(_calls.reconnectGrace);
+    for (var attempt = 1; ; attempt++) {
+      try {
+        await _calls.client.sendCall(conversation, text);
+        _calls.report({'event': 'hangup-sent', 'call': id, 'attempt': attempt});
+        return;
+      } on Object catch (e) {
+        _calls.report({
+          'event': 'hangup-not-sent',
+          'call': id,
+          'attempt': attempt,
+          'error': '$e',
+        });
+      }
+      if (DateTime.now().isAfter(until)) {
+        return;
+      }
+      await Future<void>.delayed(_calls.sendRetry);
+    }
+  }
+
   Future<void> _finish(String why, {required bool tell}) async {
     _grace?.cancel();
     _restartTimer?.cancel();
@@ -712,17 +746,10 @@ class Call {
         if (control?.state == RTCDataChannelState.RTCDataChannelOpen) {
           await control!.send(RTCDataChannelMessage('hangup'));
         }
-        // Through the mailbox as well, in case the control channel never
-        // opened or the link drops the message.
-        await _calls.client.sendCall(
-          conversation,
-          Signal(type: SignalType.hangup, call: id).encode(),
-        );
       } on Object catch (e) {
-        // With the link gone the hang-up may not get out; the other phone
-        // then ends the call itself when its grace period runs out.
         _calls.report({'event': 'hangup-not-sent', 'call': id, 'error': '$e'});
       }
+      await _deliverHangUp();
     }
     if (!_connected.isCompleted) {
       _connected.completeError(StateError('call ended: $why'));
