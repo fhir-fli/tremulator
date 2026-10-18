@@ -273,6 +273,10 @@ class Call {
   final Map<RTCRtpSender, MediaStreamTrack> _videoSenders = {};
   bool _guardBusy = false;
 
+  /// Video stops and starts, one after another: a tap can land while the
+  /// guard's own change is still replacing tracks.
+  Future<void> _videoSends = Future.value();
+
   /// Completes when media can flow; fails if the connection fails (a
   /// certificate that does not match the fingerprint in the setup ends here,
   /// RFC 8122 section 6.2) or the call ends first.
@@ -290,11 +294,24 @@ class Call {
   /// The other side's media, as it arrives.
   Stream<MediaStream> get remoteMedia => _remoteMedia.stream;
 
-  /// This phone's video stopping and starting again as the link allows
-  /// ([VideoGuard]), and the other phone's, as it reports them over the
+  /// This phone's video stopping when the link cannot carry it
+  /// ([VideoGuard]) and starting again on a tap ([retryVideo]), and the
+  /// other phone's, as it reports them over the
   /// control channel. The screen says so from these (Gate 5: "drops to
   /// audio and says so").
   Stream<VideoChange> get video => _video.stream;
+
+  /// Sends this phone's video again after the guard stopped it, because the
+  /// person tapped to try again. Video never comes back on its own
+  /// ([VideoGuard]). Does nothing if video is already sent, or this phone
+  /// sends none.
+  Future<void> retryVideo() async {
+    final guard = _guard;
+    if (guard == null || _ended.isCompleted || !guard.retry()) {
+      return;
+    }
+    await _sendVideo(true, null, 'tap');
+  }
 
   /// The underlying connection, for statistics.
   RTCPeerConnection? get connection => _pc;
@@ -834,7 +851,7 @@ class Call {
     }
     final guard = _guard = make();
     if (guard.startSending) {
-      await _sendVideo(true, 0, guard.hold);
+      await _sendVideo(true, null, 'start');
     }
     await _routeToGuard();
     _guardTimer = Timer.periodic(_calls.guardEvery, (_) async {
@@ -849,7 +866,7 @@ class Call {
         }
         final change = guard.sample(DateTime.now(), rtt);
         if (change != null) {
-          await _sendVideo(change, rtt, guard.hold);
+          await _sendVideo(change, rtt, 'guard');
         }
       } on Object catch (e) {
         _calls.report({
@@ -905,27 +922,32 @@ class Call {
   /// accepts it and the encoding stays active (calls_test, 2026-10-18; its
   /// updateRtpParameters changes a copy of the encodings and never sets them
   /// back).
-  Future<void> _sendVideo(bool sending, double rtt, Duration hold) async {
-    for (final MapEntry(key: sender, value: track) in _videoSenders.entries) {
-      await sender.replaceTrack(sending ? track : null);
-    }
-    _calls.report({
-      'event': 'video-sending',
-      'call': id,
-      'sending': sending,
-      'rtt': rtt,
-      'hold-s': hold.inSeconds,
-    });
-    if (!_video.isClosed) {
-      _video.add(VideoChange(local: true, sending: sending));
-    }
-    final control = _control;
-    if (control?.state == RTCDataChannelState.RTCDataChannelOpen) {
-      await control!.send(
-        RTCDataChannelMessage(sending ? 'video-on' : 'video-off'),
-      );
-    }
-  }
+  ///
+  /// [by] is who decided: `start`, `guard` or `tap`; [rtt] is the round trip
+  /// the guard decided on, if it did.
+  Future<void> _sendVideo(bool sending, double? rtt, String by) =>
+      _videoSends = _videoSends.then((_) async {
+        for (final MapEntry(key: sender, value: track)
+            in _videoSenders.entries) {
+          await sender.replaceTrack(sending ? track : null);
+        }
+        _calls.report({
+          'event': 'video-sending',
+          'call': id,
+          'sending': sending,
+          'by': by,
+          'rtt': rtt,
+        });
+        if (!_video.isClosed) {
+          _video.add(VideoChange(local: true, sending: sending));
+        }
+        final control = _control;
+        if (control?.state == RTCDataChannelState.RTCDataChannelOpen) {
+          await control!.send(
+            RTCDataChannelMessage(sending ? 'video-on' : 'video-off'),
+          );
+        }
+      });
 }
 
 /// Video stopped or started, on this phone ([local]) or the other.

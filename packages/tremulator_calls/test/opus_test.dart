@@ -83,8 +83,12 @@ void main() {
     expect(
       _lines(out),
       contains(
-        'a=fmtp:111 minptime=10;useinbandfec=1;maxaveragebitrate=12000;'
-        'usedtx=1',
+        [
+          'a=fmtp:111 minptime=10',
+          'useinbandfec=1',
+          'maxaveragebitrate=12000',
+          'usedtx=1',
+        ].join(';'),
       ),
     );
   });

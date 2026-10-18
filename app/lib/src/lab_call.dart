@@ -122,8 +122,9 @@ class _LabCallAppState extends State<LabCallApp> {
   final RTCVideoRenderer _remote = RTCVideoRenderer();
   bool _ready = false;
 
-  /// What the screen says about video, or null: Gate 5's "says so".
-  final ValueNotifier<String?> _notice = ValueNotifier(null);
+  /// What the screen says about video, or null: Gate 5's "says so". With
+  /// a retry, it offers a tap to try this phone's video again.
+  final ValueNotifier<_Notice?> _notice = ValueNotifier(null);
 
   @override
   void initState() {
@@ -163,17 +164,23 @@ class _LabCallAppState extends State<LabCallApp> {
                 valueListenable: _remote,
                 builder: (_, _, _) => RTCVideoView(_remote),
               ),
-              ValueListenableBuilder<String?>(
+              ValueListenableBuilder<_Notice?>(
                 valueListenable: _notice,
-                builder: (_, text, _) => text == null
+                builder: (_, notice, _) => notice == null
                     ? const SizedBox.shrink()
                     : Center(
-                        child: Text(
-                          text,
-                          textDirection: TextDirection.ltr,
-                          style: const TextStyle(
-                            color: Color(0xFFFFFFFF),
-                            fontSize: 32,
+                        child: GestureDetector(
+                          onTap: notice.retry,
+                          child: Text(
+                            notice.retry == null
+                                ? notice.text
+                                : '${notice.text}\nTap to try video again.',
+                            textDirection: TextDirection.ltr,
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              color: Color(0xFFFFFFFF),
+                              fontSize: 32,
+                            ),
                           ),
                         ),
                       ),
@@ -188,7 +195,7 @@ Future<void> _run(
   LabOptions o,
   LabLog log,
   RTCVideoRenderer remote,
-  ValueNotifier<String?> notice,
+  ValueNotifier<_Notice?> notice,
 ) async {
   log({
     'event': 'opus-asked',
@@ -280,15 +287,23 @@ Future<void> _run(
 void _show(
   Call call,
   RTCVideoRenderer remote,
-  ValueNotifier<String?> notice,
+  ValueNotifier<_Notice?> notice,
   LabLog log,
 ) {
   call.video.listen((c) {
     notice.value = c.sending
         ? null
         : c.local
-        ? 'Your video is off: weak connection. Sound continues.'
-        : 'Their video is off: weak connection. Sound continues.';
+        ? _Notice(
+            'Your video is off: weak connection. Sound continues.',
+            retry: () {
+              log({'event': 'video-retry-tapped'});
+              unawaited(call.retryVideo());
+            },
+          )
+        : const _Notice(
+            'Their video is off: weak connection. Sound continues.',
+          );
   });
   var sized = false;
   remote.onResize = () {
@@ -368,4 +383,13 @@ List<Map<String, Object?>> _keep(List<StatsReport> reports) {
               as Map<String, Object?>,
         },
   ];
+}
+
+/// What the screen says about video, and the tap that tries this phone's
+/// video again, if it is this phone's.
+class _Notice {
+  const _Notice(this.text, {this.retry});
+
+  final String text;
+  final VoidCallback? retry;
 }

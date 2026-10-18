@@ -1,5 +1,5 @@
 /// Decides when a phone stops sending its video because the link cannot
-/// carry it, and when it tries again (E7, docs/GATE2-CALLS-PLAN.md; Gate 5
+/// carry it (E7, docs/GATE2-CALLS-PLAN.md; Gate 5
 /// in docs/SUCCESS.md: "when bandwidth falls below the floor, the call drops
 /// to audio and says so, rather than freezing").
 ///
@@ -18,6 +18,12 @@
 /// on P1 that queue took the whole 300 s call to drain, with the sound
 /// waiting behind it (calls19a P1: round trip 15 s falling to 0.53 s).
 ///
+/// Stopped video comes back only when the person taps to try again
+/// ([retry]), never on its own (Grey, 2026-10-18). Each automatic try in
+/// calls19-20 refilled the queue and slowed the voice for minutes: calls19b
+/// P1, every try jammed the link within 9-10 s; calls20d, after the second
+/// try, clicks took 2.7-2.8 s for two minutes on a 0.47 s round trip.
+///
 /// The thresholds and times are choices, not measurements; the lab runs of
 /// E7 test them.
 class VideoGuard {
@@ -26,9 +32,6 @@ class VideoGuard {
     this.weakSamples = 5,
     this.ratio = 2,
     this.margin = const Duration(milliseconds: 500),
-    this.firstHold = const Duration(seconds: 30),
-    this.maxHold = const Duration(seconds: 240),
-    this.probe = const Duration(seconds: 20),
     this.startHold = const Duration(seconds: 10),
     this.startSending = false,
   }) : _sending = startSending,
@@ -44,13 +47,6 @@ class VideoGuard {
   /// See [ratio].
   final Duration margin;
 
-  /// How long the video stays off, with no weak sample, before it is tried
-  /// again; doubled each time a try fails, up to [maxHold].
-  final Duration firstHold;
-
-  /// See [firstHold].
-  final Duration maxHold;
-
   /// How long a call that starts with sound only waits, with no weak sample,
   /// before it first sends video.
   final Duration startHold;
@@ -58,24 +54,27 @@ class VideoGuard {
   /// Whether video is sent from the start, as before calls20.
   final bool startSending;
 
-  /// How long video sent again must go without stopping for the try to count
-  /// as good, which resets the hold to [firstHold].
-  final Duration probe;
-
   double? _lowest;
   int _weak = 0;
   bool _sending;
   bool _starting;
   DateTime? _quietSince;
-  late DateTime _offSince;
-  DateTime? _onSince;
-  late Duration _hold = firstHold;
 
   /// Whether video should be sent now.
   bool get sending => _sending;
 
-  /// How long the video will stay off once stopped, as things stand.
-  Duration get hold => _hold;
+  /// The person tapped to try video again. Returns true if video is to be
+  /// sent now, false if it already was. The next weak samples stop it
+  /// again, as before.
+  bool retry() {
+    if (_sending) {
+      return false;
+    }
+    _starting = false;
+    _sending = true;
+    _weak = 0;
+    return true;
+  }
 
   String? _route;
 
@@ -94,8 +93,8 @@ class VideoGuard {
   }
 
   /// One round trip of [seconds], measured at [now]. Returns the new state
-  /// when it changes (false: stop the video; true: send it again), else
-  /// null.
+  /// when it changes (false: stop the video; true: start it, once, at the
+  /// start of a call), else null.
   bool? sample(DateTime now, double seconds) {
     final lowest = _lowest = _lowest == null || seconds < _lowest!
         ? seconds
@@ -109,7 +108,6 @@ class VideoGuard {
       // (video stays off, and now it is said) or quiet long enough to try.
       if (_weak >= weakSamples) {
         _starting = false;
-        _offSince = now;
         _weak = 0;
         return false;
       }
@@ -117,41 +115,15 @@ class VideoGuard {
       if (quiet != null && now.difference(quiet) >= startHold) {
         _starting = false;
         _sending = true;
-        _onSince = now;
         _weak = 0;
         return true;
       }
       return null;
     }
-    if (_sending) {
-      final on = _onSince;
-      if (on != null && now.difference(on) >= probe) {
-        _hold = firstHold;
-        _onSince = null;
-      }
-      if (_weak >= weakSamples) {
-        if (_onSince != null) {
-          // Tried again and the link could not carry it: wait longer.
-          final doubled = _hold * 2;
-          _hold = doubled > maxHold ? maxHold : doubled;
-        }
-        _sending = false;
-        _offSince = now;
-        _onSince = null;
-        _weak = 0;
-        return false;
-      }
-      return null;
-    }
-    if (weak) {
-      _offSince = now;
-      return null;
-    }
-    if (now.difference(_offSince) >= _hold) {
-      _sending = true;
-      _onSince = now;
+    if (_sending && _weak >= weakSamples) {
+      _sending = false;
       _weak = 0;
-      return true;
+      return false;
     }
     return null;
   }

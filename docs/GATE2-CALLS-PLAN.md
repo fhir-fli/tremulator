@@ -230,6 +230,7 @@ plant on purpose. Order is the build order; none started yet.
 | E5 | The WhatsApp numbers | connect time, relayed share, voice delay, frozen video, survival across P4's drop, per profile, against `GATE1.md` | Gate 1 measurements |
 | E6 | Completion rate | 50 calls on P1 (Gate 4), completion at or above WhatsApp's on P1 | `SUCCESS.md` Gate 4 |
 | E7 | Video falls back to audio | on P1 with video on, the call keeps sound and says video is off, rather than freezing | `SUCCESS.md` Gate 5, `DESIGN.md` |
+| E7, decided | Video comes back only on a tap | Grey 2026-10-18: once stopped, video stays off until the person taps "try video again"; a tap on a link still weak stops it again after five weak seconds. Why: each automatic try in calls19-20 refilled the link's queue and slowed the voice for minutes (calls19b P1: the link jammed within 9-10 s of each try; calls20d: clicks took 2.7-2.8 s for two minutes after the second try). The call still starts with sound only and sends video by itself once the link has been steady for 10 s. | Grey |
 | E8 | Failure modes | network lost mid-call then back (call resumes or ends cleanly, both sides agree); far phone killed mid-call; relay down at call start | `SUCCESS.md` standing categories |
 
 Unknown until looked at: how much of the MLS key schedule the Dart

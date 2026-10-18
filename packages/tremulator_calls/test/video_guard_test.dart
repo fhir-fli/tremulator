@@ -27,11 +27,10 @@ void main() {
     // calls19a P1: the round trip climbs from the start.
     expect(_feed(g, [0.45, 1.2, 2.0, 3.1, 4.0, 5.2]), [(5, false)]);
     expect(g.sending, isFalse);
-    // Then the usual hold applies before the first try.
-    expect(
-      _feed(g, List.filled(31, 0.45), start: 6),
-      [(35, true)],
-    );
+    // Then it waits for a tap, however good the link becomes.
+    expect(_feed(g, List.filled(300, 0.45), start: 6), isEmpty);
+    expect(g.retry(), isTrue);
+    expect(g.sending, isTrue);
   });
 
   test('a link within 10% of its own round trip never stops video (P2, P3 '
@@ -65,41 +64,37 @@ void main() {
     expect(_feed(g, [0.005, ...List.filled(20, 0.05)]), isEmpty);
   });
 
-  test('video comes back after the hold with no weak sample, and stays if '
-      'the link holds', () {
+  test('stopped video stays off on a good link until the person taps', () {
     final g = VideoGuard(startSending: true);
     expect(_feed(g, [0.4, ...List<double>.filled(5, 9)]), [(5, false)]);
-    // The queue drains over 10 s (still weak), then the link is good: the
-    // 30 s hold runs from the last weak sample (second 15).
-    final changes = _feed(g, [
-      ...List<double>.filled(10, 9),
-      ...List.filled(40, 0.4),
-    ], start: 6);
-    expect(changes, [(45, true)]);
+    // The queue drains, then five minutes of a good link: nothing.
+    expect(
+      _feed(g, [
+        ...List<double>.filled(10, 9),
+        ...List.filled(300, 0.4),
+      ], start: 6),
+      isEmpty,
+    );
+    expect(g.sending, isFalse);
+    expect(g.retry(), isTrue);
     expect(g.sending, isTrue);
-    // 20 s good after that resets the hold.
-    _feed(g, List.filled(25, 0.4), start: 56);
-    expect(g.hold, const Duration(seconds: 30));
+    expect(_feed(g, List.filled(60, 0.4), start: 316), isEmpty);
   });
 
-  test('a failed try doubles the hold, up to the cap', () {
+  test('a tap on a link still weak stops video again after five weak '
+      'samples, and it waits for the next tap', () {
     final g = VideoGuard(startSending: true);
-    var second = 0;
-    List<(int, bool)> run(List<double> r) {
-      final c = _feed(g, r, start: second);
-      second += r.length;
-      return c;
-    }
+    _feed(g, [0.4, ...List<double>.filled(5, 9)]);
+    expect(g.retry(), isTrue);
+    expect(_feed(g, List<double>.filled(5, 9), start: 6), [(10, false)]);
+    expect(_feed(g, List.filled(300, 0.4), start: 11), isEmpty);
+    expect(g.sending, isFalse);
+  });
 
-    run([0.4, ...List<double>.filled(5, 9)]);
-    for (final want in [60, 120, 240, 240]) {
-      // Good until video returns, then weak again at once.
-      final back = run(List.filled(g.hold.inSeconds + 1, 0.4));
-      expect(back.single.$2, isTrue);
-      final off = run(List<double>.filled(5, 9));
-      expect(off.single.$2, isFalse);
-      expect(g.hold, Duration(seconds: want));
-    }
+  test('a tap while video is on changes nothing', () {
+    final g = VideoGuard(startSending: true);
+    expect(g.retry(), isFalse);
+    expect(g.sending, isTrue);
   });
 
   test('a reconnect on the same route keeps the lowest round trip, so a '

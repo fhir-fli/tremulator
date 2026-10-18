@@ -429,18 +429,15 @@ void main() {
 
   testWidgets(
     'on a slow link the caller stops its video, the other phone is told and '
-    'stops receiving it, and it comes back when the link recovers',
+    'stops receiving it, it stays off when the link recovers, and a tap '
+    'brings it back',
     (_) async {
       // The round trip is played: 0.4 s, then 9 s (a queue, as P1 built in
       // calls8), then 0.4 s again. Times shortened for the test.
       var slow = false;
       final aliceCalls = Calls(
         alice,
-        videoGuard: () => VideoGuard(
-          firstHold: const Duration(seconds: 2),
-          probe: const Duration(seconds: 2),
-          startHold: const Duration(seconds: 3),
-        ),
+        videoGuard: () => VideoGuard(startHold: const Duration(seconds: 3)),
         guardEvery: const Duration(milliseconds: 200),
         roundTrip: (_) async => slow ? 9.0 : 0.4,
       );
@@ -503,7 +500,17 @@ void main() {
       expect(await framesFlow(), isFalse, reason: 'video stopped');
 
       slow = false;
+      // Three seconds of a good link: still off, and nothing said.
+      await Future<void>.delayed(const Duration(seconds: 3));
+      expect(bobSays, [true, false]);
+      expect(await framesFlow(), isFalse, reason: 'no tap, no video');
+
+      await call.retryVideo();
       await _until(() => bobSays.length == 3);
+      expect(
+        aliceLog.lastWhere((e) => e['event'] == 'video-sending')['by'],
+        'tap',
+      );
       expect(bobSays, [true, false, true]);
       expect(await framesFlow(), isTrue, reason: 'video back');
       expect(
