@@ -6,7 +6,7 @@ sender's microphone and what came out of the receiver's speaker.
     voice_delay.py --self-check DIR                    the instrument, offline
     voice_delay.py --self-check-speech DIR             the same, with speech
 
-With speech (E7, `speech_track`): the same clicks with real speech between
+With speech (E7, `call_track`): the same clicks with real speech between
 them, so the call carries the load of a person talking. The speech is ITU-T
 P.501 (07/2026) clause 7.3.2, the British English single-talk sequence
 (speech/, with ITU's notice), looped, at half its level, stopping 1 s before
@@ -28,8 +28,19 @@ by 60-722 ms, varying per recording (pulse_stamp_check.py, 2026-10-17, two
 recordings of one sound in one container: 16 of 16 trials). Onsets come from Gate 1's
 amplitude detector (lab/tool/bin/baseline_onsets.dart, threshold 0.5 of the
 file's peak, 150 ms dead time), so the instrument is the one that measured
-WhatsApp. Each click sent is paired with the first click heard within 3 s
-after it; a click with none is counted as lost.
+WhatsApp.
+
+Each click is two 30 ms beeps, the second CODE_GAPS[n % 6] after the first
+for click n (call_track), so a click heard is known by its number modulo 6.
+Until calls23 every click was one beep and was paired with the first click
+heard within 3 s after it: a click 10-13 s late then read as the next click
+on time (calls23a: 8 ms, with a 15 s round trip), and one later than 3 s was
+counted lost. Now each click sent is paired with the first click heard after
+it, within PAIR_WINDOW_S, carrying the same code, and later than the last
+one paired (a call's sound plays in order); a click with none is counted as
+lost. Onsets that form no code are counted, not paired. The beeps of
+pulse_stamp_check.py and cross_stamp_check.py (click_track_cmd) stay single:
+they time one recording against another, not a call.
 
 A received file whose peak is under 1,000 of 32,767 is reported as silent and
 yields no pairs: on near-silence the detector's 0.5-of-peak level falls into
@@ -52,7 +63,14 @@ from array import array
 HERE = os.path.dirname(os.path.abspath(__file__))
 TOOL = os.path.abspath(os.path.join(HERE, "..", "tool"))
 SILENT_PEAK = 1000
-PAIR_WINDOW_S = 3.0
+# The second beep's delay after the first, by click number modulo 6: wider
+# than the detector's 150 ms dead time, 100 ms apart, ending before speech
+# resumes SPEECH_GAP_S after the click.
+CODE_GAPS = [0.25 + 0.1 * i for i in range(6)]
+CODE_TOLERANCE_S = 0.04
+BEEP_S = 0.03
+# Under the 60 s after which the codes repeat.
+PAIR_WINDOW_S = 50.0
 SPEECH = os.path.join(HERE, "speech", "P501_7.3.2_FB_male_female_single-talk_seq.wav")
 SPEECH_GAIN = 0.5
 SPEECH_GAP_S = 1.0  # quiet either side of each click
@@ -74,25 +92,31 @@ def click_track_cmd(path, clicks):
             "synth", "0.03", "sine", "1000", "vol", "0.8", "pad", "5", "4.97", "repeat", str(clicks - 1)]
 
 
-def speech_track(path, clicks):
-    """The click track of click_track_cmd (a 30 ms 1 kHz tone at 0.8 of full
-    scale, 5 s into every 10 s) with SPEECH looped in between, at SPEECH_GAIN,
-    SPEECH_GAP_S clear of each click. 48 kHz mono 16-bit, as the click track."""
-    with wave.open(SPEECH) as w:
-        if (w.getframerate(), w.getnchannels(), w.getsampwidth()) != (48000, 1, 2):
-            raise RuntimeError(f"{SPEECH}: not 48 kHz mono 16-bit")
-        speech = array("h", w.readframes(w.getnframes()))
+def call_track(path, clicks, speech=False):
+    """The call's sound: click n 5 s into its 10 s, as a 30 ms 1 kHz tone at
+    0.8 of full scale and the same again CODE_GAPS[n % 6] later; with
+    `speech`, SPEECH looped in between at SPEECH_GAIN, SPEECH_GAP_S clear of
+    each click. 48 kHz mono 16-bit."""
     rate = 48000
+    talk = None
+    if speech:
+        with wave.open(SPEECH) as w:
+            if (w.getframerate(), w.getnchannels(), w.getsampwidth()) != (48000, 1, 2):
+                raise RuntimeError(f"{SPEECH}: not 48 kHz mono 16-bit")
+            talk = array("h", w.readframes(w.getnframes()))
     out = array("h", bytes(2 * clicks * 10 * rate))
     k = 0
     for c in range(clicks):
         base = c * 10 * rate
-        for a, b in ((0, 5 - SPEECH_GAP_S), (5 + SPEECH_GAP_S, 10)):
-            for i in range(base + int(a * rate), base + int(b * rate)):
-                out[i] = int(speech[k % len(speech)] * SPEECH_GAIN)
-                k += 1
-        for i in range(int(0.03 * rate)):
-            out[base + 5 * rate + i] = int(0.8 * 32767 * math.sin(2 * math.pi * 1000 * i / rate))
+        if talk is not None:
+            for a, b in ((0, 5 - SPEECH_GAP_S), (5 + SPEECH_GAP_S, 10)):
+                for i in range(base + int(a * rate), base + int(b * rate)):
+                    out[i] = int(talk[k % len(talk)] * SPEECH_GAIN)
+                    k += 1
+        for at in (5, 5 + CODE_GAPS[c % len(CODE_GAPS)]):
+            start = base + int(at * rate)
+            for i in range(int(BEEP_S * rate)):
+                out[start + i] = int(0.8 * 32767 * math.sin(2 * math.pi * 1000 * i / rate))
     with wave.open(path, "wb") as w:
         w.setnchannels(1)
         w.setsampwidth(2)
@@ -154,12 +178,36 @@ def onsets(wav):
     return [float(m.group(1)) for m in re.finditer(r"^\s+([\d.]+) s", out, re.M)]
 
 
+def codes(times):
+    """Onset times read as clicks: (time of the first beep, code) for each
+    two onsets one of CODE_GAPS apart, within CODE_TOLERANCE_S; and the
+    count of onsets that formed none."""
+    out, loose, i = [], 0, 0
+    while i < len(times):
+        if i + 1 < len(times):
+            gap = times[i + 1] - times[i]
+            code = min(range(len(CODE_GAPS)), key=lambda c: abs(CODE_GAPS[c] - gap))
+            if abs(CODE_GAPS[code] - gap) <= CODE_TOLERANCE_S:
+                out.append((times[i], code))
+                i += 2
+                continue
+        loose += 1
+        i += 1
+    return out, loose
+
+
 def pair(sent, heard):
-    """(sent time, delay or None) for every click sent."""
-    out = []
-    for s in sent:
-        r = next((h for h in heard if s < h <= s + PAIR_WINDOW_S), None)
-        out.append((s, None if r is None else r - s))
+    """(sent time, delay or None) for every click sent: sent and heard are
+    (time, code), in time order."""
+    out, after = [], 0
+    for s, code in sent:
+        hit = next((j for j in range(after, len(heard))
+                    if heard[j][1] == code and s < heard[j][0] <= s + PAIR_WINDOW_S), None)
+        if hit is None:
+            out.append((s, None))
+        else:
+            out.append((s, heard[hit][0] - s))
+            after = hit + 1
     return out
 
 
@@ -172,8 +220,14 @@ def measure(sent_path, heard_path, out_path, speech=False):
             raise RuntimeError(f"{os.path.basename(path)} starts at {t}: no wall-clock stamp")
     heard_peak = peak(heard_wav)
     floor = max(SILENT_PEAK, CLICK_FRACTION * peak(sent_wav)) if speech else SILENT_PEAK
-    sent_on = [t_sent + t for t in onsets(sent_wav)]
-    heard_on = [] if heard_peak < floor else [t_heard + t for t in onsets(heard_wav)]
+    sent_on, sent_loose = codes([t_sent + t for t in onsets(sent_wav)])
+    want = [c % len(CODE_GAPS) for c in range(len(sent_on))]
+    if sent_loose or [c for _, c in sent_on] != want:
+        # What went into the microphone must read back as the track made.
+        raise RuntimeError(f"{os.path.basename(sent_path)}: codes {[c for _, c in sent_on]}, "
+                           f"{sent_loose} loose onsets: not a coded click track")
+    heard_on, heard_loose = ([], 0) if heard_peak < floor else codes(
+        [t_heard + t for t in onsets(heard_wav)])
     pairs = pair(sent_on, heard_on)
     with open(out_path, "w") as f:
         for s, d in pairs:
@@ -182,22 +236,22 @@ def measure(sent_path, heard_path, out_path, speech=False):
     delays = sorted(d * 1000 for _, d in pairs if d is not None)
     return {"sent_start": round(t_sent, 4), "heard_start": round(t_heard, 4),
             "clicks_sent": len(sent_on), "clicks_heard": len(delays),
-            "speech": speech, "heard_peak": heard_peak, "heard_onsets": len(heard_on),
+            "speech": speech, "heard_peak": heard_peak, "heard_codes": len(heard_on),
+            "heard_loose_onsets": heard_loose,
             "delay_median_ms": round(statistics.median(delays)) if delays else None,
             "delay_min_ms": round(delays[0]) if delays else None,
             "delay_max_ms": round(delays[-1]) if delays else None}
 
 
 def self_check(d, speech=False):
-    """Known condition: a 0.300 s delay and 3 of 9 clicks removed; with
-    speech, the same on the speech track, and a heard copy with every click
-    removed must read no clicks heard, never speech taken for one."""
+    """Known conditions: a 0.300 s delay and 3 of 9 clicks removed; the same
+    at 10.300 s, which single clicks paired within 3 s read as 300 ms
+    (calls23a); with speech, the same on the speech track, and a heard copy
+    with every click removed must read no clicks heard, never speech taken
+    for one."""
     os.makedirs(d, exist_ok=True)
     track = os.path.join(d, "track.wav")
-    if speech:
-        speech_track(track, 9)
-    else:
-        sh(click_track_cmd(track, 9))
+    call_track(track, 9, speech)
     sent = os.path.join(d, "sent.mkv")
     heard = os.path.join(d, "heard.mkv")
     # The same recording twice, logged as starting at T and T + 0.300 s with
@@ -215,7 +269,8 @@ def self_check(d, speech=False):
     sh(["ffmpeg", "-y", "-loglevel", "error", "-i", track, sent])
     logged(sent, t)
     # Clicks 3, 6, 9 (at 25, 55, 85 s) silenced in the heard copy.
-    mute = "+".join(f"between(t,{10 * k - 5 - 0.1},{10 * k - 5 + 0.2})" for k in (3, 6, 9))
+    # Both beeps: the second ends by 0.78 s after the first.
+    mute = "+".join(f"between(t,{10 * k - 5 - 0.1},{10 * k - 5 + 0.9})" for k in (3, 6, 9))
     sh(["ffmpeg", "-y", "-loglevel", "error", "-i", track, "-af", f"volume=enable='{mute}':volume=0", heard])
     logged(heard, t + 0.3)
     starts_ok = (abs(start_time(sent) - (t + 0.002)) < 1e-4
@@ -224,8 +279,15 @@ def self_check(d, speech=False):
     want = {"clicks_sent": 9, "clicks_heard": 6, "delay_median_ms": 300}
     ok = (starts_ok and all(got[k] == v for k, v in want.items())
           and got["delay_min_ms"] == got["delay_max_ms"] == 300)
+    late = os.path.join(d, "late.mkv")
+    sh(["ffmpeg", "-y", "-loglevel", "error", "-i", heard, "-c", "copy", late])
+    logged(late, t + 10.3)
+    got["late"] = measure(sent, late, os.path.join(d, "pairs_late.jsonl"), speech)
+    # Every click heard 10.3 s late, less the three removed (3, 6, 9).
+    ok = (ok and got["late"]["clicks_heard"] == 6
+          and got["late"]["delay_min_ms"] == got["late"]["delay_max_ms"] == 10300)
     if speech:
-        every = "+".join(f"between(t,{10 * k - 5 - 0.1},{10 * k - 5 + 0.2})" for k in range(1, 10))
+        every = "+".join(f"between(t,{10 * k - 5 - 0.1},{10 * k - 5 + 0.9})" for k in range(1, 10))
         none = os.path.join(d, "none.mkv")
         sh(["ffmpeg", "-y", "-loglevel", "error", "-i", track, "-af",
             f"volume=enable='{every}':volume=0", none])

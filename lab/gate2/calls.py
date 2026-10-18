@@ -57,7 +57,7 @@ import time
 from labkit import (PORTS, PROFILES, REPO, build_server, clear_shaping, dx,
                     freeze_spans, ip_of,
                     netem, pin_neighbours, sh, start_duty_loop, start_loop, start_server, stop_server, utc)
-from voice_delay import click_track_cmd, measure as voice_delay, record_cmd, speech_track
+from voice_delay import call_track, measure as voice_delay, record_cmd
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 APP = os.path.join(REPO, "app")
@@ -101,7 +101,7 @@ if opus["opus-dtx"]:
 # section of what they send (RFC 8285; AudioExtensions in the app).
 opus["audio-drop"] = [x for x in argval("--audio-drop", "").split(",") if x]
 opus_args += "".join(f"--audio-drop {x} " for x in opus["audio-drop"])
-# `--speech`: real speech between the clicks (voice_delay.speech_track), so
+# `--speech`: real speech between the clicks (voice_delay.call_track), so
 # the call carries a talker's load; the clicks still time the voice.
 speech = "--speech" in sys.argv
 # `--relay-link decent`: the relay is not slowed, as on a cloud server or a
@@ -344,14 +344,11 @@ def run_profile(name):
         raise_pattern(alice, 8)
     if clicked and base in CUTS:
         cut_links((alice, bob), d, CUTS[base])
-    if clicked and speech:
-        speech_track(os.path.join(host_d, "speech_track.wav"), clicks)
+    if clicked:
+        name = "speech_track.wav" if speech else "click_track.wav"
+        call_track(os.path.join(host_d, name), clicks, speech)
         sh(["docker", "exec", "-d", alice, "sh", "-c",
-            f"paplay --device=mic {d}/speech_track.wav > {d}/click.log 2>&1"])
-    elif clicked:
-        track = " ".join(click_track_cmd("/tmp/click.wav", clicks))
-        sh(["docker", "exec", "-d", alice, "sh", "-c",
-            f"{track} && paplay --device=mic /tmp/click.wav > {d}/click.log 2>&1"])
+            f"paplay --device=mic {d}/{name} > {d}/click.log 2>&1"])
     for _ in range(call_s + 240):
         if dx(alice, "test", "-e", f"{d}/alice.exit", timeout=10).returncode == 0:
             break
