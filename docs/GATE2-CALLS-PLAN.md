@@ -153,6 +153,69 @@ it").
      unaffected. Lab harness, to fix.
 
 
+### Setup during an outage (calls12-15, 2026-10-18)
+
+Plan approved by Grey 2026-10-17. Build `df2cca8` for calls12-13, `d3248a1`
+(adds the hang-up retry) for calls14-15. Changes: an offer or answer whose
+send fails is sent again every 2 s; a call that has not connected keeps
+trying for 90 s; a never-connected failure ends the call at once only when
+the transport's `dtlsState` is `failed` (a refused certificate), otherwise it
+restarts as a lost call does; a failed collect after a wake-up is retried
+every 2 s; the mailbox hang-up is retried for up to 90 s. `offercut60` and
+`answercut60` cut both phones' links for 60 s the moment Alice places the
+call or Bob receives her offer. 300 s calls. 21 valid calls; calls13
+offercut60-blocked is invalid (INVALID-RUNS.md). Rows from
+`lab/gate2/setup_table.py calls12 calls13 calls14 calls15`
+(`results/setup-table.jsonl`). "Never-connected failures" gives the phone,
+the reading (route or handshake) and the DTLS states.
+
+| Profile | Run | Route | Placed → connected | Link back → connected | Sends repeated (Alice / Bob) | Never-connected failures | Ended (Alice / Bob) | Clicks heard | Bob frozen s/min |
+|---|---|---|---|---|---|---|---|---|---|
+| P4 | calls12 | host→host | 6.9 s | — | 14 / 0 | — | hangup / lost | 9/29 | 45.54 |
+| P4 | calls13 | host→host | 69.5 s | — | 7 / 5 | alice route (new) | hangup / remote-hangup | 8/29 | 42.22 |
+| P4 | calls14 | host→host | 6.8 s | — | 13 / 0 | — | hangup / remote-hangup | 9/29 | 48.7 |
+| P4 | calls15 | host→host | 69.5 s | — | 9 / 0 | — | hangup / remote-hangup | 10/29 | 43.02 |
+| P4-blocked | calls12 | host→relay | 7.9 s | — | 14 / 0 | — | hangup / lost | 9/29 | 46.8 |
+| P4-blocked | calls13 | host→relay | 7.1 s | — | 6 / 0 | — | hangup / lost | 8/29 | 48.63 |
+| P4-blocked | calls14 | host→relay | 72.7 s | — | 17 / 0 | alice route (new), alice route (new), bob route (connecting) | hangup / remote-hangup | 9/29 | 43.72 |
+| P4-blocked | calls15 | host→relay | 8.4 s | — | 10 / 0 | — | hangup / remote-hangup | 7/29 | 49.23 |
+| offercut60 | calls12 | host→host | 63.3 s | 3.2 s | 6 / 0 | — | hangup / remote-hangup | 29/29 | 0.49 |
+| offercut60 | calls13 | host→host | 60.5 s | 0.4 s | 5 / 0 | — | hangup / remote-hangup | 29/29 | 2.77 |
+| offercut60 | calls14 | host→host | 64.7 s | 4.6 s | 3 / 0 | — | hangup / remote-hangup | 28/29 | 10.34 |
+| offercut60 | calls15 | host→host | 63.2 s | 3.2 s | 5 / 0 | — | hangup / remote-hangup | 29/29 | 8.25 |
+| offercut60-blocked | calls12 | host→relay | 63.3 s | 3.2 s | 6 / 0 | — | hangup / remote-hangup | 28/29 | 7.45 |
+| offercut60-blocked | calls14 | host→relay | 63.6 s | 3.5 s | 1 / 0 | — | hangup / remote-hangup | 29/29 | 0.03 |
+| offercut60-blocked | calls15 | host→relay | 61.3 s | 1.3 s | 4 / 0 | — | hangup / remote-hangup | 27/29 | 6.39 |
+| answercut60 | calls12 | host→host | 60.8 s | 0.4 s | 0 / 2 | bob route (new) | hangup / remote-hangup | 29/29 | 3.62 |
+| answercut60 | calls14 | host→host | 62.7 s | 2.3 s | 0 / 5 | bob route (new) | hangup / remote-hangup | 28/29 | 13.32 |
+| answercut60 | calls15 | host→host | 61.6 s | 0.9 s | 0 / 3 | bob route (new) | hangup / remote-hangup | 29/29 | 10.06 |
+| answercut60-blocked | calls12 | relay→host | 69.7 s | 3.2 s | 0 / 4 | bob route (new) | hangup / remote-hangup | 29/29 | 5.03 |
+| answercut60-blocked | calls14 | relay→host | 61.8 s | 1.3 s | 0 / 3 | bob route (new) | hangup / remote-hangup | 29/29 | 4.77 |
+| answercut60-blocked | calls15 | relay→host | 62.3 s | 1.9 s | 0 / 6 | bob route (new) | hangup / remote-hangup | 29/29 | 8.35 |
+
+Findings:
+1. 21 of 21 connected. calls11 P4 and P4-blocked: 0 of 2.
+2. A setup cut by a 60 s outage connects 0.4-4.6 s after the link returns,
+   direct or relayed, offer or answer side.
+3. P4's outage clock is not tied to the call: four of eight P4 calls set up
+   in a link window (7-8 s), four ran into an outage (69.5-72.7 s). All
+   connected and held 300 s, 7-10 of 29 clicks heard (the link is up a
+   third of the time).
+4. Every never-connected failure (9, on both phones) read as route, DTLS
+   `new` or `connecting`, and the call went on to connect. The refused
+   certificate reads `failed` (calls_test). The ICE state events could not
+   tell the two apart: with a refused certificate the plugin reported the
+   connection failed while its last ICE event said "checking".
+5. The hang-up fell in an outage on P4 and Bob ended `lost` about 70 s late
+   in 3 of 4 calls on the old build; 4 of 4 `remote-hangup` with the retry
+   (calls14 P4: sent on attempt 7, 25 s after the first).
+6. Fingerprints 0 server hits, 2 in the control, every call. Both apps exit
+   0 every call (calls10-11 cut120: exit 2, a close() defect, fixed).
+7. Open: Bob's frozen video after a setup cut ranges 0.03-13.3 s/min with no
+   pattern by profile; three or four runs each cannot say why.
+8. Open: Alice's container stalled ~13 s in calls13 (the run that stopped);
+   cause unknown, host load was not recorded.
+
 ## Endpoints the calls must meet (Grey 2026-10-16: "as thorough and as robust as possible")
 
 Each is a pass or fail that someone other than us defined, or a defect we
