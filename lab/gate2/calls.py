@@ -7,7 +7,7 @@ screen and speaker are recorded.
 
     python3 lab/gate2/calls.py --label calls1 [--profiles none] [--call-s 30]
                                [--skip-build] [--no-video]
-                               [--opus-max-bitrate N] [--opus-ptime MS]
+                               [--opus-max-bitrate N] [--opus-ptime MS] [--opus-dtx]
                                [--speech] [--relay-link field|decent]
     python3 lab/gate2/calls.py --label calls8 --reanalyse   (files on disk only)
 
@@ -93,6 +93,9 @@ alice_video = "--no-video" not in sys.argv
 # receive parameters, E7); both phones ask the same. Unset: the app default.
 opus = {k: argval(f"--{k}", None) for k in ("opus-max-bitrate", "opus-ptime")}
 opus_args = "".join(f"--{k} {v} " for k, v in opus.items() if v is not None)
+opus["opus-dtx"] = "--opus-dtx" in sys.argv
+if opus["opus-dtx"]:
+    opus_args += "--opus-dtx "
 # `--speech`: real speech between the clicks (voice_delay.speech_track), so
 # the call carries a talker's load; the clicks still time the voice.
 speech = "--speech" in sys.argv

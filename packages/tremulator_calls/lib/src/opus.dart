@@ -6,7 +6,7 @@
 class OpusReceive {
   /// Asks for at most [maxAverageBitrate] bit/s and packets of [ptime] ms.
   /// Null leaves that parameter as the description has it.
-  const OpusReceive({this.maxAverageBitrate, this.ptime});
+  const OpusReceive({this.maxAverageBitrate, this.ptime, this.dtx});
 
   /// `maxaveragebitrate` (section 6.1): "The sender of the other side MUST
   /// NOT send with an average bitrate higher than" this (section 7.1).
@@ -19,13 +19,28 @@ class OpusReceive {
   /// of delay and of more sound lost with each lost packet.
   final int? ptime;
 
+  /// `usedtx` (section 6.1): whether the other phone should leave silence
+  /// untransmitted. RFC 7587 section 3.1.3 (rfc-editor.org text, read
+  /// 2026-10-18): DTX has "slightly lower speech or audio quality than
+  /// continuous transmission. Therefore, using continuous transmission is
+  /// RECOMMENDED unless constraints on available network bandwidth are
+  /// severe."
+  final bool? dtx;
+
   /// [sdp] with these parameters in every audio section that offers Opus:
   /// `maxaveragebitrate` in that payload type's `a=fmtp` line and `ptime` as
   /// the section's `a=ptime` (section 7). Everything else is left as it was.
   String applyTo(String sdp) {
-    final rate = maxAverageBitrate;
+    final params = {
+      'maxaveragebitrate': ?maxAverageBitrate?.toString(),
+      'usedtx': ?switch (dtx) {
+        true => '1',
+        false => '0',
+        null => null,
+      },
+    };
     final packet = ptime;
-    if (rate == null && packet == null) {
+    if (params.isEmpty && packet == null) {
       return sdp;
     }
     final eol = sdp.contains('\r\n') ? '\r\n' : '\n';
@@ -38,7 +53,7 @@ class OpusReceive {
     var start = 0;
     for (var i = 0; i <= lines.length; i++) {
       if (i == lines.length || (i > 0 && lines[i].startsWith('m='))) {
-        out.addAll(_section(lines.sublist(start, i), rate, packet));
+        out.addAll(_section(lines.sublist(start, i), params, packet));
         start = i;
       }
     }
@@ -51,7 +66,11 @@ class OpusReceive {
   );
 
   /// One media section (or the session part before the first `m=`).
-  static List<String> _section(List<String> lines, int? rate, int? packet) {
+  static List<String> _section(
+    List<String> lines,
+    Map<String, String> params,
+    int? packet,
+  ) {
     if (lines.isEmpty || !lines.first.startsWith('m=audio')) {
       return lines;
     }
@@ -70,9 +89,7 @@ class OpusReceive {
         continue;
       }
       if (l.startsWith(fmtp)) {
-        out.add(
-          rate == null ? l : fmtp + _withRate(l.substring(fmtp.length), rate),
-        );
+        out.add(fmtp + _with(l.substring(fmtp.length), params));
         if (packet != null) {
           out.add('a=ptime:$packet');
         }
@@ -81,8 +98,8 @@ class OpusReceive {
         out.add(l);
         if (_opus.hasMatch(l) && !lines.any((x) => x.startsWith(fmtp))) {
           // No fmtp line for Opus: one is added after its rtpmap.
-          if (rate != null) {
-            out.add('${fmtp}maxaveragebitrate=$rate');
+          if (params.isNotEmpty) {
+            out.add(fmtp + _with('', params));
           }
           if (packet != null) {
             out.add('a=ptime:$packet');
@@ -95,14 +112,18 @@ class OpusReceive {
     return out;
   }
 
-  /// The fmtp parameter list with `maxaveragebitrate` set to [rate].
-  static String _withRate(String params, int rate) {
+  /// The fmtp parameter list [list] with each of [set] put in, replacing
+  /// any it already has.
+  static String _with(String list, Map<String, String> set) {
     final kept = [
-      for (final p in params.split(';'))
+      for (final p in list.split(';'))
         if (p.trim().isNotEmpty &&
-            p.trim().split('=').first.toLowerCase() != 'maxaveragebitrate')
+            !set.containsKey(p.trim().split('=').first.toLowerCase()))
           p.trim(),
     ];
-    return [...kept, 'maxaveragebitrate=$rate'].join(';');
+    return [
+      ...kept,
+      for (final e in set.entries) '${e.key}=${e.value}',
+    ].join(';');
   }
 }

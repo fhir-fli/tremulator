@@ -35,6 +35,7 @@ class LabOptions {
         help: 'maxaveragebitrate this phone asks for (RFC 7587)',
       )
       ..addOption('opus-ptime', help: 'ptime this phone asks for (RFC 7587)')
+      ..addFlag('opus-dtx', help: 'ask for usedtx=1 (RFC 7587)')
       ..addOption(
         'until-file',
         help: "the callee stays until this file exists (the lab's stop sign)",
@@ -96,6 +97,7 @@ class LabOptions {
     return OpusReceive(
       maxAverageBitrate: n('opus-max-bitrate'),
       ptime: n('opus-ptime'),
+      dtx: (_a['opus-dtx'] as bool) ? true : null,
     );
   }
 
@@ -192,6 +194,7 @@ Future<void> _run(
     'event': 'opus-asked',
     'maxaveragebitrate': o.opus.maxAverageBitrate,
     'ptime': o.opus.ptime,
+    'usedtx': o.opus.dtx,
   });
   final keys = await openLabKeys(
     Directory(o.state)..createSync(recursive: true),

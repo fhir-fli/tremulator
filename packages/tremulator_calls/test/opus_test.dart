@@ -75,6 +75,20 @@ void main() {
     ]);
   });
 
+  test('DTX goes in the same fmtp line, with the bitrate', () {
+    final out = const OpusReceive(
+      maxAverageBitrate: 12000,
+      dtx: true,
+    ).applyTo(_sdp);
+    expect(
+      _lines(out),
+      contains(
+        'a=fmtp:111 minptime=10;useinbandfec=1;maxaveragebitrate=12000;'
+        'usedtx=1',
+      ),
+    );
+  });
+
   test('a description without Opus is left alone', () {
     final noOpus = _sdp
         .replaceFirst('a=rtpmap:111 opus/48000/2\r\n', '')
