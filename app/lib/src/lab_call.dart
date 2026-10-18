@@ -31,6 +31,11 @@ class LabOptions {
       ..addOption('turn-pass', defaultsTo: 'lab')
       ..addOption('stats-ms', defaultsTo: '1000', help: 'between stats lines')
       ..addOption(
+        'opus-max-bitrate',
+        help: 'maxaveragebitrate this phone asks for (RFC 7587)',
+      )
+      ..addOption('opus-ptime', help: 'ptime this phone asks for (RFC 7587)')
+      ..addOption(
         'until-file',
         help: "the callee stays until this file exists (the lab's stop sign)",
       );
@@ -80,6 +85,19 @@ class LabOptions {
 
   /// Gap between stats lines.
   Duration get statsEvery => Duration(milliseconds: int.parse(_s('stats-ms')));
+
+  /// How this phone asks the other to send its sound.
+  OpusReceive get opus {
+    int? n(String name) {
+      final v = _a[name] as String?;
+      return v == null ? null : int.parse(v);
+    }
+
+    return OpusReceive(
+      maxAverageBitrate: n('opus-max-bitrate'),
+      ptime: n('opus-ptime'),
+    );
+  }
 
   /// The stop sign.
   String? get untilFile => _a['until-file'] as String?;
@@ -142,6 +160,11 @@ class _LabCallAppState extends State<LabCallApp> {
 }
 
 Future<void> _run(LabOptions o, LabLog log, RTCVideoRenderer remote) async {
+  log({
+    'event': 'opus-asked',
+    'maxaveragebitrate': o.opus.maxAverageBitrate,
+    'ptime': o.opus.ptime,
+  });
   final keys = await openLabKeys(
     Directory(o.state)..createSync(recursive: true),
     o.name,
@@ -152,7 +175,12 @@ Future<void> _run(LabOptions o, LabLog log, RTCVideoRenderer remote) async {
     report: log.call,
   );
   await keepCollecting(client);
-  final calls = Calls(client, iceServers: o.iceServers, report: log.call);
+  final calls = Calls(
+    client,
+    iceServers: o.iceServers,
+    opus: o.opus,
+    report: log.call,
+  );
   final media = await _media(o, log);
 
   final Call call;

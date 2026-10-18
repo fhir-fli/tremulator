@@ -2,4 +2,5 @@
 library;
 
 export 'src/calls.dart';
+export 'src/opus.dart';
 export 'src/signal.dart';

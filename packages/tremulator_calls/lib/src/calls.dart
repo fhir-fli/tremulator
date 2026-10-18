@@ -3,6 +3,7 @@ import 'dart:math';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
+import 'package:tremulator_calls/src/opus.dart';
 import 'package:tremulator_calls/src/signal.dart';
 import 'package:tremulator_client/tremulator_client.dart';
 import 'package:tremulator_keys/tremulator_keys.dart';
@@ -41,6 +42,7 @@ class Calls {
     this.restartRetry = const Duration(seconds: 30),
     this.setupDeadline = const Duration(seconds: 90),
     this.sendRetry = const Duration(seconds: 2),
+    this.opus = const OpusReceive(),
     Report? report,
     @visibleForTesting this.alterRemoteSdp,
   }) : report = report ?? client.report {
@@ -95,6 +97,10 @@ class Calls {
   /// request. A repeat is harmless: the number on it marks it as one
   /// already seen.
   final Duration sendRetry;
+
+  /// How this phone asks the other to send its sound, put into every offer
+  /// and answer this phone sends.
+  final OpusReceive opus;
 
   /// Where events go.
   final Report report;
@@ -402,7 +408,7 @@ class Call {
       'ms': DateTime.now().difference(started).inMilliseconds,
       'timed-out': timedOut,
     });
-    unawaited(_deliver(type, full!.sdp!, _number));
+    unawaited(_deliver(type, _calls.opus.applyTo(full!.sdp!), _number));
   }
 
   /// Sends an offer or answer through the mailbox, again every

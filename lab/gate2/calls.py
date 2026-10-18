@@ -6,7 +6,8 @@ the sound, into which a click track plays once the call connects; Bob's
 screen and speaker are recorded.
 
     python3 lab/gate2/calls.py --label calls1 [--profiles none] [--call-s 30]
-                               [--skip-build]
+                               [--skip-build] [--no-video]
+                               [--opus-max-bitrate N] [--opus-ptime MS]
     python3 lab/gate2/calls.py --label calls8 --reanalyse   (files on disk only)
 
 Profiles: `none` (no shaping), P1-P5 and P0 from labkit.PROFILES, and
@@ -84,6 +85,12 @@ def argval(flag, default):
 label = argval("--label", time.strftime("calls-%Y%m%d-%H%M"))
 profiles = argval("--profiles", "none").split(",")
 call_s = int(argval("--call-s", "30"))
+# `--no-video`: Alice sends sound only (E7 baseline: does sound alone fit?).
+alice_video = "--no-video" not in sys.argv
+# What each phone asks the other to send its sound with (RFC 7587 Opus
+# receive parameters, E7); both phones ask the same. Unset: the app default.
+opus = {k: argval(f"--{k}", None) for k in ("opus-max-bitrate", "opus-ptime")}
+opus_args = "".join(f"--{k} {v} " for k, v in opus.items() if v is not None)
 outroot = os.path.join(HERE, "results", label)
 os.makedirs(outroot, exist_ok=True)
 summary = open(os.path.join(HERE, "results", f"{label}.jsonl"), "a")
@@ -250,7 +257,7 @@ def run_profile(name):
 
     sh(["docker", "exec", "-d", bob, "sh", "-c",
         f"/app/tremulator --lab --server {url} --name bob --state /tmp/state --out {d}/bob.jsonl "
-        f"--audio --turn '{relay}' --until-file {stop} > {d}/bob.stdout 2>&1; echo $? > {d}/bob.exit"])
+        f"--audio {opus_args}--turn '{relay}' --until-file {stop} > {d}/bob.stdout 2>&1; echo $? > {d}/bob.exit"])
     if not wait_for(bob, f"{d}/bob.jsonl", "waiting-for-call", 90):
         # P0 is the known negative: Bob cannot reach the server, so no call
         # can be placed. That is a result, logged; calls8 raised here and
@@ -298,7 +305,7 @@ def run_profile(name):
     t0 = time.time()
     sh(["docker", "exec", "-d", alice, "sh", "-c",
         f"/app/tremulator --lab --server {url} --name alice --state /tmp/state --out {d}/alice.jsonl "
-        f"--peer bob --video --audio --turn '{relay}' --call-s {call_s} "
+        f"--peer bob {'--video ' if alice_video else ''}--audio {opus_args}--turn '{relay}' --call-s {call_s} "
         f"> {d}/alice.stdout 2>&1; echo $? > {d}/alice.exit"])
     # calls6 `none`: the raise ran, yet her app window ended on top and both
     # screens were grey all call. The raise is now repeated until the stack
@@ -349,7 +356,7 @@ def run_profile(name):
     unblock_direct(alice, bob)
     dx(srv, "chown", "-R", f"{os.getuid()}:{os.getgid()}", "/out", user="0")
 
-    rec = {"profile": name, "alice_wall_s": alice_s, "pattern_raised": raised,
+    rec = {"profile": name, "alice_video": alice_video, "opus": opus, "alice_wall_s": alice_s, "pattern_raised": raised,
            "pattern_on_top_at_connect": on_top_at_connect,
            "direct_blocked": block, "clicks_started": clicked, "bob_call_ended_seen": bob_ended,
            "alice_exit": read(alice, f"{d}/alice.exit"), "bob_exit": read(bob, f"{d}/bob.exit"),
