@@ -16,7 +16,12 @@ a direct call. `cut20`, `cut60` and `cut120`: no shaping, and 30 s after
 Alice's call connects both phones lose their link (100% loss on their own
 interfaces; the server and relay keep theirs) for 20, 60 or 120 s, so the
 call must reconnect, or with 120 s outlast its 90 s grace and end as lost
-on both phones (E8 in docs/GATE2-CALLS-PLAN.md). Any profile with `-blocked` appended (`P2-blocked`) also
+on both phones (E8 in docs/GATE2-CALLS-PLAN.md). `offercut60` and
+`answercut60`: no shaping, and both phones lose their link for 60 s during
+call setup, the moment Alice places the call (her offer must go out in the
+outage) or the moment Bob receives her offer (his answer must), so the
+setup must be retried and the call connect after the link returns, within
+the 90 s setup deadline (calls11 P4: never connected). Any profile with `-blocked` appended (`P2-blocked`) also
 blocks the two phones' direct route to each other, so the call must go
 through the relay. P5 runs on a second network created with `--internal`
 (no route out), as run.py does.
@@ -66,6 +71,9 @@ NODES = {  # internal network?: (server, relay, alice, bob)
 CHECKS = {"plus500": (0, 1000, 0, False)}  # name: as PROFILES
 CUTS = {"cut20": 20, "cut60": 60, "cut120": 120}  # name: seconds of no link
 CUT_AT_S = 30  # after Alice's call connects
+# name: (seconds of no link, log whose line starts the cut, that line)
+SETUP_CUTS = {"offercut60": (60, "alice", "call-started"),
+              "answercut60": (60, "bob", "signal-received")}
 TURN_PORT = 3478
 
 
@@ -101,7 +109,7 @@ def parse(name):
         shape = PROFILES[base]
     elif base in CHECKS:
         shape = CHECKS[base]
-    elif base in CUTS:
+    elif base in CUTS or base in SETUP_CUTS:
         shape = None
     else:
         raise ValueError(f"unknown profile {name}")
@@ -284,6 +292,9 @@ def run_profile(name):
         "ffplay -loglevel error -noborder -left 0 -top 0 -x 1280 -y 720 -an "
         "-f lavfi 'testsrc2=size=1280x720:rate=30' > /tmp/ffplay.log 2>&1"])
     time.sleep(2)
+    if base in SETUP_CUTS:
+        seconds, who, event = SETUP_CUTS[base]
+        cut_links_on((alice, bob), d, seconds, f"{d}/{who}.jsonl", event)
     t0 = time.time()
     sh(["docker", "exec", "-d", alice, "sh", "-c",
         f"/app/tremulator --lab --server {url} --name alice --state /tmp/state --out {d}/alice.jsonl "
@@ -297,7 +308,8 @@ def run_profile(name):
     # The click track starts when Alice's call connects: a 30 ms tone 5 s
     # into every 10 s, ending before her call does.
     clicks = max(1, call_s // 10 - 1)
-    clicked = wait_for(alice, f"{d}/alice.jsonl", '"event": *"connected"', 90)
+    # 150 s: setup may now take up to its 90 s deadline after a 60 s outage.
+    clicked = wait_for(alice, f"{d}/alice.jsonl", '"event": *"connected"', 150)
     on_top_at_connect = pattern_on_top(alice)
     if not on_top_at_connect:
         raise_pattern(alice, 8)
@@ -352,6 +364,8 @@ def run_profile(name):
     rec["voice"] = voice_facts(host_d)
     if base in CUTS:
         rec["cut"] = cut_facts(host_d, CUTS[base])
+    if base in SETUP_CUTS:
+        rec["cut"] = cut_facts(host_d, SETUP_CUTS[base][0])
     rec.update(fingerprint_hunt(host_d))
     log(rec)
 
@@ -367,6 +381,21 @@ def cut_links(phones, d, seconds):
         # empty one (calls10 cut120-blocked: the cut ended as the profile's
         # clean-up ran, and an empty bob_cut.end stopped the run).
         start_loop(c, f"sleep {CUT_AT_S}; date +%s.%N > {d}/{who}_cut.start.tmp && "
+                      f"mv {d}/{who}_cut.start.tmp {d}/{who}_cut.start; "
+                      f"tc qdisc replace dev eth0 root netem loss 100%; sleep {seconds}; "
+                      f"tc qdisc del dev eth0 root; date +%s.%N > {d}/{who}_cut.end.tmp && "
+                      f"mv {d}/{who}_cut.end.tmp {d}/{who}_cut.end")
+
+
+def cut_links_on(phones, d, seconds, log_path, event):
+    """As cut_links, but each phone's cut starts when `event` first
+    appears in `log_path` (polled every 50 ms, given up after 120 s, which
+    leaves no cut.start file), not at a fixed time."""
+    for c in phones:
+        who = c.split("-")[-1].rstrip("5")
+        start_loop(c, f"i=0; until grep -qE '\"event\": *\"{event}\"' {log_path} 2>/dev/null; do "
+                      f"i=$((i+1)); [ $i -ge 2400 ] && exit 0; sleep 0.05; done; "
+                      f"date +%s.%N > {d}/{who}_cut.start.tmp && "
                       f"mv {d}/{who}_cut.start.tmp {d}/{who}_cut.start; "
                       f"tc qdisc replace dev eth0 root netem loss 100%; sleep {seconds}; "
                       f"tc qdisc del dev eth0 root; date +%s.%N > {d}/{who}_cut.end.tmp && "

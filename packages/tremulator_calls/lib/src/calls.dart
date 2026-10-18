@@ -39,6 +39,8 @@ class Calls {
     this.reconnectGrace = const Duration(seconds: 90),
     this.restartDelay = const Duration(seconds: 2),
     this.restartRetry = const Duration(seconds: 30),
+    this.setupDeadline = const Duration(seconds: 90),
+    this.sendRetry = const Duration(seconds: 2),
     Report? report,
     @visibleForTesting this.alterRemoteSdp,
   }) : report = report ?? client.report {
@@ -78,6 +80,22 @@ class Calls {
   /// the slowest profile (call setup took 23.7 s on P1 relayed, calls8).
   final Duration restartRetry;
 
+  /// How long a call that has never connected keeps trying, from when this
+  /// phone placed or answered it, before it ends as `failed` on both
+  /// phones. 90 s, as [reconnectGrace]: it outlasts P4's 60 s outage, so a
+  /// call placed just before one still connects (calls11 P4: placed, then
+  /// the link went, and setup was never retried). It runs from the start of
+  /// setup, so time spent ringing on a phone a person must answer counts
+  /// against it; the lab's callee answers at once.
+  final Duration setupDeadline;
+
+  /// How long after a failed send of an offer or answer it is sent again,
+  /// until it gets through, the call ends, or a newer one replaces it.
+  /// The value is a choice, unmeasured: a failed request costs one more
+  /// request. A repeat is harmless: the number on it marks it as one
+  /// already seen.
+  final Duration sendRetry;
+
   /// Where events go.
   final Report report;
 
@@ -99,6 +117,7 @@ class Calls {
     final call = Call._(this, conversation, _newId(), outgoing: true);
     _calls[call.id] = call;
     report({'event': 'call-started', 'call': call.id});
+    call._startSetupClock();
     await call._open(media);
     await call._offer();
     return call;
@@ -128,6 +147,8 @@ class Calls {
     switch (s.type) {
       case SignalType.offer:
         if (known != null) {
+          // A repeat of an offer already seen, or a restart of a call this
+          // phone has: never a new ring.
           if (!known.outgoing) {
             await known._serial(() => known._restartOffer(s.sdp!, s.number!));
           }
@@ -190,8 +211,13 @@ class Call {
 
   RTCPeerConnection? _pc;
   RTCDataChannel? _control;
-  final String? _remoteOffer;
+
+  /// The offer a ringing call will answer: the first, or a restart that
+  /// replaced it before this phone answered.
+  String? _remoteOffer;
   final Completer<void> _connected = Completer();
+  Timer? _setupTimer;
+  RTCIceConnectionState? _ice;
 
   /// The caller's latest offer number; the callee's latest answered one.
   int _number = 0;
@@ -219,7 +245,9 @@ class Call {
   Future<void> get connected => _connected.future;
 
   /// Completes with why the call ended: `hangup` (this phone),
-  /// `remote-hangup`, `failed` (the connection never connected), `lost`
+  /// `remote-hangup`, `failed` (it never connected: the other phone's
+  /// certificate did not match its fingerprint, or [Calls.setupDeadline]
+  /// passed), `lost`
   /// (it connected, lost its link and did not reconnect within
   /// [Calls.reconnectGrace]) or `fingerprint-changed` (a later description
   /// carried a different certificate fingerprint from the first).
@@ -237,6 +265,7 @@ class Call {
     if (outgoing || offer == null) {
       throw StateError('only a ringing incoming call can be answered');
     }
+    _startSetupClock();
     await _open(media);
     if (!await _remote(RTCSessionDescription(offer, 'offer'))) {
       return;
@@ -292,6 +321,10 @@ class Call {
     _pc = pc;
     pc
       ..onConnectionState = _onState
+      ..onIceConnectionState = (s) {
+        _ice = s;
+        _calls.report({'event': 'ice-state', 'call': id, 'state': s.name});
+      }
       ..onTrack = (e) {
         if (e.streams.isNotEmpty) {
           _remoteMedia.add(e.streams.first);
@@ -324,8 +357,20 @@ class Call {
     await _sendDescription(offer, SignalType.offer);
   }
 
+  /// Ends the call as `failed` on both phones if it has not connected
+  /// within [Calls.setupDeadline].
+  void _startSetupClock() {
+    _setupTimer = Timer(_calls.setupDeadline, () {
+      if (!_connected.isCompleted) {
+        _calls.report({'event': 'setup-deadline', 'call': id});
+        unawaited(_end('failed', tell: true));
+      }
+    });
+  }
+
   /// Sets [description] locally, waits for this phone's addresses (or
-  /// [Calls.gatherTimeout]), and sends the description with them in it.
+  /// [Calls.gatherTimeout]), and starts sending the description with them
+  /// in it (see [_deliver]); returns before it has got through.
   Future<void> _sendDescription(
     RTCSessionDescription description,
     SignalType type,
@@ -352,11 +397,48 @@ class Call {
       'ms': DateTime.now().difference(started).inMilliseconds,
       'timed-out': timedOut,
     });
-    await _calls.client.sendCall(
-      conversation,
-      Signal(type: type, call: id, sdp: full!.sdp, number: _number).encode(),
-    );
-    _calls.report({'event': '${type.name}-sent', 'call': id, 'n': _number});
+    unawaited(_deliver(type, full!.sdp!, _number));
+  }
+
+  /// Sends an offer or answer through the mailbox, again every
+  /// [Calls.sendRetry] while the send fails (the link is down, and with it
+  /// the mailbox), until it gets through, the call ends, or a newer number
+  /// replaces it. calls11 P4: the answer's one send fell in the outage and
+  /// the call never connected.
+  Future<void> _deliver(SignalType type, String sdp, int number) async {
+    final text = Signal(
+      type: type,
+      call: id,
+      sdp: sdp,
+      number: number,
+    ).encode();
+    for (var attempt = 1; ; attempt++) {
+      if (_ended.isCompleted || number != _number) {
+        return;
+      }
+      try {
+        await _calls.client.sendCall(conversation, text);
+        _calls.report({
+          'event': '${type.name}-sent',
+          'call': id,
+          'n': number,
+          'attempt': attempt,
+        });
+        return;
+      } on Object catch (e) {
+        // A send can time out here yet reach the server (calls11 P1); the
+        // repeat is then a duplicate, which the number marks.
+        _calls.report({
+          'event': 'send-failed',
+          'call': id,
+          'type': type.name,
+          'n': number,
+          'attempt': attempt,
+          'error': '$e',
+        });
+      }
+      await Future<void>.delayed(_calls.sendRetry);
+    }
   }
 
   /// Applies the other phone's [description]. Returns false, having ended
@@ -418,9 +500,17 @@ class Call {
   }
 
   /// The callee: answers a restart offer newer than any it has answered.
+  /// Before this phone has answered, a newer offer replaces the one it will
+  /// answer.
   Future<void> _restartOffer(String sdp, int number) async {
-    if (number <= _number || _pc == null) {
+    if (number <= _number) {
       _calls.report({'event': 'offer-ignored', 'call': id, 'n': number});
+      return;
+    }
+    if (_pc == null) {
+      _remoteOffer = sdp;
+      _number = number;
+      _calls.report({'event': 'offer-replaced', 'call': id, 'n': number});
       return;
     }
     _number = number;
@@ -434,18 +524,26 @@ class Call {
     }
   }
 
-  /// The link of a connected call is gone: both phones start the grace
-  /// period, and the caller restarts the connection. Only the caller
-  /// offers, so the two never offer at once.
+  /// The link is gone: the caller restarts the connection, and a call
+  /// that had connected starts the grace period on both phones (one that
+  /// never connected is bounded by [Calls.setupDeadline] instead). Only the
+  /// caller offers, so the two never offer at once.
   void _onLost(RTCPeerConnectionState s) {
     if (_lostAt != null || _ended.isCompleted) {
       return;
     }
     _lostAt = DateTime.now();
-    _calls.report({'event': 'reconnecting', 'call': id, 'state': s.name});
-    _grace = Timer(_calls.reconnectGrace, () {
-      unawaited(_end('lost', tell: true));
+    _calls.report({
+      'event': 'reconnecting',
+      'call': id,
+      'state': s.name,
+      'ever-connected': _connected.isCompleted,
     });
+    if (_connected.isCompleted) {
+      _grace = Timer(_calls.reconnectGrace, () {
+        unawaited(_end('lost', tell: true));
+      });
+    }
     if (outgoing) {
       unawaited(_restartLoop());
     }
@@ -515,22 +613,20 @@ class Call {
     switch (s) {
       case RTCPeerConnectionState.RTCPeerConnectionStateConnected:
         _restartTimer?.cancel();
+        _setupTimer?.cancel();
         if (!_connected.isCompleted) {
           _connected.complete();
         }
         _reconnected();
       case RTCPeerConnectionState.RTCPeerConnectionStateFailed:
         _restartTimer?.cancel();
-        if (!_connected.isCompleted) {
-          // Never connected: a refused certificate ends here (RFC 8122
-          // section 6.2), as does having no route at all.
-          _connected.completeError(StateError('connection failed'));
-          unawaited(_end('failed', tell: false));
-        } else {
+        if (_connected.isCompleted) {
           _onLost(s);
+        } else {
+          unawaited(_failedBeforeConnecting(s));
         }
       case RTCPeerConnectionState.RTCPeerConnectionStateDisconnected:
-        if (_connected.isCompleted && _lostAt == null) {
+        if (_lostAt == null) {
           _restartTimer?.cancel();
           _restartTimer = Timer(_calls.restartDelay, () => _onLost(s));
         }
@@ -538,6 +634,50 @@ class Call {
       case RTCPeerConnectionState.RTCPeerConnectionStateNew:
       case RTCPeerConnectionState.RTCPeerConnectionStateConnecting:
         break;
+    }
+  }
+
+  /// A connection that never connected has failed. W3C WebRTC 1.0 (read
+  /// whole 2026-10-17): a connection is "failed" when "either
+  /// [[IceConnectionState]] is "failed" or any RTCDtlsTransports are in the
+  /// "failed" state" (RTCPeerConnectionState), and a DTLS transport fails
+  /// on "failure to validate the remote fingerprint" (RTCDtlsTransportState).
+  /// So a failed DTLS transport is the other end's certificate (RFC 8122
+  /// section 6.2) and ends the call at once; otherwise the route failed,
+  /// and the call keeps trying until [Calls.setupDeadline].
+  ///
+  /// The DTLS state is read from the transport's statistics (`dtlsState`,
+  /// required in RTCTransportStats, W3C webrtc-stats, read whole
+  /// 2026-10-17), not from state events: with a refused certificate the
+  /// plugin reported the connection failed while its last ICE event still
+  /// said "checking" (calls_test, 2026-10-17). Unreadable statistics end
+  /// the call as a refused certificate would.
+  Future<void> _failedBeforeConnecting(RTCPeerConnectionState s) async {
+    List<String>? dtls;
+    try {
+      dtls = [
+        for (final r in await stats())
+          if (r.type == 'transport') '${r.values['dtlsState']}',
+      ];
+    } on Object catch (e) {
+      _calls.report({'event': 'stats-failed', 'call': id, 'error': '$e'});
+    }
+    final refused = dtls == null || dtls.isEmpty || dtls.contains('failed');
+    _calls.report({
+      'event': 'setup-failed',
+      'call': id,
+      'dtls': dtls,
+      'ice': _ice?.name,
+      'why': refused ? 'handshake' : 'route',
+    });
+    if (_ended.isCompleted || _connected.isCompleted) {
+      return;
+    }
+    if (refused) {
+      _connected.completeError(StateError('connection failed'));
+      await _end('failed', tell: false);
+    } else {
+      _onLost(s);
     }
   }
 
@@ -561,6 +701,7 @@ class Call {
   Future<void> _finish(String why, {required bool tell}) async {
     _grace?.cancel();
     _restartTimer?.cancel();
+    _setupTimer?.cancel();
     _lostAt = null;
     if (_back?.isCompleted == false) {
       _back!.complete();

@@ -90,7 +90,8 @@ def start_loop(c, body):
 
 
 PORTS = {"P1": 8081, "P2": 8082, "P3": 8083, "P4": 8084, "P5": 8085, "P0": 8080,
-         "none": 8086, "plus500": 8087, "cut20": 8088, "cut60": 8089, "cut120": 8090}
+         "none": 8086, "plus500": 8087, "cut20": 8088, "cut60": 8089, "cut120": 8090,
+         "offercut60": 8091, "answercut60": 8092}
 
 
 def start_server(srv, profile, port=None):

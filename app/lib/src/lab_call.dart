@@ -171,7 +171,9 @@ Future<void> _run(LabOptions o, LabLog log, RTCVideoRenderer remote) async {
     call = await calls.start(c, media: media);
     _show(call, remote, log);
   }
-  await call.connected.timeout(const Duration(seconds: 60));
+  // No timeout of its own: the call's setup deadline (90 s) bounds this.
+  // A 60 s one here cut setup short of it (calls11 P4-blocked).
+  await call.connected;
   log({
     'event': 'connected',
     'call': call.id,

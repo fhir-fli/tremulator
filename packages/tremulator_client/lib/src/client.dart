@@ -42,6 +42,7 @@ class Client {
     required this.keys,
     required this.mailbox,
     required this.report,
+    required this.collectRetry,
   });
 
   /// The key store.
@@ -52,6 +53,14 @@ class Client {
 
   /// Where events go.
   final Report report;
+
+  /// How long after a failed collect a listening client tries again. A
+  /// wake-up arrives once per message, so a collect that fails (the link is
+  /// down) would otherwise leave what is waiting until the next message
+  /// (calls11 P4-blocked: the call's answer reached the server, Alice's one
+  /// collect failed in the outage, and she never fetched it). The value is a
+  /// choice, unmeasured: a failed request costs one more request.
+  final Duration collectRetry;
 
   /// Conversations this client is in, by hex id.
   final Map<String, Conversation> _conversations = {};
@@ -68,6 +77,8 @@ class Client {
   bool _collecting = false;
   bool _again = false;
   Future<int>? _inFlight;
+  Timer? _retry;
+  bool _closed = false;
 
   /// Opens the keys, registers the Device and tops the key package stock up
   /// to [stock].
@@ -76,11 +87,13 @@ class Client {
     required Mailbox mailbox,
     int stock = 5,
     Report? report,
+    Duration collectRetry = const Duration(seconds: 2),
   }) async {
     final client = Client._(
       keys: keys,
       mailbox: mailbox,
       report: report ?? (_) {},
+      collectRetry: collectRetry,
     );
     final deviceId = await mailbox.register(
       deviceName: keys.identity.name,
@@ -234,27 +247,48 @@ class Client {
     }
   }
 
-  /// Holds the wake-up connection open and collects on every ping.
+  /// Holds the wake-up connection open and collects on every ping, and
+  /// again every [collectRetry] after a collect that failed until one
+  /// succeeds.
   Future<void> listen() async {
     _wakeup = await mailbox.wakeups();
     report({'event': 'listening', 'subscription': _wakeup!.subscriptionId});
     _wakeup!.pings.listen(
-      (_) {
-        unawaited(
-          collect().catchError((Object e) {
-            report({'event': 'collect-failed', 'error': '$e'});
-            return 0;
-          }),
-        );
-      },
+      (_) => _collectOrRetry(),
       onError: (Object e) => report({'event': 'wake-up-error', 'error': '$e'}),
     );
   }
 
-  /// Closes everything, after any collect still running.
+  void _collectOrRetry() {
+    unawaited(
+      collect().then<void>(
+        (_) {},
+        onError: (Object e) {
+          report({'event': 'collect-failed', 'error': '$e'});
+          if (!_closed) {
+            _retry ??= Timer(collectRetry, () {
+              _retry = null;
+              _collectOrRetry();
+            });
+          }
+        },
+      ),
+    );
+  }
+
+  /// Closes everything, after any collect still running. A collect that
+  /// fails meanwhile is reported, not thrown: its failure belongs to
+  /// whoever started it (calls10 cut120: the lab app's last collect failed
+  /// in the outage and close() threw it again, so the app exited 2).
   Future<void> close() async {
+    _closed = true;
+    _retry?.cancel();
     await _wakeup?.close();
-    await _inFlight;
+    try {
+      await _inFlight;
+    } on MailboxError catch (e) {
+      report({'event': 'collect-failed-at-close', 'error': e.message});
+    }
     await _incoming.close();
     mailbox.close();
     await keys.close();

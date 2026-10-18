@@ -160,6 +160,83 @@ void main() {
     }
     expect(counter.count, 5);
   });
+
+  test(
+    'a collect that fails while the link is down is retried until what '
+    'waits is fetched',
+    () async {
+      final link = _Link();
+      final log = <Map<String, Object?>>[];
+      final dana = await Client.start(
+        keys: await KeyStore.open(
+          dbPath: ':memory:',
+          storageKey: randomKey(),
+          identity: await Identity.create('dana-phone'),
+        ),
+        mailbox: Mailbox(base: server.base, client: link),
+        report: log.add,
+        collectRetry: const Duration(milliseconds: 200),
+      );
+      addTearDown(dana.close);
+      final c = await alice.open('dana-phone');
+      await dana.collect();
+      await dana.listen();
+      final got = dana.incoming.first.timeout(const Duration(seconds: 10));
+
+      // The wake-up gets through; the collect it starts does not. One
+      // message, so one wake-up: only a retry can fetch it.
+      link.down = true;
+      await alice.send(c, 'sent in the outage');
+      final deadline = DateTime.now().add(const Duration(seconds: 10));
+      while (!log.any((e) => e['event'] == 'collect-failed')) {
+        if (DateTime.now().isAfter(deadline)) {
+          fail('the collect never failed: the test did not cut the link');
+        }
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+      }
+      link.down = false;
+      expect((await got).text, 'sent in the outage');
+    },
+  );
+
+  test('closing while a collect fails reports it and does not throw', () async {
+    final link = _Link();
+    final log = <Map<String, Object?>>[];
+    final erin = await Client.start(
+      keys: await KeyStore.open(
+        dbPath: ':memory:',
+        storageKey: randomKey(),
+        identity: await Identity.create('erin-phone'),
+      ),
+      mailbox: Mailbox(base: server.base, client: link),
+      report: log.add,
+    );
+    link.down = true;
+    // Whoever started the collect sees it fail; close() must not throw it
+    // a second time (calls10 cut120: the lab app exited 2 this way).
+    final running = erin.collect();
+    await expectLater(running, throwsA(isA<MailboxError>()));
+    await erin.close();
+    expect(
+      log.where((e) => e['event'] == 'collect-failed-at-close'),
+      hasLength(1),
+    );
+  });
+}
+
+/// A connection to the server that can be cut: while [down], every request
+/// fails as a dead link's would.
+class _Link extends http.BaseClient {
+  final http.Client _inner = http.Client();
+  bool down = false;
+
+  @override
+  Future<http.StreamedResponse> send(http.BaseRequest request) {
+    if (down) {
+      throw http.ClientException('link down', request.url);
+    }
+    return _inner.send(request);
+  }
 }
 
 class _Counting extends http.BaseClient {

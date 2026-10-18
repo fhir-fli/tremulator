@@ -3,6 +3,7 @@ import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:http/http.dart' as http;
 import 'package:integration_test/integration_test.dart';
 import 'package:tremulator_calls/tremulator_calls.dart';
 import 'package:tremulator_client/tremulator_client.dart';
@@ -22,13 +23,17 @@ void main() {
   late Conversation conversation;
   late List<Map<String, Object?>> aliceLog;
   late List<Map<String, Object?>> bobLog;
+  late _Link aliceLink;
+  late _Link bobLink;
 
   setUp(() async {
     server = await TestServer.start();
     aliceLog = [];
     bobLog = [];
-    alice = await _phone('alice-phone', server.base, aliceLog);
-    bob = await _phone('bob-phone', server.base, bobLog);
+    aliceLink = _Link();
+    bobLink = _Link();
+    alice = await _phone('alice-phone', server.base, aliceLog, aliceLink);
+    bob = await _phone('bob-phone', server.base, bobLog, bobLink);
     conversation = await alice.open('bob-phone');
     await bob.collect();
     await alice.listen();
@@ -277,6 +282,25 @@ void main() {
         call.connected.timeout(const Duration(seconds: 30)),
         throwsA(isA<StateError>()),
       );
+      // It ends at once as failed: a call that cannot be set up for want
+      // of a route keeps trying for Calls.setupDeadline (90 s), one whose
+      // other end is the wrong certificate must not.
+      expect(await call.ended.timeout(const Duration(seconds: 5)), 'failed');
+      expect(
+        aliceLog.where((e) => e['event'] == 'reconnecting'),
+        isEmpty,
+        reason: 'no retry after a refused certificate',
+      );
+      expect(
+        aliceLog.where((e) => e['event'] == 'setup-deadline'),
+        isEmpty,
+      );
+      // The handshake failed, read from the transport's own state (W3C
+      // WebRTC 1.0, RTCDtlsTransportState "failed": "failure to validate
+      // the remote fingerprint").
+      final why = aliceLog.singleWhere((e) => e['event'] == 'setup-failed');
+      expect(why['dtls'], contains('failed'));
+      expect(why['why'], 'handshake');
       // The description was accepted and the handshake tried: the failure
       // is the certificate check, not a garbled description.
       final states = [
@@ -290,6 +314,94 @@ void main() {
       await bobCalls.close();
     },
   );
+
+  testWidgets(
+    "an offer sent while the caller's link is down is sent again and the "
+    'call connects',
+    (_) async {
+      final aliceCalls = Calls(
+        alice,
+        sendRetry: const Duration(milliseconds: 200),
+      );
+      final bobCalls = Calls(bob);
+      final bobsCall = Completer<Call>();
+      bobCalls.ringing.listen((c) async {
+        await c.answer();
+        bobsCall.complete(c);
+      });
+
+      aliceLink.down = true;
+      final call = await aliceCalls.start(conversation);
+      await _until(
+        () => aliceLog.any(
+          (e) => e['event'] == 'send-failed' && e['type'] == 'offer',
+        ),
+      );
+      aliceLink.down = false;
+
+      await call.connected.timeout(const Duration(seconds: 30));
+      await (await bobsCall.future).connected.timeout(
+        const Duration(seconds: 30),
+      );
+      final sent = aliceLog.singleWhere((e) => e['event'] == 'offer-sent');
+      expect(sent['attempt'], greaterThan(1));
+      expect(sent['n'], 0);
+      await aliceCalls.close();
+      await bobCalls.close();
+    },
+  );
+
+  testWidgets(
+    "an answer sent while the callee's link is down is sent again and the "
+    'call connects',
+    (_) async {
+      final aliceCalls = Calls(alice);
+      final bobCalls = Calls(
+        bob,
+        sendRetry: const Duration(milliseconds: 200),
+      );
+      final bobsCall = Completer<Call>();
+      bobCalls.ringing.listen((c) async {
+        bobLink.down = true;
+        await c.answer();
+        bobsCall.complete(c);
+      });
+
+      final call = await aliceCalls.start(conversation);
+      await _until(
+        () => bobLog.any(
+          (e) => e['event'] == 'send-failed' && e['type'] == 'answer',
+        ),
+      );
+      bobLink.down = false;
+
+      await call.connected.timeout(const Duration(seconds: 30));
+      await (await bobsCall.future).connected.timeout(
+        const Duration(seconds: 30),
+      );
+      final sent = bobLog.singleWhere((e) => e['event'] == 'answer-sent');
+      expect(sent['attempt'], greaterThan(1));
+      expect(sent['n'], 0);
+      await aliceCalls.close();
+      await bobCalls.close();
+    },
+  );
+}
+
+/// A connection to the server that can be cut: while [down], every request
+/// fails as a dead link's would. The wake-up connection is a web socket,
+/// outside it, and stays up.
+class _Link extends http.BaseClient {
+  final http.Client _inner = http.Client();
+  bool down = false;
+
+  @override
+  Future<http.StreamedResponse> send(http.BaseRequest request) {
+    if (down) {
+      throw http.ClientException('link down', request.url);
+    }
+    return _inner.send(request);
+  }
 }
 
 /// Alice calls Bob and he answers; both are connected.
@@ -314,6 +426,7 @@ Future<Client> _phone(
   String name,
   Uri base,
   List<Map<String, Object?>> log,
+  http.Client link,
 ) async {
   final rng = Random.secure();
   return Client.start(
@@ -324,7 +437,7 @@ Future<Client> _phone(
       ),
       identity: await Identity.create(name),
     ),
-    mailbox: Mailbox(base: base),
+    mailbox: Mailbox(base: base, client: link),
     report: log.add,
   );
 }
