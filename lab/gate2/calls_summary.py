@@ -46,4 +46,11 @@ for path in sys.argv[1:]:
         "answers-applied": [e.get("n") for e in events if e["event"] == "answer-applied"],
         "answers-sent": [e.get("n") for e in events if e["event"] == "answer-sent"],
         "hangup-not-sent": sum(e["event"] == "hangup-not-sent" for e in events),
+        # Video guard (E7): this phone stopping or restarting its own video,
+        # seconds after connected, and the other phone's as it was told.
+        "video-sending": [[round((t(e) - t(conn)).total_seconds(), 1), e.get("sending"), e.get("rtt")]
+                          for e in events if e["event"] == "video-sending"] if conn else [],
+        "remote-video": [[round((t(e) - t(conn)).total_seconds(), 1), e.get("sending")]
+                         for e in events if e["event"] == "remote-video"] if conn else [],
+        "video-guard-failed": [e.get("error") for e in events if e["event"] == "video-guard-failed"][:3],
     }), flush=True)
