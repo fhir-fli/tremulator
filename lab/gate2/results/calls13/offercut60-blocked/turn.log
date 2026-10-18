@@ -1,0 +1,175 @@
+0: : Listener address to use: 172.18.0.3
+0: : Listener address to use: 172.18.0.3
+0: : Relay address to use: 172.18.0.3
+0: : White listing: 172.18.0.0-172.18.255.255
+0: : 
+RFC 3489/5389/5766/5780/6062/6156 STUN/TURN Server
+Version Coturn-4.6.1 'Gorst'
+0: : 
+Max number of open files/sockets allowed for this process: 524288
+0: : 
+Due to the open files/sockets limitation,
+max supported number of TURN Sessions possible is: 262000 (approximately)
+0: : 
+
+==== Show him the instruments, Practical Frost: ====
+
+0: : TLS supported
+0: : DTLS supported
+0: : DTLS 1.2 supported
+0: : TURN/STUN ALPN supported
+0: : Third-party authorization (oAuth) supported
+0: : GCM (AEAD) supported
+0: : OpenSSL compile-time version: OpenSSL 3.0.13 30 Jan 2024 (0x300000d0)
+0: : 
+0: : SQLite supported, default database location is /var/lib/turn/turndb
+0: : Redis supported
+0: : PostgreSQL supported
+0: : MySQL supported
+0: : MongoDB is not supported
+0: : 
+0: : Default Net Engine version: 3 (UDP thread per CPU core)
+
+=====================================================
+
+0: : Domain name: 
+0: : Default realm: tremulator.lab
+Cannot create pid file: /var/run/turnserver.pid: Permission denied
+0: : Cannot create pid file: /var/run/turnserver.pid
+0: : pid file created: /var/tmp/turnserver.pid
+0: : IO method (main listener thread): epoll (with changelist)
+0: : WARNING: I cannot support STUN CHANGE_REQUEST functionality because only one IP address is provided
+0: : Wait for relay ports initialization...
+0: :   relay 172.18.0.3 initialization...
+0: :   relay 172.18.0.3 initialization done
+0: : Relay ports initialization done
+0: : IO method (general relay thread): epoll (with changelist)
+0: : IO method (general relay thread): epoll (with changelist)
+0: : IO method (general relay thread): epoll (with changelist)
+0: : turn server id=0 created
+0: : turn server id=1 created
+0: : IO method (general relay thread): epoll (with changelist)
+0: : IPv4. SCTP listener opened on : 172.18.0.3:3478
+0: : IPv4. SCTP listener opened on : 172.18.0.3:3478
+0: : turn server id=2 created
+0: : IPv4. TCP listener opened on : 172.18.0.3:3478
+0: : IPv4. TCP listener opened on : 172.18.0.3:3478
+0: : turn server id=3 created
+0: : IO method (general relay thread): epoll (with changelist)
+0: : IPv4. SCTP listener opened on : 172.18.0.3:3478
+0: : IPv4. SCTP listener opened on : 172.18.0.3:3478
+0: : IPv4. TCP listener opened on : 172.18.0.3:3478
+0: : IPv4. TCP listener opened on : 172.18.0.3:3478
+0: : turn server id=4 created
+0: : IO method (general relay thread): epoll (with changelist)
+0: : IPv4. SCTP listener opened on : 172.18.0.3:3478
+0: : IPv4. TCP listener opened on : 172.18.0.3:3478
+0: : IO method (general relay thread): epoll (with changelist)
+0: : turn server id=5 created
+0: : IPv4. SCTP listener opened on : 172.18.0.3:3478
+0: : turn server id=6 created
+0: : IPv4. TCP listener opened on : 172.18.0.3:3478
+0: : IPv4. SCTP listener opened on : 172.18.0.3:3478
+0: : IO method (general relay thread): epoll (with changelist)
+0: : IPv4. TCP listener opened on : 172.18.0.3:3478
+0: : turn server id=7 created
+0: : IPv4. SCTP listener opened on : 172.18.0.3:3478
+0: : IO method (general relay thread): epoll (with changelist)
+0: : IPv4. TCP listener opened on : 172.18.0.3:3478
+0: : IO method (general relay thread): epoll (with changelist)
+0: : turn server id=8 created
+0: : turn server id=9 created
+0: : IO method (general relay thread): epoll (with changelist)
+0: : IO method (general relay thread): epoll (with changelist)
+0: : turn server id=10 created
+0: : turn server id=11 created
+0: : IPv4. SCTP listener opened on : 172.18.0.3:3478
+0: : IPv4. SCTP listener opened on : 172.18.0.3:3478
+0: : IPv4. TCP listener opened on : 172.18.0.3:3478
+0: : IPv4. TCP listener opened on : 172.18.0.3:3478
+0: : IO method (general relay thread): epoll (with changelist)
+0: : IO method (general relay thread): epoll (with changelist)
+0: : IO method (general relay thread): epoll (with changelist)
+0: : IO method (general relay thread): epoll (with changelist)
+0: : turn server id=15 created
+0: : turn server id=13 created
+0: : IPv4. SCTP listener opened on : 172.18.0.3:3478
+0: : IPv4. SCTP listener opened on : 172.18.0.3:3478
+0: : turn server id=14 created
+0: : turn server id=12 created
+0: : IPv4. TCP listener opened on : 172.18.0.3:3478
+0: : IPv4. TCP listener opened on : 172.18.0.3:3478
+0: : IPv4. SCTP listener opened on : 172.18.0.3:3478
+0: : IPv4. SCTP listener opened on : 172.18.0.3:3478
+0: : IPv4. TCP listener opened on : 172.18.0.3:3478
+0: : IPv4. UDP listener opened on: 172.18.0.3:3478
+0: : IPv4. TCP listener opened on : 172.18.0.3:3478
+0: : IPv4. SCTP listener opened on : 172.18.0.3:3478
+0: : IPv4. TCP listener opened on : 172.18.0.3:3478
+0: : IPv4. SCTP listener opened on : 172.18.0.3:3478
+0: : IPv4. TCP listener opened on : 172.18.0.3:3478
+0: : Total General servers: 16
+0: : IO method (auth thread): epoll (with changelist)
+0: : ERROR: Cannot open SQLite DB connection: </var/lib/turn/turndb>, runtime error:
+  unable to open database file
+  (If your intention is to use an SQLite database for the TURN server, then
+  check and fix, if necessary, the effective permissions of the TURN server
+  process and of the DB directory and then re-start the TURN server)
+0: : IO method (auth thread): epoll (with changelist)
+0: : IO method (auth thread): epoll (with changelist)
+0: : IO method (auth thread): epoll (with changelist)
+0: : IO method (auth thread): epoll (with changelist)
+0: : IO method (auth thread): epoll (with changelist)
+0: : IO method (auth thread): epoll (with changelist)
+0: : IO method (auth thread): epoll (with changelist)
+0: : IO method (admin thread): epoll (with changelist)
+69: : session 011000000000000001: realm <tremulator.lab> user <>: incoming packet message processed, error 401: Unauthorized
+69: : IPv4. Local relay addr: 172.18.0.3:49425
+69: : session 011000000000000001: new, realm=<tremulator.lab>, username=<lab>, lifetime=600
+69: : session 011000000000000001: realm <tremulator.lab> user <lab>: incoming packet ALLOCATE processed, success
+69: : session 011000000000000001: peer 172.18.0.4 lifetime updated: 300
+69: : session 011000000000000001: realm <tremulator.lab> user <lab>: incoming packet CREATE_PERMISSION processed, success
+69: : session 011000000000000001: peer 172.18.0.4 lifetime updated: 600
+69: : session 011000000000000001: realm <tremulator.lab> user <lab>: incoming packet CHANNEL_BIND processed, success
+78: : session 011000000000000001: usage: realm=<tremulator.lab>, username=<lab>, rp=550, rb=39219, sp=1503, sb=920849
+78: : session 011000000000000001: peer usage: realm=<tremulator.lab>, username=<lab>, rp=1498, rb=914381, sp=545, sb=36611
+84: : session 011000000000000001: usage: realm=<tremulator.lab>, username=<lab>, rp=386, rb=28368, sp=1663, sb=1298407
+84: : session 011000000000000001: peer usage: realm=<tremulator.lab>, username=<lab>, rp=1662, rb=1291679, sp=385, sb=26808
+89: : session 011000000000000001: usage: realm=<tremulator.lab>, username=<lab>, rp=343, rb=25625, sp=1706, sb=1423237
+89: : session 011000000000000001: peer usage: realm=<tremulator.lab>, username=<lab>, rp=1705, rb=1416337, sp=342, sb=24237
+95: : session 011000000000000001: usage: realm=<tremulator.lab>, username=<lab>, rp=339, rb=24872, sp=1709, sb=1438219
+95: : session 011000000000000001: peer usage: realm=<tremulator.lab>, username=<lab>, rp=1709, rb=1431383, sp=339, sb=23516
+100: : session 011000000000000001: usage: realm=<tremulator.lab>, username=<lab>, rp=338, rb=25217, sp=1711, sb=1435275
+100: : session 011000000000000001: peer usage: realm=<tremulator.lab>, username=<lab>, rp=1710, rb=1428355, sp=337, sb=23849
+105: : session 011000000000000001: usage: realm=<tremulator.lab>, username=<lab>, rp=307, rb=22856, sp=1741, sb=1518383
+105: : session 011000000000000001: peer usage: realm=<tremulator.lab>, username=<lab>, rp=1741, rb=1511419, sp=307, sb=21628
+113: : session 011000000000000001: usage: realm=<tremulator.lab>, username=<lab>, rp=419, rb=31817, sp=1630, sb=1442128
+113: : session 011000000000000001: peer usage: realm=<tremulator.lab>, username=<lab>, rp=1629, rb=1435532, sp=418, sb=30125
+117: : session 011000000000000001: usage: realm=<tremulator.lab>, username=<lab>, rp=301, rb=22676, sp=1747, sb=1532368
+117: : session 011000000000000001: peer usage: realm=<tremulator.lab>, username=<lab>, rp=1747, rb=1525380, sp=301, sb=21472
+122: : session 011000000000000001: usage: realm=<tremulator.lab>, username=<lab>, rp=292, rb=21688, sp=1757, sb=1552287
+122: : session 011000000000000001: peer usage: realm=<tremulator.lab>, username=<lab>, rp=1756, rb=1545183, sp=291, sb=20504
+127: : session 011000000000000001: usage: realm=<tremulator.lab>, username=<lab>, rp=296, rb=22411, sp=1752, sb=1543635
+127: : session 011000000000000001: peer usage: realm=<tremulator.lab>, username=<lab>, rp=1752, rb=1536627, sp=296, sb=21227
+132: : session 011000000000000001: usage: realm=<tremulator.lab>, username=<lab>, rp=302, rb=22344, sp=1747, sb=1527153
+132: : session 011000000000000001: peer usage: realm=<tremulator.lab>, username=<lab>, rp=1746, rb=1520089, sp=301, sb=21120
+138: : session 011000000000000001: usage: realm=<tremulator.lab>, username=<lab>, rp=324, rb=24367, sp=1724, sb=1477992
+138: : session 011000000000000001: peer usage: realm=<tremulator.lab>, username=<lab>, rp=1724, rb=1471096, sp=324, sb=23071
+142: : session 011000000000000001: usage: realm=<tremulator.lab>, username=<lab>, rp=328, rb=24192, sp=1721, sb=1501355
+142: : session 011000000000000001: peer usage: realm=<tremulator.lab>, username=<lab>, rp=1720, rb=1494395, sp=327, sb=22864
+147: : session 011000000000000001: usage: realm=<tremulator.lab>, username=<lab>, rp=300, rb=22694, sp=1748, sb=1538703
+147: : session 011000000000000001: peer usage: realm=<tremulator.lab>, username=<lab>, rp=1748, rb=1531711, sp=300, sb=21494
+152: : session 011000000000000001: usage: realm=<tremulator.lab>, username=<lab>, rp=290, rb=21736, sp=1759, sb=1541562
+152: : session 011000000000000001: peer usage: realm=<tremulator.lab>, username=<lab>, rp=1758, rb=1534450, sp=289, sb=20560
+157: : session 011000000000000001: usage: realm=<tremulator.lab>, username=<lab>, rp=298, rb=22466, sp=1750, sb=1543481
+157: : session 011000000000000001: peer usage: realm=<tremulator.lab>, username=<lab>, rp=1750, rb=1536481, sp=298, sb=21274
+161: : session 011000000000000001: usage: realm=<tremulator.lab>, username=<lab>, rp=293, rb=21638, sp=1756, sb=1551582
+161: : session 011000000000000001: peer usage: realm=<tremulator.lab>, username=<lab>, rp=1755, rb=1544482, sp=292, sb=20450
+166: : session 011000000000000001: usage: realm=<tremulator.lab>, username=<lab>, rp=293, rb=22191, sp=1755, sb=1543357
+166: : session 011000000000000001: peer usage: realm=<tremulator.lab>, username=<lab>, rp=1755, rb=1536337, sp=293, sb=21019
+171: : session 011000000000000001: usage: realm=<tremulator.lab>, username=<lab>, rp=295, rb=21874, sp=1754, sb=1543703
+171: : session 011000000000000001: peer usage: realm=<tremulator.lab>, username=<lab>, rp=1753, rb=1536611, sp=294, sb=20678
+180: : session 011000000000000001: usage: realm=<tremulator.lab>, username=<lab>, rp=532, rb=39132, sp=1517, sb=1128500
+180: : session 011000000000000001: peer usage: realm=<tremulator.lab>, username=<lab>, rp=1516, rb=1122356, sp=531, sb=36988
+184: : session 011000000000000001: usage: realm=<tremulator.lab>, username=<lab>, rp=298, rb=21852, sp=1750, sb=1540191
+184: : session 011000000000000001: peer usage: realm=<tremulator.lab>, username=<lab>, rp=1750, rb=1533191, sp=298, sb=20660

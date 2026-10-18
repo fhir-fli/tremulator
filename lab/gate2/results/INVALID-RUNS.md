@@ -107,3 +107,14 @@
   a temporary file and renamed, and a missing time reads as not recorded.
   Re-run as calls11. Valid in calls10: cut20, cut20-blocked, cut60,
   cut60-blocked, cut120.
+- **calls13 stopped in offercut60-blocked** (2026-10-18 01:23): P4,
+  P4-blocked and offercut60 are valid and summarised. offercut60-blocked had
+  connected and was mid-call when one poll for Alice's exit file
+  (`docker exec g2c-alice test -e …`, 10 s limit) took longer than 10 s; the
+  uncaught `TimeoutExpired` ended calls.py and the sweep, so calls14 never
+  ran. Alice's stats lines, once a second, jump from 05:22:56 to 05:23:09:
+  her container stalled ~13 s. Cause of the stall unknown; host load was not
+  being measured. Its directory is kept unsummarised. Fixed in the next
+  commit: labkit.sh reports a timed-out command as exit 124
+  (`command-timed-out` on stdout), as timeout(1) does, and raises only with
+  `check`. lab/network/validate.py's own sh already did the same.

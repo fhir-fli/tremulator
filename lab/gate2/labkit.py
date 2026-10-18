@@ -7,6 +7,7 @@ Every pkill here runs INSIDE a container through docker exec, never on the
 host.
 """
 import os
+import json
 import subprocess
 import time
 from datetime import datetime
@@ -33,7 +34,19 @@ LOOP_PIDS = "/tmp/shaping-loop.pids"
 
 
 def sh(cmd, timeout=600, check=False, **kw):
-    r = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout, **kw)
+    """Runs cmd. A command still running at `timeout` counts as failed with
+    exit 124, as timeout(1) reports it, unless `check` is set, which raises.
+    calls13 offercut60-blocked: one `docker exec ... test -e` poll took over
+    10 s (Alice's container stalled ~13 s, her stats lines show the gap;
+    cause unknown) and the uncaught TimeoutExpired ended the whole sweep."""
+    try:
+        r = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout, **kw)
+    except subprocess.TimeoutExpired as e:
+        if check:
+            raise RuntimeError(f"{' '.join(cmd)}: timed out after {timeout} s") from e
+        out = e.stdout.decode() if isinstance(e.stdout, bytes) else (e.stdout or "")
+        print(json.dumps({"event": "command-timed-out", "cmd": cmd, "timeout_s": timeout}), flush=True)
+        return subprocess.CompletedProcess(cmd, 124, out, f"timed out after {timeout} s")
     if check and r.returncode != 0:
         raise RuntimeError(f"{' '.join(cmd)}: {r.stderr.strip()}")
     return r
