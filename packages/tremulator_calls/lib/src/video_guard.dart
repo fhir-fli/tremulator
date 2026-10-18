@@ -59,11 +59,20 @@ class VideoGuard {
   /// How long the video will stay off once stopped, as things stand.
   Duration get hold => _hold;
 
-  /// Forgets the lowest round trip: the route changed (a reconnect), so the
-  /// old one no longer describes the link.
-  void newRoute() {
-    _lowest = null;
-    _weak = 0;
+  String? _route;
+
+  /// The connection is on [route] (local and remote candidate types) after
+  /// connecting or reconnecting. A different route from before forgets the
+  /// lowest round trip, which described the old one. The same route keeps
+  /// it: after a reconnect the first round trips can still be a full queue,
+  /// and taken as the lowest they made 37 s look normal (calls18 P1-blocked:
+  /// video sent again at a 37 s round trip).
+  void onRoute(String route) {
+    if (_route != null && route != _route) {
+      _lowest = null;
+      _weak = 0;
+    }
+    _route = route;
   }
 
   /// One round trip of [seconds], measured at [now]. Returns the new state

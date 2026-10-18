@@ -608,7 +608,7 @@ class Call {
     }
     _lostAt = null;
     _grace?.cancel();
-    _guard?.newRoute();
+    unawaited(_routeToGuard());
     _calls.report({
       'event': 'reconnected',
       'call': id,
@@ -831,6 +831,7 @@ class Call {
       return;
     }
     final guard = _guard = make();
+    await _routeToGuard();
     _guardTimer = Timer.periodic(_calls.guardEvery, (_) async {
       if (_guardBusy || _ended.isCompleted || _lostAt != null) {
         return;
@@ -855,6 +856,22 @@ class Call {
         _guardBusy = false;
       }
     });
+  }
+
+  /// Tells the guard which route the connection is on now.
+  Future<void> _routeToGuard() async {
+    final guard = _guard;
+    if (guard == null) {
+      return;
+    }
+    try {
+      final r = await route();
+      if (r != null) {
+        guard.onRoute('$r');
+      }
+    } on Object catch (e) {
+      _calls.report({'event': 'video-guard-failed', 'call': id, 'error': '$e'});
+    }
   }
 
   /// The connected pair's current round trip in seconds (W3C webrtc-stats,

@@ -81,10 +81,23 @@ void main() {
     }
   });
 
+  test('a reconnect on the same route keeps the lowest round trip, so a '
+      'queue still full after it is still weak', () {
+    final g = VideoGuard()..onRoute('host→relay');
+    expect(_feed(g, [0.8, ...List<double>.filled(5, 25)]), [(5, false)]);
+    g.onRoute('host→relay');
+    // calls18 P1-blocked: 30 s, then 37 s after the reconnect.
+    expect(
+      _feed(g, [30, ...List<double>.filled(60, 37)], start: 6),
+      isEmpty,
+    );
+    expect(g.sending, isFalse);
+  });
+
   test('a new route forgets the old round trip', () {
-    final g = VideoGuard();
+    final g = VideoGuard()..onRoute('host→host');
     _feed(g, [0.05, 0.05]);
-    g.newRoute();
+    g.onRoute('host→relay');
     // Relayed now at 1.4 s: not weak against the old 0.05.
     expect(_feed(g, List.filled(10, 1.4), start: 2), isEmpty);
   });
