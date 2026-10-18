@@ -7,8 +7,9 @@
 # drop, so drift falls on both alike:
 #   <L><n>fc / <L><n>fd  P1 direct and P1 relayed, relay on the field link
 #   <L><n>dc / <L><n>dd  P1 relayed, relay on a decent link
-# Sound only, speech, Opus 12 kbit/s, 60 ms, DTX, 300 s calls; coded clicks
-# (voice_delay.py, 13036c9). The app is calls23's build (unchanged since).
+# Sound only, speech, Opus 12 kbit/s, 60 ms, DTX, 300 s calls; clicks coded
+# by pitch (voice_delay.py). The app is calls23's build (unchanged since).
+# calls24 stopped in its first run (INVALID-RUNS.md); calls25 is the sweep.
 # Stops at the first run that fails. Needs Grey's go (docs/GATE1.md).
 #
 #     bash lab/gate2/calls_e7_header_repeat.sh calls24

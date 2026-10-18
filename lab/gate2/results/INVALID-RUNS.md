@@ -118,3 +118,14 @@
   commit: labkit.sh reports a timed-out command as exit 124
   (`command-timed-out` on stdout), as timeout(1) does, and raises only with
   `check`. lab/network/validate.py's own sh already did the same.
+- **calls241fc** (2026-10-18 19:40): first run of the header repeat sweep.
+  P1's call completed (both exits 0), then the server stop failed: neither
+  store dump reached the server (its log has no request for them, and no
+  dump files exist), and it still answered /health 20 s after the kill, so
+  calls.py raised "server on 8081 did not stop" and the sweep ended before
+  P1-blocked. No step's exit or errors were recorded, so the cause is
+  unknown; labkit.stop_server now prints each step's exit, output and errors
+  and the container's processes before raising. Its click track was the
+  two-beep code of `13036c9`: 21 of 29 clicks read (315-468 ms), and all 8
+  unread were a lone beep whose partner was lost (P1: 5% loss at each
+  phone), which is why the code became one beep per tone. Kept unsummarised.

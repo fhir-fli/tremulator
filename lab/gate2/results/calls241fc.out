@@ -1,0 +1,10 @@
+{"run": "calls241fc", "t": "2026-10-18T19:40:44", "event": "start", "profiles": ["P1", "P1-blocked"], "call_s": 300}
+{"run": "calls241fc", "t": "2026-10-18T19:47:22", "event": "end"}
+Traceback (most recent call last):
+  File "/home/grey/dev/fhir/tremulator/lab/gate2/calls.py", line 659, in <module>
+    run_profile(name)
+  File "/home/grey/dev/fhir/tremulator/lab/gate2/calls.py", line 376, in run_profile
+    stop_server(srv, name, port)
+  File "/home/grey/dev/fhir/tremulator/lab/gate2/labkit.py", line 157, in stop_server
+    raise RuntimeError(f"server on {port} did not stop")
+RuntimeError: server on 8081 did not stop

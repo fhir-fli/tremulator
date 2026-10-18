@@ -9,6 +9,7 @@ host.
 import os
 import json
 import subprocess
+import sys
 import time
 from datetime import datetime
 
@@ -143,17 +144,26 @@ def stop_server(srv, profile, port=None):
     d = f"/out/{profile}"
     port = port or PORTS[profile]
     # the server's own view of every blob, then the raw store file
-    dx(srv, "sh", "-c",
-       f"curl -s 'http://127.0.0.1:{port}/Communication?_count=1000&_format=json' > {d}/server_dump.json")
-    dx(srv, "sh", "-c",
-       f"curl -s 'http://127.0.0.1:{port}/Device?_count=1000&_format=json' > {d}/devices_dump.json")
-    dx(srv, "sh", "-c", f"kill -INT $(cat {d}/server.pid); sleep 2; kill -KILL $(cat {d}/server.pid) 2>/dev/null; true", user="0")
-    dx(srv, "sh", "-c", f"kill -INT $(cat {d}/tcpdump.pid); sleep 1; true", user="0")
+    # Each step's exit and errors go to this run's output: calls241fc P1,
+    # the dumps never reached the server and it was still answering 20 s
+    # after the kill, and nothing recorded why.
+    def step(what, *args, **kw):
+        r = dx(srv, *args, **kw)
+        print(json.dumps({"stop_server": what, "profile": profile, "exit": r.returncode,
+                          "stdout": r.stdout[-2000:], "stderr": r.stderr[-500:]}), file=sys.stderr, flush=True)
+    step("dump", "sh", "-c",
+         f"curl -s 'http://127.0.0.1:{port}/Communication?_count=1000&_format=json' > {d}/server_dump.json")
+    step("devices", "sh", "-c",
+         f"curl -s 'http://127.0.0.1:{port}/Device?_count=1000&_format=json' > {d}/devices_dump.json")
+    step("kill", "sh", "-c", f"kill -INT $(cat {d}/server.pid); sleep 2; kill -KILL $(cat {d}/server.pid) 2>/dev/null; true", user="0")
+    step("tcpdump", "sh", "-c", f"kill -INT $(cat {d}/tcpdump.pid); sleep 1; true", user="0")
     for _ in range(20):
         if dx(srv, "curl", "-fsS", f"http://127.0.0.1:{port}/health", timeout=10).returncode != 0:
             break
         time.sleep(1)
     else:
+        step("ps", "ps", "-ef")
+        step("pid file", "cat", f"{d}/server.pid")
         raise RuntimeError(f"server on {port} did not stop")
     dx(srv, "sh", "-c", f"cp /data/{profile}/fhirant.db {d}/fhirant.db", user="0")
     dx(srv, "chown", "-R", f"{os.getuid()}:{os.getgid()}", "/out", user="0")

@@ -10,12 +10,7 @@ With speech (E7, `call_track`): the same clicks with real speech between
 them, so the call carries the load of a person talking. The speech is ITU-T
 P.501 (07/2026) clause 7.3.2, the British English single-talk sequence
 (speech/, with ITU's notice), looped, at half its level, stopping 1 s before
-each click and resuming 1 s after it. Both recordings are then band-passed
-around the click's 1 kHz before onsets are found: on the track itself speech
-peaks at 0.38 of the click's peak unfiltered and 0.10 filtered, against the
-detector's 0.5 (measured 2026-10-18). A heard recording whose filtered peak
-is under a quarter of the sent one's holds no click, only speech, and yields
-no pairs, as a silent one does.
+each click and resuming 1 s after it.
 
 Each recording is made in its container by ffmpeg's PulseAudio input
 (record_cmd) with every 10 ms packet stamped with its arrival on the wall
@@ -30,17 +25,29 @@ amplitude detector (lab/tool/bin/baseline_onsets.dart, threshold 0.5 of the
 file's peak, 150 ms dead time), so the instrument is the one that measured
 WhatsApp.
 
-Each click is two 30 ms beeps, the second CODE_GAPS[n % 6] after the first
-for click n (call_track), so a click heard is known by its number modulo 6.
-Until calls23 every click was one beep and was paired with the first click
-heard within 3 s after it: a click 10-13 s late then read as the next click
-on time (calls23a: 8 ms, with a 15 s round trip), and one later than 3 s was
-counted lost. Now each click sent is paired with the first click heard after
-it, within PAIR_WINDOW_S, carrying the same code, and later than the last
-one paired (a call's sound plays in order); a click with none is counted as
-lost. Onsets that form no code are counted, not paired. The beeps of
-pulse_stamp_check.py and cross_stamp_check.py (click_track_cmd) stay single:
-they time one recording against another, not a call.
+Each click is one 30 ms beep whose pitch is its number modulo 6
+(CODE_TONES, call_track). Both recordings are band-passed around each tone
+in turn and onsets found in each, so a click heard is known by its number.
+In a band, a recording whose peak is under CLICK_FRACTION of the sent one's
+in that band holds no click there and yields none, as a silent one does:
+the self-check's band with its clicks removed peaked at 0.28 (the next
+tones leaking through) and speech alone at 0.10; calls241fc's heard sound
+(the 1 kHz track) at 0.31 of a beep in the top bands, and its beep arrived
+at 1.17 of the level sent. Heard beeps paired with no click are counted
+(heard_unpaired): noise taken for beeps shows there. Each click sent is paired with the
+first click heard after it, within PAIR_WINDOW_S, carrying the same tone,
+and later than the last one paired (a call's sound plays in order); a click
+with none is counted as lost.
+
+Why tones: until calls23 every click was the same 1 kHz beep, paired with the
+first click heard within 3 s after it, so a click 10-13 s late read as the
+next click on time (calls23a: 8 ms, with a 15 s round trip) and one later
+than 3 s counted as lost. Two beeps a gap apart (13036c9) carried the number
+but any lost beep lost the click: calls241fc P1 (5% loss at each phone), 8
+of 29 clicks unread, each a lone beep with its partner gone; one beep a
+click keeps the loss exposure Gate 1's single clap had. The beeps of
+pulse_stamp_check.py and cross_stamp_check.py (click_track_cmd) stay single
+1 kHz: they time one recording against another, not a call.
 
 A received file whose peak is under 1,000 of 32,767 is reported as silent and
 yields no pairs: on near-silence the detector's 0.5-of-peak level falls into
@@ -63,19 +70,18 @@ from array import array
 HERE = os.path.dirname(os.path.abspath(__file__))
 TOOL = os.path.abspath(os.path.join(HERE, "..", "tool"))
 SILENT_PEAK = 1000
-# The second beep's delay after the first, by click number modulo 6: wider
-# than the detector's 150 ms dead time, 100 ms apart, ending before speech
-# resumes SPEECH_GAP_S after the click.
-CODE_GAPS = [0.25 + 0.1 * i for i in range(6)]
-CODE_TOLERANCE_S = 0.04
+# Click n's pitch is CODE_TONES[n % 6]: about 1.35 apart, so through
+# another tone's band (Q 8) a beep is at most about 0.2 of its own band's
+# peak, under the detector's 0.5; within Opus wideband's 8 kHz.
+CODE_TONES = [800, 1100, 1500, 2000, 2700, 3600]
 BEEP_S = 0.03
 # Under the 60 s after which the codes repeat.
 PAIR_WINDOW_S = 50.0
 SPEECH = os.path.join(HERE, "speech", "P501_7.3.2_FB_male_female_single-talk_seq.wav")
 SPEECH_GAIN = 0.5
 SPEECH_GAP_S = 1.0  # quiet either side of each click
-BAND = "bandpass=f=1000:t=q:w=8"
-CLICK_FRACTION = 0.25  # of the sent recording's filtered peak
+BAND = "bandpass=f={}:t=q:w=8"
+CLICK_FRACTION = 0.5  # of the sent recording's peak in the same band
 
 
 def sh(cmd, **kw):
@@ -93,8 +99,8 @@ def click_track_cmd(path, clicks):
 
 
 def call_track(path, clicks, speech=False):
-    """The call's sound: click n 5 s into its 10 s, as a 30 ms 1 kHz tone at
-    0.8 of full scale and the same again CODE_GAPS[n % 6] later; with
+    """The call's sound: click n 5 s into its 10 s, a 30 ms tone of
+    CODE_TONES[n % 6] at 0.8 of full scale; with
     `speech`, SPEECH looped in between at SPEECH_GAIN, SPEECH_GAP_S clear of
     each click. 48 kHz mono 16-bit."""
     rate = 48000
@@ -113,10 +119,9 @@ def call_track(path, clicks, speech=False):
                 for i in range(base + int(a * rate), base + int(b * rate)):
                     out[i] = int(talk[k % len(talk)] * SPEECH_GAIN)
                     k += 1
-        for at in (5, 5 + CODE_GAPS[c % len(CODE_GAPS)]):
-            start = base + int(at * rate)
-            for i in range(int(BEEP_S * rate)):
-                out[start + i] = int(0.8 * 32767 * math.sin(2 * math.pi * 1000 * i / rate))
+        tone = CODE_TONES[c % len(CODE_TONES)]
+        for i in range(int(BEEP_S * rate)):
+            out[base + 5 * rate + i] = int(0.8 * 32767 * math.sin(2 * math.pi * tone * i / rate))
     with wave.open(path, "wb") as w:
         w.setnchannels(1)
         w.setsampwidth(2)
@@ -160,10 +165,11 @@ def start_time(path):
     return best
 
 
-def to_wav(path, band=False):
-    wav = os.path.splitext(path)[0] + ("_band.wav" if band else ".wav")
+def to_wav(path, band=None):
+    """`path` as 48 kHz mono 16-bit WAV, band-passed around `band` Hz if set."""
+    wav = os.path.splitext(path)[0] + (f"_band{band}.wav" if band else ".wav")
     sh(["ffmpeg", "-y", "-loglevel", "error", "-i", path, "-ac", "1", "-ar", "48000",
-        *(["-af", BAND] if band else []), "-c:a", "pcm_s16le", wav])
+        *(["-af", BAND.format(band)] if band else []), "-c:a", "pcm_s16le", wav])
     return wav
 
 
@@ -178,22 +184,18 @@ def onsets(wav):
     return [float(m.group(1)) for m in re.finditer(r"^\s+([\d.]+) s", out, re.M)]
 
 
-def codes(times):
-    """Onset times read as clicks: (time of the first beep, code) for each
-    two onsets one of CODE_GAPS apart, within CODE_TOLERANCE_S; and the
-    count of onsets that formed none."""
-    out, loose, i = [], 0, 0
-    while i < len(times):
-        if i + 1 < len(times):
-            gap = times[i + 1] - times[i]
-            code = min(range(len(CODE_GAPS)), key=lambda c: abs(CODE_GAPS[c] - gap))
-            if abs(CODE_GAPS[code] - gap) <= CODE_TOLERANCE_S:
-                out.append((times[i], code))
-                i += 2
-                continue
-        loose += 1
-        i += 1
-    return out, loose
+def coded(path, start, floors=None):
+    """(time, code) for every beep in the recording at `path`, in time order,
+    from its onsets in each tone's band; and each band's peak. A band whose
+    peak is under its floor yields none."""
+    out, peaks = [], []
+    for code, tone in enumerate(CODE_TONES):
+        wav = to_wav(path, tone)
+        p = peak(wav)
+        peaks.append(p)
+        if floors is None or p >= floors[code]:
+            out += [(start + t, code) for t in onsets(wav)]
+    return sorted(out), peaks
 
 
 def pair(sent, heard):
@@ -212,22 +214,22 @@ def pair(sent, heard):
 
 
 def measure(sent_path, heard_path, out_path, speech=False):
-    sent_wav, heard_wav = to_wav(sent_path, speech), to_wav(heard_path, speech)
+    """`speech` is recorded in the result; the bands do the same work with
+    or without it."""
     t_sent, t_heard = start_time(sent_path), start_time(heard_path)
     # A stamp that is not a wall-clock time means the instrument is broken.
     for path, t in ((sent_path, t_sent), (heard_path, t_heard)):
         if t < 1e9:
             raise RuntimeError(f"{os.path.basename(path)} starts at {t}: no wall-clock stamp")
-    heard_peak = peak(heard_wav)
-    floor = max(SILENT_PEAK, CLICK_FRACTION * peak(sent_wav)) if speech else SILENT_PEAK
-    sent_on, sent_loose = codes([t_sent + t for t in onsets(sent_wav)])
-    want = [c % len(CODE_GAPS) for c in range(len(sent_on))]
-    if sent_loose or [c for _, c in sent_on] != want:
+    heard_peak = peak(to_wav(heard_path))
+    sent_on, sent_peaks = coded(sent_path, t_sent)
+    want = [c % len(CODE_TONES) for c in range(len(sent_on))]
+    if [c for _, c in sent_on] != want:
         # What went into the microphone must read back as the track made.
-        raise RuntimeError(f"{os.path.basename(sent_path)}: codes {[c for _, c in sent_on]}, "
-                           f"{sent_loose} loose onsets: not a coded click track")
-    heard_on, heard_loose = ([], 0) if heard_peak < floor else codes(
-        [t_heard + t for t in onsets(heard_wav)])
+        raise RuntimeError(f"{os.path.basename(sent_path)}: codes {[c for _, c in sent_on]}: "
+                           "not a coded click track")
+    floors = [max(SILENT_PEAK, CLICK_FRACTION * p) for p in sent_peaks]
+    heard_on, _ = ([], None) if heard_peak < SILENT_PEAK else coded(heard_path, t_heard, floors)
     pairs = pair(sent_on, heard_on)
     with open(out_path, "w") as f:
         for s, d in pairs:
@@ -236,8 +238,8 @@ def measure(sent_path, heard_path, out_path, speech=False):
     delays = sorted(d * 1000 for _, d in pairs if d is not None)
     return {"sent_start": round(t_sent, 4), "heard_start": round(t_heard, 4),
             "clicks_sent": len(sent_on), "clicks_heard": len(delays),
-            "speech": speech, "heard_peak": heard_peak, "heard_codes": len(heard_on),
-            "heard_loose_onsets": heard_loose,
+            "speech": speech, "heard_peak": heard_peak, "heard_beeps": len(heard_on),
+            "heard_unpaired": len(heard_on) - len(delays),
             "delay_median_ms": round(statistics.median(delays)) if delays else None,
             "delay_min_ms": round(delays[0]) if delays else None,
             "delay_max_ms": round(delays[-1]) if delays else None}
@@ -269,8 +271,7 @@ def self_check(d, speech=False):
     sh(["ffmpeg", "-y", "-loglevel", "error", "-i", track, sent])
     logged(sent, t)
     # Clicks 3, 6, 9 (at 25, 55, 85 s) silenced in the heard copy.
-    # Both beeps: the second ends by 0.78 s after the first.
-    mute = "+".join(f"between(t,{10 * k - 5 - 0.1},{10 * k - 5 + 0.9})" for k in (3, 6, 9))
+    mute = "+".join(f"between(t,{10 * k - 5 - 0.1},{10 * k - 5 + 0.2})" for k in (3, 6, 9))
     sh(["ffmpeg", "-y", "-loglevel", "error", "-i", track, "-af", f"volume=enable='{mute}':volume=0", heard])
     logged(heard, t + 0.3)
     starts_ok = (abs(start_time(sent) - (t + 0.002)) < 1e-4
@@ -287,7 +288,7 @@ def self_check(d, speech=False):
     ok = (ok and got["late"]["clicks_heard"] == 6
           and got["late"]["delay_min_ms"] == got["late"]["delay_max_ms"] == 10300)
     if speech:
-        every = "+".join(f"between(t,{10 * k - 5 - 0.1},{10 * k - 5 + 0.9})" for k in range(1, 10))
+        every = "+".join(f"between(t,{10 * k - 5 - 0.1},{10 * k - 5 + 0.2})" for k in range(1, 10))
         none = os.path.join(d, "none.mkv")
         sh(["ffmpeg", "-y", "-loglevel", "error", "-i", track, "-af",
             f"volume=enable='{every}':volume=0", none])
