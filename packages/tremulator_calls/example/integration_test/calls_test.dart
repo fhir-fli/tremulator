@@ -3,6 +3,7 @@ import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:http/http.dart' as http;
 import 'package:integration_test/integration_test.dart';
 import 'package:tremulator_calls/tremulator_calls.dart';
@@ -423,6 +424,90 @@ void main() {
       final sent = aliceLog.singleWhere((e) => e['event'] == 'hangup-sent');
       expect(sent['attempt'], greaterThan(1));
       await bobCalls.close();
+    },
+  );
+
+  testWidgets(
+    'on a slow link the caller stops its video, the other phone is told and '
+    'stops receiving it, and it comes back when the link recovers',
+    (_) async {
+      // The round trip is played: 0.4 s, then 9 s (a queue, as P1 built in
+      // calls8), then 0.4 s again. Times shortened for the test.
+      var slow = false;
+      final aliceCalls = Calls(
+        alice,
+        videoGuard: () => VideoGuard(
+          firstHold: const Duration(seconds: 2),
+          probe: const Duration(seconds: 2),
+        ),
+        guardEvery: const Duration(milliseconds: 200),
+        roundTrip: (_) async => slow ? 9.0 : 0.4,
+      );
+      final bobCalls = Calls(bob, videoGuard: null);
+      final screen = await navigator.mediaDevices.getDisplayMedia({
+        'video': {
+          'deviceId': {'exact': '0'},
+          'mandatory': {'frameRate': 30.0},
+        },
+        'audio': false,
+      });
+      final bobsCall = Completer<Call>();
+      bobCalls.ringing.listen((c) async {
+        await c.answer();
+        bobsCall.complete(c);
+      });
+      final call = await aliceCalls.start(conversation, media: screen);
+      await call.connected.timeout(const Duration(seconds: 30));
+      final answered = await bobsCall.future;
+      await answered.connected.timeout(const Duration(seconds: 30));
+      final bobSays = <bool>[];
+      answered.video.listen((c) {
+        expect(c.local, isFalse);
+        bobSays.add(c.sending);
+      });
+
+      Future<int> framesAtBob() async {
+        for (final r in await answered.stats()) {
+          if (r.type == 'inbound-rtp' && r.values['kind'] == 'video') {
+            return (r.values['framesReceived'] as num?)?.toInt() ?? 0;
+          }
+        }
+        return 0;
+      }
+
+      Future<bool> framesFlow() async {
+        final before = await framesAtBob();
+        await Future<void>.delayed(const Duration(milliseconds: 1500));
+        return await framesAtBob() > before;
+      }
+
+      for (var i = 0; i < 100 && await framesAtBob() == 0; i++) {
+        await Future<void>.delayed(const Duration(milliseconds: 100));
+      }
+      expect(await framesFlow(), isTrue, reason: 'video flows at first');
+
+      slow = true;
+      await _until(() => bobSays.contains(false));
+      final off = aliceLog.singleWhere((e) => e['event'] == 'video-sending');
+      expect(off['sending'], isFalse);
+      // Frames already on the way may still land; then none.
+      await Future<void>.delayed(const Duration(seconds: 1));
+      expect(await framesFlow(), isFalse, reason: 'video stopped');
+
+      slow = false;
+      await _until(() => bobSays.length == 2);
+      expect(bobSays, [false, true]);
+      expect(await framesFlow(), isTrue, reason: 'video back');
+      expect(
+        aliceLog.where((e) => e['event'] == 'video-guard-failed'),
+        isEmpty,
+      );
+
+      await aliceCalls.close();
+      await bobCalls.close();
+      for (final t in screen.getTracks()) {
+        await t.stop();
+      }
     },
   );
 }

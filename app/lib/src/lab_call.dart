@@ -120,6 +120,9 @@ class _LabCallAppState extends State<LabCallApp> {
   final RTCVideoRenderer _remote = RTCVideoRenderer();
   bool _ready = false;
 
+  /// What the screen says about video, or null: Gate 5's "says so".
+  final ValueNotifier<String?> _notice = ValueNotifier(null);
+
   @override
   void initState() {
     super.initState();
@@ -131,7 +134,7 @@ class _LabCallAppState extends State<LabCallApp> {
     setState(() => _ready = true);
     final log = LabLog(widget.options.out);
     try {
-      await _run(widget.options, log, _remote);
+      await _run(widget.options, log, _remote, _notice);
       log({'event': 'done'});
       log.close();
       exit(0);
@@ -151,15 +154,40 @@ class _LabCallAppState extends State<LabCallApp> {
     // rebuilt whenever the renderer changes (a stream set, a first frame).
     // Built once, it kept the placeholder for the whole call (calls1).
     child: _ready
-        ? ValueListenableBuilder<RTCVideoValue>(
-            valueListenable: _remote,
-            builder: (_, _, _) => RTCVideoView(_remote),
+        ? Stack(
+            fit: StackFit.expand,
+            children: [
+              ValueListenableBuilder<RTCVideoValue>(
+                valueListenable: _remote,
+                builder: (_, _, _) => RTCVideoView(_remote),
+              ),
+              ValueListenableBuilder<String?>(
+                valueListenable: _notice,
+                builder: (_, text, _) => text == null
+                    ? const SizedBox.shrink()
+                    : Center(
+                        child: Text(
+                          text,
+                          textDirection: TextDirection.ltr,
+                          style: const TextStyle(
+                            color: Color(0xFFFFFFFF),
+                            fontSize: 32,
+                          ),
+                        ),
+                      ),
+              ),
+            ],
           )
         : const SizedBox.expand(),
   );
 }
 
-Future<void> _run(LabOptions o, LabLog log, RTCVideoRenderer remote) async {
+Future<void> _run(
+  LabOptions o,
+  LabLog log,
+  RTCVideoRenderer remote,
+  ValueNotifier<String?> notice,
+) async {
   log({
     'event': 'opus-asked',
     'maxaveragebitrate': o.opus.maxAverageBitrate,
@@ -189,7 +217,7 @@ Future<void> _run(LabOptions o, LabLog log, RTCVideoRenderer remote) async {
     final ringing = calls.ringing.first;
     log({'event': 'waiting-for-call'});
     call = await ringing;
-    _show(call, remote, log);
+    _show(call, remote, notice, log);
     await call.answer(media: media);
   } else {
     final c = await openWithRetry(client, peer);
@@ -197,7 +225,7 @@ Future<void> _run(LabOptions o, LabLog log, RTCVideoRenderer remote) async {
       throw MailboxError('could not open a conversation with $peer');
     }
     call = await calls.start(c, media: media);
-    _show(call, remote, log);
+    _show(call, remote, notice, log);
   }
   // No timeout of its own: the call's setup deadline (90 s) bounds this.
   // A 60 s one here cut setup short of it (calls11 P4-blocked).
@@ -246,7 +274,19 @@ Future<void> _run(LabOptions o, LabLog log, RTCVideoRenderer remote) async {
   await client.close();
 }
 
-void _show(Call call, RTCVideoRenderer remote, LabLog log) {
+void _show(
+  Call call,
+  RTCVideoRenderer remote,
+  ValueNotifier<String?> notice,
+  LabLog log,
+) {
+  call.video.listen((c) {
+    notice.value = c.sending
+        ? null
+        : c.local
+        ? 'Your video is off: weak connection. Sound continues.'
+        : 'Their video is off: weak connection. Sound continues.';
+  });
   var sized = false;
   remote.onResize = () {
     if (!sized && remote.videoWidth > 0) {

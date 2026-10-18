@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:tremulator_calls/src/opus.dart';
 import 'package:tremulator_calls/src/signal.dart';
+import 'package:tremulator_calls/src/video_guard.dart';
 import 'package:tremulator_client/tremulator_client.dart';
 import 'package:tremulator_keys/tremulator_keys.dart';
 import 'package:tremulator_mailbox/tremulator_mailbox.dart';
@@ -43,8 +44,11 @@ class Calls {
     this.setupDeadline = const Duration(seconds: 90),
     this.sendRetry = const Duration(seconds: 2),
     this.opus = const OpusReceive(),
+    this.videoGuard = VideoGuard.new,
+    this.guardEvery = const Duration(seconds: 1),
     Report? report,
     @visibleForTesting this.alterRemoteSdp,
+    @visibleForTesting this.roundTrip,
   }) : report = report ?? client.report {
     _subscription = client.incoming
         .where((m) => m.label == Label.call)
@@ -102,12 +106,24 @@ class Calls {
   /// and answer this phone sends.
   final OpusReceive opus;
 
+  /// Makes the guard that stops this phone's video when the link cannot
+  /// carry it (one per call); null sends video whatever the link.
+  final VideoGuard Function()? videoGuard;
+
+  /// How often a connected call sending video reads its round trip for the
+  /// guard.
+  final Duration guardEvery;
+
   /// Where events go.
   final Report report;
 
   /// Changes the other side's session description before it is used. Only
   /// for tests that play a dishonest relay of the setup.
   final String Function(String sdp)? alterRemoteSdp;
+
+  /// Replaces the round trip read from the call's statistics, in seconds.
+  /// Only for tests that play a slow link.
+  final Future<double?> Function(Call call)? roundTrip;
 
   late final StreamSubscription<Incoming> _subscription;
   final Map<String, Call> _calls = {};
@@ -249,6 +265,13 @@ class Call {
   final Completer<String> _ended = Completer();
   final StreamController<MediaStream> _remoteMedia =
       StreamController.broadcast();
+  final StreamController<VideoChange> _video = StreamController.broadcast();
+  VideoGuard? _guard;
+  Timer? _guardTimer;
+
+  /// This phone's video senders and the track each sends while video is on.
+  final Map<RTCRtpSender, MediaStreamTrack> _videoSenders = {};
+  bool _guardBusy = false;
 
   /// Completes when media can flow; fails if the connection fails (a
   /// certificate that does not match the fingerprint in the setup ends here,
@@ -266,6 +289,12 @@ class Call {
 
   /// The other side's media, as it arrives.
   Stream<MediaStream> get remoteMedia => _remoteMedia.stream;
+
+  /// This phone's video stopping and starting again as the link allows
+  /// ([VideoGuard]), and the other phone's, as it reports them over the
+  /// control channel. The screen says so from these (Gate 5: "drops to
+  /// audio and says so").
+  Stream<VideoChange> get video => _video.stream;
 
   /// The underlying connection, for statistics.
   RTCPeerConnection? get connection => _pc;
@@ -357,8 +386,19 @@ class Call {
   void _adopt(RTCDataChannel channel) {
     _control = channel;
     channel.onMessage = (m) {
-      if (m.text == 'hangup') {
-        unawaited(_end('remote-hangup', tell: false));
+      switch (m.text) {
+        case 'hangup':
+          unawaited(_end('remote-hangup', tell: false));
+        case 'video-off' || 'video-on':
+          final sending = m.text == 'video-on';
+          _calls.report({
+            'event': 'remote-video',
+            'call': id,
+            'sending': sending,
+          });
+          if (!_video.isClosed) {
+            _video.add(VideoChange(local: false, sending: sending));
+          }
       }
     };
   }
@@ -568,6 +608,7 @@ class Call {
     }
     _lostAt = null;
     _grace?.cancel();
+    _guard?.newRoute();
     _calls.report({
       'event': 'reconnected',
       'call': id,
@@ -627,6 +668,7 @@ class Call {
         _setupTimer?.cancel();
         if (!_connected.isCompleted) {
           _connected.complete();
+          unawaited(_startGuard());
         }
         _reconnected();
       case RTCPeerConnectionState.RTCPeerConnectionStateFailed:
@@ -739,6 +781,7 @@ class Call {
   }
 
   Future<void> _finish(String why, {required bool tell}) async {
+    _guardTimer?.cancel();
     _grace?.cancel();
     _restartTimer?.cancel();
     _setupTimer?.cancel();
@@ -768,5 +811,109 @@ class Call {
       _calls.report({'event': 'close-failed', 'call': id, 'error': '$e'});
     }
     await _remoteMedia.close();
+    await _video.close();
   }
+
+  /// Starts the [VideoGuard] if this phone sends video.
+  Future<void> _startGuard() async {
+    final make = _calls.videoGuard;
+    final pc = _pc;
+    if (make == null || pc == null || _ended.isCompleted) {
+      return;
+    }
+    for (final s in await pc.getSenders()) {
+      final track = s.track;
+      if (track != null && track.kind == 'video') {
+        _videoSenders[s] = track;
+      }
+    }
+    if (_videoSenders.isEmpty) {
+      return;
+    }
+    final guard = _guard = make();
+    _guardTimer = Timer.periodic(_calls.guardEvery, (_) async {
+      if (_guardBusy || _ended.isCompleted || _lostAt != null) {
+        return;
+      }
+      _guardBusy = true;
+      try {
+        final rtt = await (_calls.roundTrip?.call(this) ?? _roundTrip());
+        if (rtt == null || _ended.isCompleted) {
+          return;
+        }
+        final change = guard.sample(DateTime.now(), rtt);
+        if (change != null) {
+          await _sendVideo(change, rtt, guard.hold);
+        }
+      } on Object catch (e) {
+        _calls.report({
+          'event': 'video-guard-failed',
+          'call': id,
+          'error': '$e',
+        });
+      } finally {
+        _guardBusy = false;
+      }
+    });
+  }
+
+  /// The connected pair's current round trip in seconds (W3C webrtc-stats,
+  /// RTCIceCandidatePairStats.currentRoundTripTime), or null if none yet.
+  Future<double?> _roundTrip() async {
+    final reports = await stats();
+    final byId = {for (final r in reports) r.id: r};
+    for (final r in reports) {
+      if (r.type == 'transport') {
+        final pair = byId[r.values['selectedCandidatePairId']];
+        final rtt = pair?.values['currentRoundTripTime'];
+        if (rtt is num) {
+          return rtt.toDouble();
+        }
+      }
+    }
+    return null;
+  }
+
+  /// Stops or starts this phone's video, and tells the other phone.
+  /// replaceTrack with no track: "If sending is true, and withTrack is null,
+  /// have the sender stop sending" (W3C WebRTC 1.0, RTCRtpSender
+  /// replaceTrack(), read 2026-10-18); the same sender is given its track
+  /// back to start again, with no new offer or answer. Not
+  /// RTCRtpEncodingParameters.active: flutter_webrtc 1.6.2+hotfix.4 on Linux
+  /// accepts it and the encoding stays active (calls_test, 2026-10-18; its
+  /// updateRtpParameters changes a copy of the encodings and never sets them
+  /// back).
+  Future<void> _sendVideo(bool sending, double rtt, Duration hold) async {
+    for (final MapEntry(key: sender, value: track) in _videoSenders.entries) {
+      await sender.replaceTrack(sending ? track : null);
+    }
+    _calls.report({
+      'event': 'video-sending',
+      'call': id,
+      'sending': sending,
+      'rtt': rtt,
+      'hold-s': hold.inSeconds,
+    });
+    if (!_video.isClosed) {
+      _video.add(VideoChange(local: true, sending: sending));
+    }
+    final control = _control;
+    if (control?.state == RTCDataChannelState.RTCDataChannelOpen) {
+      await control!.send(
+        RTCDataChannelMessage(sending ? 'video-on' : 'video-off'),
+      );
+    }
+  }
+}
+
+/// Video stopped or started, on this phone ([local]) or the other.
+class VideoChange {
+  /// A change.
+  const VideoChange({required this.local, required this.sending});
+
+  /// True for this phone's own video, false for the other phone's.
+  final bool local;
+
+  /// Whether that video is being sent now.
+  final bool sending;
 }
