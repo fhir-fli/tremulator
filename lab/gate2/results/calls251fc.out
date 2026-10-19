@@ -1,0 +1,16 @@
+{"run": "calls251fc", "t": "2026-10-18T19:57:00", "event": "start", "profiles": ["P1", "P1-blocked"], "call_s": 300}
+{"stop_server": "dump", "profile": "speech_track.wav", "exit": 2, "stdout": "", "stderr": "sh: 1: cannot create /out/speech_track.wav/server_dump.json: Directory nonexistent\n"}
+{"stop_server": "devices", "profile": "speech_track.wav", "exit": 2, "stdout": "", "stderr": "sh: 1: cannot create /out/speech_track.wav/devices_dump.json: Directory nonexistent\n"}
+{"stop_server": "kill", "profile": "speech_track.wav", "exit": 0, "stdout": "", "stderr": "cat: /out/speech_track.wav/server.pid: No such file or directory\nsh: 1: kill: Usage: kill [-s sigspec | -signum | -sigspec] [pid | job]... or\nkill -l [exitstatus]\ncat: /out/speech_track.wav/server.pid: No such file or directory\n"}
+{"stop_server": "tcpdump", "profile": "speech_track.wav", "exit": 0, "stdout": "", "stderr": "cat: /out/speech_track.wav/tcpdump.pid: No such file or directory\nsh: 1: kill: Usage: kill [-s sigspec | -signum | -sigspec] [pid | job]... or\nkill -l [exitstatus]\n"}
+{"stop_server": "ps", "profile": "speech_track.wav", "exit": 0, "stdout": "UID          PID    PPID  C STIME TTY          TIME CMD\nroot           1       0  0 Oct18 ?        00:00:00 sleep infinity\nroot          67       0  0 Oct18 ?        00:00:00 sh -c mkdir -p /out/P1; echo $$ > /out/P1/g2c-srv_qdisc.pid; while :; do echo t=$(date +%s.%N); tc -s qdisc show dev eth0; sleep 5; done > /out/P1/g2c-srv_qdisc.log 2>&1\ntcpdump      116       1  0 Oct18 ?        00:00:00 tcpdump -i eth0 -w /out/P1/traffic.pcap -U\nroot         123       1  0 Oct18 ?        00:00:00 /app/bin/server --dev-mode --port 8081 --db-path /data/P1 --spec-path /data/empty-spec\nroot         734      67  0 00:03 ?        00:00:00 sleep 5\nroot         735       0 10 00:03 ?        00:00:00 ps -ef\n", "stderr": ""}
+{"stop_server": "pid file", "profile": "speech_track.wav", "exit": 1, "stdout": "", "stderr": "cat: /out/speech_track.wav/server.pid: No such file or directory\n"}
+{"run": "calls251fc", "t": "2026-10-18T20:04:10", "event": "end"}
+Traceback (most recent call last):
+  File "/home/grey/dev/fhir/tremulator/lab/gate2/calls.py", line 659, in <module>
+    run_profile(name)
+  File "/home/grey/dev/fhir/tremulator/lab/gate2/calls.py", line 376, in run_profile
+    stop_server(srv, name, port)
+  File "/home/grey/dev/fhir/tremulator/lab/gate2/labkit.py", line 167, in stop_server
+    raise RuntimeError(f"server on {port} did not stop")
+RuntimeError: server on 8081 did not stop

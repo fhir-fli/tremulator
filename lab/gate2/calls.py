@@ -345,10 +345,10 @@ def run_profile(name):
     if clicked and base in CUTS:
         cut_links((alice, bob), d, CUTS[base])
     if clicked:
-        name = "speech_track.wav" if speech else "click_track.wav"
-        call_track(os.path.join(host_d, name), clicks, speech)
+        track = "speech_track.wav" if speech else "click_track.wav"
+        call_track(os.path.join(host_d, track), clicks, speech)
         sh(["docker", "exec", "-d", alice, "sh", "-c",
-            f"paplay --device=mic {d}/{name} > {d}/click.log 2>&1"])
+            f"paplay --device=mic {d}/{track} > {d}/click.log 2>&1"])
     for _ in range(call_s + 240):
         if dx(alice, "test", "-e", f"{d}/alice.exit", timeout=10).returncode == 0:
             break

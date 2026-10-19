@@ -123,9 +123,16 @@
   store dump reached the server (its log has no request for them, and no
   dump files exist), and it still answered /health 20 s after the kill, so
   calls.py raised "server on 8081 did not stop" and the sweep ended before
-  P1-blocked. No step's exit or errors were recorded, so the cause is
-  unknown; labkit.stop_server now prints each step's exit, output and errors
-  and the container's processes before raising. Its click track was the
+  P1-blocked. Cause, measured in calls251fc once stop_server printed each
+  step's errors (`36fc5e8`): every step ran with profile "speech_track.wav"
+  ("cannot create /out/speech_track.wav/server_dump.json: Directory
+  nonexistent"; "cat: /out/speech_track.wav/server.pid: No such file or
+  directory", then kill's usage message). `13036c9` had reused calls.py's
+  `name` (the profile) for the click track's file name. Fixed by renaming
+  the variable. Its click track was the
   two-beep code of `13036c9`: 21 of 29 clicks read (315-468 ms), and all 8
   unread were a lone beep whose partner was lost (P1: 5% loss at each
   phone), which is why the code became one beep per tone. Kept unsummarised.
+- **calls251fc** (2026-10-18 19:57): the same fault as calls241fc, the run
+  whose stop step records showed it (above). Stopped by pid after its first
+  call; kept unsummarised.

@@ -9,7 +9,8 @@
 #   <L><n>dc / <L><n>dd  P1 relayed, relay on a decent link
 # Sound only, speech, Opus 12 kbit/s, 60 ms, DTX, 300 s calls; clicks coded
 # by pitch (voice_delay.py). The app is calls23's build (unchanged since).
-# calls24 stopped in its first run (INVALID-RUNS.md); calls25 is the sweep.
+# calls24 and calls25 stopped in their first run (INVALID-RUNS.md); calls26
+# is the sweep.
 # Stops at the first run that fails. Needs Grey's go (docs/GATE1.md).
 #
 #     bash lab/gate2/calls_e7_header_repeat.sh calls24
