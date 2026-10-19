@@ -28,8 +28,8 @@ WhatsApp.
 Each click is one 30 ms beep whose pitch is its number modulo 6
 (CODE_TONES, call_track). Both recordings are band-passed around each tone
 in turn and onsets found in each, so a click heard is known by its number.
-In a band, a recording whose peak is under CLICK_FRACTION of the sent one's
-in that band holds no click there and yields none, as a silent one does:
+A heard beep counts only where its band reaches CLICK_FRACTION of the sent
+beep's peak in that band (coded):
 the self-check's band with its clicks removed peaked at 0.28 (the next
 tones leaking through) and speech alone at 0.10; calls241fc's heard sound
 (the 1 kHz track) at 0.31 of a beep in the top bands, and its beep arrived
@@ -184,17 +184,29 @@ def onsets(wav):
     return [float(m.group(1)) for m in re.finditer(r"^\s+([\d.]+) s", out, re.M)]
 
 
+def level_at(wav, t, span=BEEP_S + 0.02):
+    """The peak of `wav` over `span` seconds from `t`."""
+    with wave.open(wav) as w:
+        w.setpos(max(0, min(w.getnframes(), int(t * w.getframerate()))))
+        a = array("h", w.readframes(int(span * w.getframerate())))
+    return max((abs(x) for x in a), default=0)
+
+
 def coded(path, start, floors=None):
     """(time, code) for every beep in the recording at `path`, in time order,
-    from its onsets in each tone's band; and each band's peak. A band whose
-    peak is under its floor yields none."""
+    from its onsets in each tone's band; and each band's peak. With
+    `floors`, an onset counts only if the band reaches its floor there: the
+    detector's own level is half the recording's peak in the band, so where
+    the heard beeps of a band came through weak it fell to about 0.27 of the
+    sent beep, and what the codec left of speech in the band crossed it
+    (calls26: 95 onsets matched to no click, at 0.25-0.39 of the sent beep in
+    calls261dd and calls262dd, and some took a real beep's place)."""
     out, peaks = [], []
     for code, tone in enumerate(CODE_TONES):
         wav = to_wav(path, tone)
-        p = peak(wav)
-        peaks.append(p)
-        if floors is None or p >= floors[code]:
-            out += [(start + t, code) for t in onsets(wav)]
+        peaks.append(peak(wav))
+        out += [(start + t, code) for t in onsets(wav)
+                if floors is None or level_at(wav, t) >= floors[code]]
     return sorted(out), peaks
 
 

@@ -115,6 +115,8 @@ def row(label, rec):
         "video": a.get("video-sending"), "bob_told": b.get("remote-video"),
         "reconnecting": [a.get("reconnecting"), b.get("reconnecting")],
         "ended": [a.get("ended"), b.get("ended")],
+        "voice_reanalysed": rec.get("voice_reanalysed"),
+        "heard_unpaired": v.get("heard_unpaired"),
         "fingerprint_hits": rec.get("fingerprint_hits"),
         "exits": [rec.get("alice_exit"), rec.get("bob_exit")],
     }
@@ -122,9 +124,20 @@ def row(label, rec):
 
 def main():
     for label in sys.argv[1:]:
+        # The voice numbers of the latest `calls.py --reanalyse` replace the
+        # run's own, when there are any (the instrument changed after it).
+        again = {}
+        p = os.path.join(HERE, "results", f"{label}-reanalysed.jsonl")
+        if os.path.exists(p):
+            for line in open(p):
+                r = json.loads(line)
+                again[r["profile"]] = r
         for line in open(os.path.join(HERE, "results", f"{label}.jsonl")):
             rec = json.loads(line)
             if "profile" in rec:
+                if rec["profile"] in again:
+                    rec = {**rec, "voice": again[rec["profile"]]["voice"],
+                           "voice_reanalysed": again[rec["profile"]]["reanalysed"]}
                 print(json.dumps(row(label, rec)), flush=True)
 
 
