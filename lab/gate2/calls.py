@@ -269,6 +269,7 @@ def run_profile(name):
         if base == "P4":
             start_duty_loop(shaped, rate, rtt, loss)
     qdisc_watch(nodes, d)
+    media_capture((alice, bob), d)
     srv_port = start_server(srv, name, port)
     url = f"http://{ip_of(srv)}:{srv_port}"
     relay = start_relay(turn, d, internal)
@@ -286,6 +287,7 @@ def run_profile(name):
         # left P0 without a summary line.
         stop_server(srv, name, port)
         relay_facts = stop_relay(turn, d, host_d)
+        media_stop((alice, bob), d)
         clear_shaping(nodes)
         unblock_direct(alice, bob)
         bob_log = os.path.join(host_d, "bob.jsonl")
@@ -376,6 +378,7 @@ def run_profile(name):
     stop_server(srv, name, port)
     relay_facts = stop_relay(turn, d, host_d)
     qdisc_stop(nodes, d)
+    media_stop((alice, bob), d)
     clear_shaping(nodes)
     unblock_direct(alice, bob)
     dx(srv, "chown", "-R", f"{os.getuid()}:{os.getgid()}", "/out", user="0")
@@ -415,6 +418,25 @@ def qdisc_watch(nodes, d):
         sh(["docker", "exec", "-d", "-u", "0", c, "sh", "-c",
             f"mkdir -p {d}; echo $$ > {d}/{c}_qdisc.pid; while :; do echo t=$(date +%s.%N); "
             f"tc -s qdisc show dev eth0; sleep 5; done > {d}/{c}_qdisc.log 2>&1"])
+
+
+def media_capture(phones, d):
+    """Each phone's UDP packets on eth0, first 96 bytes (to the end of the
+    RTP header and its extensions), to <phone>_media.pcap; tcpdump's pid in
+    <phone>_media.pid. A packet the phone received is captured as it
+    arrived, after every shaper on the way. calls26: with abs-send-time and
+    transport-cc dropped, P1 direct heard 73 of 87 clicks against 82 of 87,
+    at the same loss (~5%), and the only capture was the server's, so no
+    missed click could be put against a lost or a late packet."""
+    for c in phones:
+        sh(["docker", "exec", "-d", "-u", "0", c, "sh", "-c",
+            f"mkdir -p {d}; tcpdump -i eth0 -s 96 -U -w {d}/{c}_media.pcap udp "
+            f"2>{d}/{c}_media.err & echo $! > {d}/{c}_media.pid"])
+
+
+def media_stop(phones, d):
+    for c in phones:
+        dx(c, "sh", "-c", f"kill -INT $(cat {d}/{c}_media.pid) 2>/dev/null; sleep 1; true", user="0")
 
 
 def qdisc_stop(nodes, d):
