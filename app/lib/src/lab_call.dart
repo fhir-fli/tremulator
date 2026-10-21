@@ -41,6 +41,10 @@ class LabOptions {
         allowed: _audioExtensions.keys,
         help: 'leave this header extension out of the audio section (RFC 8285)',
       )
+      ..addFlag(
+        'separate-streams',
+        help: 'send the video in a stream of its own (no lip sync, RFC 8830)',
+      )
       ..addOption(
         'until-file',
         help: "the callee stays until this file exists (the lab's stop sign)",
@@ -112,6 +116,9 @@ class LabOptions {
       for (final n in _a['audio-drop'] as List<String>) _audioExtensions[n]!,
     },
   );
+
+  /// Whether the video goes in a stream of its own.
+  bool get separateStreams => _a['separate-streams'] as bool;
 
   /// The stop sign.
   String? get untilFile => _a['until-file'] as String?;
@@ -215,6 +222,7 @@ Future<void> _run(
     'ptime': o.opus.ptime,
     'usedtx': o.opus.dtx,
     'audio-drop': o.audioExtensions.drop.toList(),
+    'separate-streams': o.separateStreams,
   });
   final keys = await openLabKeys(
     Directory(o.state)..createSync(recursive: true),
@@ -231,6 +239,7 @@ Future<void> _run(
     iceServers: o.iceServers,
     opus: o.opus,
     audioExtensions: o.audioExtensions,
+    separateStreams: o.separateStreams,
     report: log.call,
   );
   final media = await _media(o, log);
@@ -337,7 +346,12 @@ void _show(
       'stream': s.id,
       'tracks': [for (final t in s.getTracks()) t.kind],
     });
-    remote.srcObject = s;
+    // With --separate-streams the sound and the picture arrive as two
+    // streams; the picture's is the one to show (the sound plays either way).
+    if (remote.srcObject == null ||
+        s.getTracks().any((t) => t.kind == 'video')) {
+      remote.srcObject = s;
+    }
   });
 }
 

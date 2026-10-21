@@ -46,6 +46,7 @@ class Calls {
     this.sendRetry = const Duration(seconds: 2),
     this.opus = const OpusReceive(),
     this.audioExtensions = const AudioExtensions(),
+    this.separateStreams = false,
     this.videoGuard = VideoGuard.new,
     this.guardEvery = const Duration(seconds: 1),
     Report? report,
@@ -111,6 +112,15 @@ class Calls {
   /// Header extensions left out of the audio section of every offer and
   /// answer this phone sends.
   final AudioExtensions audioExtensions;
+
+  /// Sends the video track in a stream of its own rather than in the sound's.
+  /// "A MediaStream is defined to impose synchronization on its members"
+  /// (RFC 8830 appendix A), so with the two in one stream the other phone
+  /// holds the sound back to match the picture. calls28 P1, both one stream:
+  /// after video started and stopped, Bob's sound playout aimed at
+  /// 850-1,550 ms to the end of the call while the network needed 40-100 ms
+  /// (14 of 16 calls). Off: the lab's test of that cause.
+  final bool separateStreams;
 
   /// Makes the guard that stops this phone's video when the link cannot
   /// carry it (one per call); null sends video whatever the link.
@@ -396,8 +406,11 @@ class Call {
       ..onDataChannel = _adopt;
     if (media != null) {
       final guarded = _calls.videoGuard != null;
+      final video = _calls.separateStreams
+          ? await createLocalMediaStream('${media.id}-video')
+          : media;
       for (final t in media.getTracks()) {
-        final sender = await pc.addTrack(t, media);
+        final sender = await pc.addTrack(t, t.kind == 'video' ? video : media);
         if (guarded && t.kind == 'video') {
           // Sound first: the video track is held back until the guard
           // starts it (VideoGuard.startSending). The sender, and the video

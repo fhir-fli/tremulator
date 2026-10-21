@@ -525,6 +525,95 @@ void main() {
       }
     },
   );
+
+  for (final separate in [false, true]) {
+    testWidgets(
+      separate
+          ? 'with separateStreams the sound and the picture go in two streams'
+          : 'by default the sound and the picture go in one stream',
+      (_) async {
+        // RFC 8830 section 2: "a=msid:<stream id> <track id>" on each media
+        // section names the stream its track is in.
+        String? offer;
+        final aliceCalls = Calls(
+          alice,
+          separateStreams: separate,
+          videoGuard: null,
+        );
+        final bobCalls = Calls(
+          bob,
+          alterRemoteSdp: (sdp) {
+            offer ??= sdp;
+            return sdp;
+          },
+        );
+        final media = await navigator.mediaDevices.getUserMedia({
+          'audio': true,
+          'video': false,
+        });
+        final screen = await navigator.mediaDevices.getDisplayMedia({
+          'video': {
+            'deviceId': {'exact': '0'},
+            'mandatory': {'frameRate': 30.0},
+          },
+          'audio': false,
+        });
+        for (final t in screen.getVideoTracks()) {
+          await media.addTrack(t);
+        }
+        // remoteMedia does not hold events for a late listener: listen
+        // before answering, when the tracks arrive.
+        final arrived = <MediaStream>[];
+        final bobsCall = Completer<Call>();
+        bobCalls.ringing.listen((c) async {
+          c.remoteMedia.listen(arrived.add);
+          await c.answer();
+          bobsCall.complete(c);
+        });
+        final call = await aliceCalls.start(conversation, media: media);
+        final answered = await bobsCall.future;
+        await answered.connected.timeout(const Duration(seconds: 30));
+
+        final ids = _streamIds(offer!);
+        expect(ids.keys, containsAll(['audio', 'video']));
+        if (separate) {
+          expect(ids['audio'], isNot(ids['video']));
+        } else {
+          expect(ids['audio'], ids['video']);
+        }
+        // What Bob's phone builds from it: the picture's stream holds no
+        // sound when they are apart.
+        await _until(
+          () => arrived.any((s) => s.getVideoTracks().isNotEmpty),
+        );
+        final picture = arrived.firstWhere(
+          (s) => s.getVideoTracks().isNotEmpty,
+        );
+        expect(picture.getAudioTracks(), separate ? isEmpty : isNotEmpty);
+
+        await call.hangUp();
+        await aliceCalls.close();
+        await bobCalls.close();
+        for (final t in [...media.getTracks(), ...screen.getTracks()]) {
+          await t.stop();
+        }
+      },
+    );
+  }
+}
+
+/// The stream id in each media section's msid line, by kind (RFC 8830).
+Map<String, String> _streamIds(String sdp) {
+  final out = <String, String>{};
+  String? kind;
+  for (final line in sdp.split(RegExp(r'\r?\n'))) {
+    if (line.startsWith('m=')) {
+      kind = line.substring(2).split(' ').first;
+    } else if (line.startsWith('a=msid:') && kind != null) {
+      out[kind] = line.substring('a=msid:'.length).split(' ').first;
+    }
+  }
+  return out;
 }
 
 /// A connection to the server that can be cut: while [down], every request

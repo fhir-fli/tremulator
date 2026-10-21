@@ -101,6 +101,12 @@ if opus["opus-dtx"]:
 # section of what they send (RFC 8285; AudioExtensions in the app).
 opus["audio-drop"] = [x for x in argval("--audio-drop", "").split(",") if x]
 opus_args += "".join(f"--audio-drop {x} " for x in opus["audio-drop"])
+# `--separate-streams`: Alice's video goes in a stream of its own, so Bob's
+# phone does not hold her sound back to match the picture (Calls.
+# separateStreams). Both phones pass it; only the sender's matters.
+opus["separate-streams"] = "--separate-streams" in sys.argv
+if opus["separate-streams"]:
+    opus_args += "--separate-streams "
 # `--speech`: real speech between the clicks (voice_delay.call_track), so
 # the call carries a talker's load; the clicks still time the voice.
 speech = "--speech" in sys.argv
