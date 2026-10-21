@@ -1,0 +1,1444 @@
+libEGL warning: DRI3 error: Could not get DRI3 device
+libEGL warning: Ensure your X server supports DRI3 to get accelerated rendering
+
+(dev.fhirfli.tremulator:329): Atk-CRITICAL **: 17:22:08.913: atk_socket_embed: assertion 'plug_id != NULL' failed
+[IMPORTANT:flutter/shell/platform/embedder/embedder_surface_gl_impeller.cc(126)] Using the Impeller rendering backend (OpenGLESSDF).
+(audio_device_buffer.cc:75): AudioDeviceBuffer::ctor
+(audio_device_impl.cc:146): current platform is Linux
+(audio_device_impl.cc:169): CreatePlatformSpecificObjects
+(audio_device_impl.cc:930): PlatformAudioLayer
+(audio_device_impl.cc:227): PulseAudio support is enabled.
+(audio_device_impl.cc:232): Linux PulseAudio APIs will be utilized
+(audio_device_impl.cc:276): AttachAudioBuffer
+(audio_device_buffer.cc:216): SetRecordingSampleRate(0)
+(audio_device_buffer.cc:222): SetPlayoutSampleRate(0)
+(audio_device_buffer.cc:236): SetRecordingChannels(0)
+(audio_device_buffer.cc:242): SetPlayoutChannels(0)
+(audio_device_impl.cc:296): Init
+(input_volume_stats_reporter.cc:95): Will not log any `WebRTC.Audio.Apm.AppliedInputVolume.*` histogram stats.
+(input_volume_stats_reporter.cc:95): Will not log any `WebRTC.Audio.Apm.RecommendedInputVolume.*` histogram stats.
+(audio_processing_impl.cc:484): Injected APM submodules:
+Echo control factory: 0
+Echo detector: 0
+Capture analyzer: 0
+Capture post processor: 1
+Render pre processor: 1
+Neural residual echo estimator 0
+(audio_processing_impl.cc:499): AudioProcessing: AudioProcessing::Config{ pipeline: { maximum_internal_processing_rate: 32000, multi_channel_render: 1, multi_channel_capture: 1 }, pre_amplifier: { enabled: 0, fixed_gain_factor: 1 },capture_level_adjustment: { enabled: 0, pre_gain_factor: 1, post_gain_factor: 1, analog_mic_gain_emulation: { enabled: 0, initial_level: 255 }}, high_pass_filter: { enabled: 0 }, echo_canceller: { enabled: 0, enforce_high_pass_filtering: 1 }, noise_suppression: { enabled: 0, level: Moderate }, transient_suppression: { enabled: 0 }, gain_controller1: { enabled: 0, mode: AdaptiveAnalog, target_level_dbfs: 3, compression_gain_db: 9, enable_limiter: 1, analog_gain_controller { enabled: 1, startup_min_volume: 0, clipped_level_min: 70, enable_digital_adaptive: 1, clipped_level_step: 15, clipped_ratio_threshold: 0.1, clipped_wait_frames: 300, clipping_predictor:  { enabled: 0, mode: 0, window_length: 5, reference_window_length: 5, reference_window_delay: 5, clipping_threshold: -1, crest_factor_margin: 3, use_predicted_step: 1 }}}, gain_controller2: { enabled: 0, fixed_digital: { gain_db: 0 }, adaptive_digital: { enabled: 0, headroom_db: 5, max_gain_db: 50, initial_gain_db: 15, max_gain_change_db_per_second: 6, max_output_noise_level_dbfs: -50 }, input_volume_control : { enabled 0}}
+(audio_processing_impl.cc:685): AudioProcessing::ApplyConfig: AudioProcessing::Config{ pipeline: { maximum_internal_processing_rate: 32000, multi_channel_render: 1, multi_channel_capture: 1 }, pre_amplifier: { enabled: 0, fixed_gain_factor: 1 },capture_level_adjustment: { enabled: 0, pre_gain_factor: 1, post_gain_factor: 1, analog_mic_gain_emulation: { enabled: 0, initial_level: 255 }}, high_pass_filter: { enabled: 0 }, echo_canceller: { enabled: 0, enforce_high_pass_filtering: 1 }, noise_suppression: { enabled: 0, level: Moderate }, transient_suppression: { enabled: 0 }, gain_controller1: { enabled: 0, mode: AdaptiveAnalog, target_level_dbfs: 3, compression_gain_db: 9, enable_limiter: 1, analog_gain_controller { enabled: 1, startup_min_volume: 0, clipped_level_min: 70, enable_digital_adaptive: 1, clipped_level_step: 15, clipped_ratio_threshold: 0.1, clipped_wait_frames: 300, clipping_predictor:  { enabled: 0, mode: 0, window_length: 5, reference_window_length: 5, reference_window_delay: 5, clipping_threshold: -1, crest_factor_margin: 3, use_predicted_step: 1 }}}, gain_controller2: { enabled: 0, fixed_digital: { gain_db: 0 }, adaptive_digital: { enabled: 0, headroom_db: 5, max_gain_db: 50, initial_gain_db: 15, max_gain_change_db_per_second: 6, max_output_noise_level_dbfs: -50 }, input_volume_control : { enabled 0}}
+(webrtc_voice_engine.cc:492): WebRtcVoiceEngine::WebRtcVoiceEngine
+(audio_device_impl.cc:903): SetObserver(3e5085c8)
+(audio_device_impl.cc:905): output: -1
+Null check operator used on a null value
+#0      AlignmentDirectional.resolve (package:flutter/src/painting/alignment.dart:651)
+#1      RenderStack._resolvedAlignment (package:flutter/src/rendering/stack.dart:401)
+#2      RenderStack.performLayout (package:flutter/src/rendering/stack.dart:684)
+#3      RenderObject.layout (package:flutter/src/rendering/object.dart:2923)
+#4      RenderProxyBoxMixin.performLayout (package:flutter/src/rendering/proxy_box.dart:118)
+#5      RenderObject._layoutWithoutResize (package:flutter/src/rendering/object.dart:2771)
+#6      PipelineOwner.flushLayout (package:flutter/src/rendering/object.dart:1174)
+#7      PipelineOwner.flushLayout (package:flutter/src/rendering/object.dart:1187)
+#8      RendererBinding.drawFrame (package:flutter/src/rendering/binding.dart:692)
+#9      WidgetsBinding.drawFrame (package:flutter/src/widgets/binding.dart:1573)
+#10     RendererBinding._handlePersistentFrameCallback (package:flutter/src/rendering/binding.dart:558)
+#11     SchedulerBinding._invokeFrameCallback (package:flutter/src/scheduler/binding.dart:1430)
+#12     SchedulerBinding.handleDrawFrame (package:flutter/src/scheduler/binding.dart:1345)
+#13     SchedulerBinding._handleDrawFrame (package:flutter/src/scheduler/binding.dart:1198)
+#14     _invoke (dart:ui/hooks.dart:441)
+#15     PlatformDispatcher._drawFrame (dart:ui/platform_dispatcher.dart:450)
+#16     _drawFrame (dart:ui/hooks.dart:413)
+(audio_device_impl.cc:632): PlayoutDevices
+(audio_device_impl.cc:635): output: 3
+(audio_device_impl.cc:694): RecordingDevices
+(audio_device_impl.cc:697): output: 1
+(audio_device_impl.cc:676): RecordingDeviceName(0, ...)
+(audio_device_impl.cc:685): output: name = default: mic.monitor
+(audio_device_impl.cc:688): output: guid = 
+(audio_device_impl.cc:676): RecordingDeviceName(0, ...)
+(audio_device_impl.cc:685): output: name = default: mic.monitor
+(audio_device_impl.cc:688): output: guid = 
+(audio_device_impl.cc:808): Recording
+(audio_device_impl.cc:702): SetRecordingDevice(0)
+(audio_device_impl.cc:655): PlayoutDeviceName(0, ...)
+(audio_device_impl.cc:664): output: name = default: Null Output
+(audio_device_impl.cc:667): output: guid = 
+(audio_device_impl.cc:655): PlayoutDeviceName(1, ...)
+(audio_device_impl.cc:664): output: name = Null Output
+(audio_device_impl.cc:667): output: guid = 
+(audio_device_impl.cc:655): PlayoutDeviceName(2, ...)
+(audio_device_impl.cc:664): output: name = Null Output
+(audio_device_impl.cc:667): output: guid = 
+(rtc_audio_source_impl.cc:9): RTCAudioSourceImpl: ctor 
+(rtc_audio_track_impl.cc:8): AudioTrackImpl: ctor 
+(rtc_audio_track_impl.cc:8): AudioTrackImpl: ctor 
+(rtc_audio_source_impl.cc:13): ~RTCAudioSourceImpl: dtor 
+(screen_capturer_x11.cc:518): ScreenCapturerX11::CreateRawScreenCapturer creates DesktopCapturer of type ScreenCapturerX11
+(screen_capturer_x11.cc:175): Using XRandR extension v146646
+(desktop_capturer.cc:125): DesktopCapturer::CreateScreenCapturer creates DesktopCapturer of type DesktopCapturerDifferWrapper over a base capturer
+(screen_capturer_x11.cc:337): XRandR selected source: 292
+(screen_capturer_x11.cc:518): ScreenCapturerX11::CreateRawScreenCapturer creates DesktopCapturer of type ScreenCapturerX11
+(screen_capturer_x11.cc:175): Using XRandR extension v146646
+(desktop_capturer.cc:125): DesktopCapturer::CreateScreenCapturer creates DesktopCapturer of type DesktopCapturerDifferWrapper over a base capturer
+(rtc_video_source_impl.cc:14): RTCVideoSourceImpl: ctor 
+(rtc_video_sink_adapter.cc:13): VideoSinkAdapter: ctor 3e6dfac0
+(rtc_video_track_impl.cc:12): VideoTrackImpl: ctor 
+(rtc_video_sink_adapter.cc:13): VideoSinkAdapter: ctor f800ea60
+(rtc_video_track_impl.cc:12): VideoTrackImpl: ctor 
+(screen_capturer_x11.cc:337): XRandR selected source: 292
+(rtc_video_source_impl.cc:26): ~RTCVideoSourceImpl: dtor 
+(rtc_audio_track_impl.cc:8): AudioTrackImpl: ctor 
+(rtc_audio_track_impl.cc:14): ~AudioTrackImpl: dtor 
+(rtc_video_sink_adapter.cc:13): VideoSinkAdapter: ctor f8010600
+(rtc_video_track_impl.cc:12): VideoTrackImpl: ctor 
+(video_adapter.cc:285): Frame size changed: scaled 0 / out 1 / in 1 Changes: 1 Input: 1280x720 Scale: 1/1 Output: 1280x720 fps: 2147483647/-1 alignment: 1
+(rtc_peerconnection_impl.cc:222): RTCPeerConnectionImpl: ctor
+(peer_connection_factory.cc:411): Using default network controller factory
+(bitrate_prober.cc:54): Bandwidth probing enabled, set to inactive
+(cpu_info.cc:77): Available number of cores: 16
+(transport_sequence_number_feedback_generator.cc:52): Maximum interval between transport feedback RTCP messages: 250 ms
+(aimd_rate_control.cc:88): Using aimd rate control with back off factor 0.85
+(remote_bitrate_estimator_single_stream.cc:59): RemoteBitrateEstimatorSingleStream: Instantiating.
+(webrtc_voice_engine.cc:529): WebRtcVoiceEngine::Init
+(audio_device_impl.cc:296): Init
+(audio_device_impl.cc:640): SetPlayoutDevice(0)
+(audio_device_impl.cc:329): InitSpeaker
+(audio_device_impl.cc:544): StereoPlayoutIsAvailable
+(audio_device_impl.cc:551): output: 1
+(audio_device_impl.cc:556): SetStereoPlayout(1)
+(audio_device_buffer.cc:242): SetPlayoutChannels(2)
+(audio_device_impl.cc:702): SetRecordingDevice(0)
+(audio_device_impl.cc:335): InitMicrophone
+(audio_device_impl.cc:498): StereoRecordingIsAvailable
+(audio_mixer_manager_pulse_linux.cc:428): input device index has not been set
+(adm_helpers.cc:74): Failed to query stereo recording.
+(audio_device_impl.cc:510): SetStereoRecording(0)
+(audio_device_buffer.cc:236): SetRecordingChannels(1)
+(webrtc_voice_engine.cc:609): WebRtcVoiceEngine::ApplyOptions: AudioOptions {aec: 1, agc: 1, ns: 1, hf: 1, swap: 0, audio_jitter_buffer_max_packets: 200, audio_jitter_buffer_fast_accelerate: 0, audio_jitter_buffer_min_delay_ms: 0, }
+(audio_device_impl.cc:831): BuiltInAECIsAvailable
+(audio_device_impl.cc:834): output: 0
+(audio_device_impl.cc:847): BuiltInAGCIsAvailable
+(audio_device_impl.cc:850): output: 0
+(audio_device_impl.cc:863): BuiltInNSIsAvailable
+(audio_device_impl.cc:866): output: 0
+(audio_processing_impl.cc:685): AudioProcessing::ApplyConfig: AudioProcessing::Config{ pipeline: { maximum_internal_processing_rate: 32000, multi_channel_render: 1, multi_channel_capture: 1 }, pre_amplifier: { enabled: 0, fixed_gain_factor: 1 },capture_level_adjustment: { enabled: 0, pre_gain_factor: 1, post_gain_factor: 1, analog_mic_gain_emulation: { enabled: 0, initial_level: 255 }}, high_pass_filter: { enabled: 1 }, echo_canceller: { enabled: 1, enforce_high_pass_filtering: 1 }, noise_suppression: { enabled: 1, level: High }, transient_suppression: { enabled: 0 }, gain_controller1: { enabled: 1, mode: AdaptiveAnalog, target_level_dbfs: 3, compression_gain_db: 9, enable_limiter: 1, analog_gain_controller { enabled: 1, startup_min_volume: 0, clipped_level_min: 70, enable_digital_adaptive: 1, clipped_level_step: 15, clipped_ratio_threshold: 0.1, clipped_wait_frames: 300, clipping_predictor:  { enabled: 0, mode: 0, window_length: 5, reference_window_length: 5, reference_window_delay: 5, clipping_threshold: -1, crest_factor_margin: 3, use_predicted_step: 1 }}}, gain_controller2: { enabled: 0, fixed_digital: { gain_db: 0 }, adaptive_digital: { enabled: 0, headroom_db: 5, max_gain_db: 50, initial_gain_db: 15, max_gain_change_db_per_second: 6, max_output_noise_level_dbfs: -50 }, input_volume_control : { enabled 0}}
+(transparent_mode.cc:243): AEC3 Transparent Mode: Legacy
+(echo_canceller3.cc:820): AEC3 created with sample rate: 16000 Hz, num render channels: 1, num capture channels: 1
+(clipping_predictor.cc:367): [AGC2] Clipping prediction disabled.
+(agc_manager_direct.cc:495): [agc] analog controller enabled: yes
+(agc_manager_direct.cc:498): [agc] Min mic level: 12 (overridden: no)
+(audio_processing_impl.cc:618): AudioProcessing::InitializeLocked input sampleRate:16000 output sampleRate:16000
+(transparent_mode.cc:243): AEC3 Transparent Mode: Legacy
+(echo_canceller3.cc:820): AEC3 created with sample rate: 16000 Hz, num render channels: 1, num capture channels: 1
+(webrtc_voice_engine.cc:649): Applied audio processing options: AudioOptions {aec: 1, agc: 1, ns: 1, hf: 1, swap: 0, audio_jitter_buffer_max_packets: 200, audio_jitter_buffer_fast_accelerate: 0, audio_jitter_buffer_min_delay_ms: 0, }
+(audio_device_impl.cc:815): RegisterAudioCallback
+(openssl_key_pair.cc:36): Making key pair
+(openssl_key_pair.cc:89): Returning key pair
+(boringssl_certificate.cc:186): Making certificate for WebRTC
+(boringssl_certificate.cc:242): Returning certificate
+(rtp_transmission_manager.cc:244): Adding audio transceiver in response to a call to AddTrack.
+(rtc_audio_track_impl.cc:8): AudioTrackImpl: ctor 
+(rtc_audio_track_impl.cc:14): ~AudioTrackImpl: dtor 
+(rtp_transmission_manager.cc:244): Adding video transceiver in response to a call to AddTrack.
+(rtc_video_sink_adapter.cc:13): VideoSinkAdapter: ctor 3e7bfa00
+(rtc_video_track_impl.cc:12): VideoTrackImpl: ctor 
+(rtc_video_track_impl.cc:18): ~VideoTrackImpl: dtor 
+(rtc_video_sink_adapter.cc:18): ~VideoSinkAdapter: dtor 
+(sctp_data_channel.cc:105): Accepting maxRetransmits < 0 for backwards compatibility
+(sctp_data_channel.cc:115): Accepting maxRetransmitTime < 0 for backwards compatibility
+(sctp_data_channel.cc:342): DataChannelObserver - adapter needed
+(p2p_transport_channel.cc:560): Set backup connection ping interval to 25 s milliseconds.
+(p2p_transport_channel.cc:569): Set ICE receiving timeout to 2500 ms milliseconds
+(p2p_transport_channel.cc:576): Set ping most likely connection to 0
+(p2p_transport_channel.cc:583): Set stable_writable_connection_ping_interval to 2500 ms
+(p2p_transport_channel.cc:596): Set presume writable when fully relayed to 0
+(p2p_transport_channel.cc:614): Set regather_on_failed_networks_interval to 300 s
+(p2p_transport_channel.cc:624): Set receiving_switching_delay to 1 s
+(jsep_transport_controller.cc:635): Creating DtlsSrtpTransport.
+(dtls_srtp_transport.cc:54): Setting RTP Transport on 0 transport fc0027d0
+(srtp_transport.cc:285): The params in SRTP transport are reset.
+(p2p_transport_channel.cc:560): Set backup connection ping interval to 25 s milliseconds.
+(p2p_transport_channel.cc:569): Set ICE receiving timeout to 2500 ms milliseconds
+(p2p_transport_channel.cc:576): Set ping most likely connection to 0
+(p2p_transport_channel.cc:583): Set stable_writable_connection_ping_interval to 2500 ms
+(p2p_transport_channel.cc:596): Set presume writable when fully relayed to 0
+(p2p_transport_channel.cc:614): Set regather_on_failed_networks_interval to 300 s
+(p2p_transport_channel.cc:624): Set receiving_switching_delay to 1 s
+(jsep_transport_controller.cc:635): Creating DtlsSrtpTransport.
+(dtls_srtp_transport.cc:54): Setting RTP Transport on 1 transport fc0046d0
+(srtp_transport.cc:285): The params in SRTP transport are reset.
+(p2p_transport_channel.cc:560): Set backup connection ping interval to 25 s milliseconds.
+(p2p_transport_channel.cc:569): Set ICE receiving timeout to 2500 ms milliseconds
+(p2p_transport_channel.cc:576): Set ping most likely connection to 0
+(p2p_transport_channel.cc:583): Set stable_writable_connection_ping_interval to 2500 ms
+(p2p_transport_channel.cc:596): Set presume writable when fully relayed to 0
+(p2p_transport_channel.cc:614): Set regather_on_failed_networks_interval to 300 s
+(p2p_transport_channel.cc:624): Set receiving_switching_delay to 1 s
+(jsep_transport_controller.cc:635): Creating DtlsSrtpTransport.
+(dtls_srtp_transport.cc:54): Setting RTP Transport on 2 transport fc0067e0
+(srtp_transport.cc:285): The params in SRTP transport are reset.
+(p2p_transport_channel.cc:494): Set ICE ufrag: NjZf pwd: PVSbQa7eFREI34xAQ/BuooQr on transport 0
+(p2p_transport_channel.cc:494): Set ICE ufrag: NjZf pwd: PVSbQa7eFREI34xAQ/BuooQr on transport 1
+(p2p_transport_channel.cc:494): Set ICE ufrag: NjZf pwd: PVSbQa7eFREI34xAQ/BuooQr on transport 2
+(peer_connection.cc:2211): Creating data channel, mid=2
+(webrtc_voice_engine.cc:1219): Setting voice channel options: AudioOptions {audio_jitter_buffer_max_packets: 200, audio_jitter_buffer_fast_accelerate: 0, audio_jitter_buffer_min_delay_ms: 0, }
+(webrtc_voice_engine.cc:609): WebRtcVoiceEngine::ApplyOptions: AudioOptions {audio_jitter_buffer_max_packets: 200, audio_jitter_buffer_fast_accelerate: 0, audio_jitter_buffer_min_delay_ms: 0, }
+(audio_processing_impl.cc:685): AudioProcessing::ApplyConfig: AudioProcessing::Config{ pipeline: { maximum_internal_processing_rate: 32000, multi_channel_render: 1, multi_channel_capture: 1 }, pre_amplifier: { enabled: 0, fixed_gain_factor: 1 },capture_level_adjustment: { enabled: 0, pre_gain_factor: 1, post_gain_factor: 1, analog_mic_gain_emulation: { enabled: 0, initial_level: 255 }}, high_pass_filter: { enabled: 1 }, echo_canceller: { enabled: 1, enforce_high_pass_filtering: 1 }, noise_suppression: { enabled: 1, level: High }, transient_suppression: { enabled: 0 }, gain_controller1: { enabled: 1, mode: AdaptiveAnalog, target_level_dbfs: 3, compression_gain_db: 9, enable_limiter: 1, analog_gain_controller { enabled: 1, startup_min_volume: 0, clipped_level_min: 70, enable_digital_adaptive: 1, clipped_level_step: 15, clipped_ratio_threshold: 0.1, clipped_wait_frames: 300, clipping_predictor:  { enabled: 0, mode: 0, window_length: 5, reference_window_length: 5, reference_window_delay: 5, clipping_threshold: -1, crest_factor_margin: 3, use_predicted_step: 1 }}}, gain_controller2: { enabled: 0, fixed_digital: { gain_db: 0 }, adaptive_digital: { enabled: 0, headroom_db: 5, max_gain_db: 50, initial_gain_db: 15, max_gain_change_db_per_second: 6, max_output_noise_level_dbfs: -50 }, input_volume_control : { enabled 0}}
+(webrtc_voice_engine.cc:649): Applied audio processing options: AudioOptions {audio_jitter_buffer_max_packets: 200, audio_jitter_buffer_fast_accelerate: 0, audio_jitter_buffer_min_delay_ms: 0, }
+(webrtc_voice_engine.cc:1239): Set voice send channel options. Current options: AudioOptions {audio_jitter_buffer_max_packets: 200, audio_jitter_buffer_fast_accelerate: 0, audio_jitter_buffer_min_delay_ms: 0, }
+(webrtc_voice_engine.cc:2230): Setting voice channel options: AudioOptions {audio_jitter_buffer_max_packets: 200, audio_jitter_buffer_fast_accelerate: 0, audio_jitter_buffer_min_delay_ms: 0, }
+(webrtc_voice_engine.cc:609): WebRtcVoiceEngine::ApplyOptions: AudioOptions {audio_jitter_buffer_max_packets: 200, audio_jitter_buffer_fast_accelerate: 0, audio_jitter_buffer_min_delay_ms: 0, }
+(audio_processing_impl.cc:685): AudioProcessing::ApplyConfig: AudioProcessing::Config{ pipeline: { maximum_internal_processing_rate: 32000, multi_channel_render: 1, multi_channel_capture: 1 }, pre_amplifier: { enabled: 0, fixed_gain_factor: 1 },capture_level_adjustment: { enabled: 0, pre_gain_factor: 1, post_gain_factor: 1, analog_mic_gain_emulation: { enabled: 0, initial_level: 255 }}, high_pass_filter: { enabled: 1 }, echo_canceller: { enabled: 1, enforce_high_pass_filtering: 1 }, noise_suppression: { enabled: 1, level: High }, transient_suppression: { enabled: 0 }, gain_controller1: { enabled: 1, mode: AdaptiveAnalog, target_level_dbfs: 3, compression_gain_db: 9, enable_limiter: 1, analog_gain_controller { enabled: 1, startup_min_volume: 0, clipped_level_min: 70, enable_digital_adaptive: 1, clipped_level_step: 15, clipped_ratio_threshold: 0.1, clipped_wait_frames: 300, clipping_predictor:  { enabled: 0, mode: 0, window_length: 5, reference_window_length: 5, reference_window_delay: 5, clipping_threshold: -1, crest_factor_margin: 3, use_predicted_step: 1 }}}, gain_controller2: { enabled: 0, fixed_digital: { gain_db: 0 }, adaptive_digital: { enabled: 0, headroom_db: 5, max_gain_db: 50, initial_gain_db: 15, max_gain_change_db_per_second: 6, max_output_noise_level_dbfs: -50 }, input_volume_control : { enabled 0}}
+(webrtc_voice_engine.cc:649): Applied audio processing options: AudioOptions {audio_jitter_buffer_max_packets: 200, audio_jitter_buffer_fast_accelerate: 0, audio_jitter_buffer_min_delay_ms: 0, }
+(webrtc_voice_engine.cc:2266): Set voice receive channel options. Current options: AudioOptions {audio_jitter_buffer_max_packets: 200, audio_jitter_buffer_fast_accelerate: 0, audio_jitter_buffer_min_delay_ms: 0, }
+(pacing_controller.cc:113): PacedSender paused.
+(sdp_offer_answer.cc:3423): Session: 2591945473396503909 Old state: stable New state: have-local-offer
+(webrtc_voice_engine.cc:2469): ResetUnsignaledRecvStream.
+(webrtc_video_engine.cc:3147): ResetUnsignaledRecvStream.
+(webrtc_voice_engine.cc:2166): WebRtcVoiceMediaChannel::SetReceiverParameters: {codecs: [AudioCodec[111:opus:48000:0:2], AudioCodec[63:red:48000:0:2], AudioCodec[9:G722:8000:0:1], AudioCodec[0:PCMU:8000:0:1], AudioCodec[8:PCMA:8000:0:1], AudioCodec[13:CN:8000:0:1], AudioCodec[110:telephone-event:48000:0:1], AudioCodec[126:telephone-event:8000:0:1]], extensions: [{uri: http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01, id: 3}, {uri: http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time, id: 2}, {uri: urn:ietf:params:rtp-hdrext:sdes:mid, id: 4}, {uri: urn:ietf:params:rtp-hdrext:ssrc-audio-level, id: 1}], rtcp: {reduced_size:1, remote_estimate:0}}
+(webrtc_voice_engine.cc:1540): AddSendStream: {id:76d48098-9192-47be-9a42-4a8905b8d560;ssrcs:[2253650649];ssrc_groups:;cname:nlfSMGkKTXxe/XRW;stream_ids:cf86c393-6b71-42e5-a967-e3194edc766d;}
+(audio_coding_module.cc:221): Created
+(audio_send_stream.cc:172): AudioSendStream: 2253650649
+(audio_send_stream.cc:235): AudioSendStream::ConfigureStream: {rtp: {ssrc: 2253650649, csrcs: [], extmap-allow-mixed: true, extensions: [], c_name: nlfSMGkKTXxe/XRW}, rtcp_report_interval_ms: 5000, send_transport: (Transport), min_bitrate_bps: -1, max_bitrate_bps: -1, has audio_network_adaptor_config: false, has_dscp: false, send_codec_spec: <unset>}
+(channel.cc:960): Add send stream ssrc: 2253650649 into {mid: 0, media_type: audio}
+(channel.cc:633): Changing state, recv=0 send=0 for {mid: 0, media_type: audio}
+(webrtc_video_engine.cc:2987): SetReceiverParameters: {codecs: [VideoCodec[96:VP8], VideoCodec[97:rtx], VideoCodec[103:H264], VideoCodec[104:rtx], VideoCodec[107:H264], VideoCodec[108:rtx], VideoCodec[109:H264], VideoCodec[114:rtx], VideoCodec[115:H264], VideoCodec[116:rtx], VideoCodec[117:H264], VideoCodec[118:rtx], VideoCodec[39:H264], VideoCodec[40:rtx], VideoCodec[45:AV1], VideoCodec[46:rtx], VideoCodec[98:VP9], VideoCodec[99:rtx], VideoCodec[100:VP9], VideoCodec[101:rtx], VideoCodec[119:red], VideoCodec[120:rtx], VideoCodec[121:ulpfec]], extensions: [{uri: http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01, id: 3}, {uri: http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time, id: 2}, {uri: http://www.webrtc.org/experiments/rtp-hdrext/color-space, id: 8}, {uri: http://www.webrtc.org/experiments/rtp-hdrext/playout-delay, id: 5}, {uri: http://www.webrtc.org/experiments/rtp-hdrext/video-content-type, id: 6}, {uri: http://www.webrtc.org/experiments/rtp-hdrext/video-timing, id: 7}, {uri: urn:3gpp:video-orientation, id: 13}, {uri: urn:ietf:params:rtp-hdrext:sdes:mid, id: 4}, {uri: urn:ietf:params:rtp-hdrext:sdes:repaired-rtp-stream-id, id: 11}, {uri: urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id, id: 10}, {uri: urn:ietf:params:rtp-hdrext:toffset, id: 14}], rtcp: {reduced_size:1, remote_estimate:0}}
+(webrtc_video_engine.cc:1578): AddSendStream: {id:b8dda512-1d52-483b-9d2d-b50eeef7ec8e;ssrcs:[2684106432,3566388371];ssrc_groups:{semantics:FID;ssrcs:[2684106432,3566388371]};cname:nlfSMGkKTXxe/XRW;stream_ids:cf86c393-6b71-42e5-a967-e3194edc766d;}
+(channel.cc:960): Add send stream ssrc: 2684106432 into {mid: 1, media_type: video}
+(channel.cc:633): Changing state, recv=0 send=0 for {mid: 1, media_type: video}
+(webrtc_voice_engine.cc:1718): WebRtcVoiceSendChannel::MuteStream: APM:0
+(webrtc_voice_engine.cc:1726): WebRtcVoiceSendChannel::MuteStream: ADM:0
+(audio_device_impl.cc:808): Recording
+(audio_device_impl.cc:727): InitRecording
+(audio_device_impl.cc:746): RecordingIsInitialized
+(audio_device_buffer.cc:216): SetRecordingSampleRate(44100)
+(audio_device_buffer.cc:236): SetRecordingChannels(1)
+(audio_device_impl.cc:733): output: 0
+(audio_device_impl.cc:783): StartRecording
+(audio_device_impl.cc:808): Recording
+(audio_device_impl.cc:790): output: 0
+(webrtc_voice_engine.cc:1219): Setting voice channel options: AudioOptions {aec: 1, agc: 1, ns: 1, hf: 0, }
+(webrtc_voice_engine.cc:609): WebRtcVoiceEngine::ApplyOptions: AudioOptions {aec: 1, agc: 1, ns: 1, hf: 0, audio_jitter_buffer_max_packets: 200, audio_jitter_buffer_fast_accelerate: 0, audio_jitter_buffer_min_delay_ms: 0, }
+(audio_device_impl.cc:831): BuiltInAECIsAvailable
+(audio_device_impl.cc:834): output: 0
+(audio_device_impl.cc:847): BuiltInAGCIsAvailable
+(audio_device_impl.cc:850): output: 0
+(audio_device_impl.cc:863): BuiltInNSIsAvailable
+(audio_device_impl.cc:866): output: 0
+(audio_processing_impl.cc:685): AudioProcessing::ApplyConfig: AudioProcessing::Config{ pipeline: { maximum_internal_processing_rate: 32000, multi_channel_render: 1, multi_channel_capture: 1 }, pre_amplifier: { enabled: 0, fixed_gain_factor: 1 },capture_level_adjustment: { enabled: 0, pre_gain_factor: 1, post_gain_factor: 1, analog_mic_gain_emulation: { enabled: 0, initial_level: 255 }}, high_pass_filter: { enabled: 0 }, echo_canceller: { enabled: 1, enforce_high_pass_filtering: 1 }, noise_suppression: { enabled: 1, level: High }, transient_suppression: { enabled: 0 }, gain_controller1: { enabled: 1, mode: AdaptiveAnalog, target_level_dbfs: 3, compression_gain_db: 9, enable_limiter: 1, analog_gain_controller { enabled: 1, startup_min_volume: 0, clipped_level_min: 70, enable_digital_adaptive: 1, clipped_level_step: 15, clipped_ratio_threshold: 0.1, clipped_wait_frames: 300, clipping_predictor:  { enabled: 0, mode: 0, window_length: 5, reference_window_length: 5, reference_window_delay: 5, clipping_threshold: -1, crest_factor_margin: 3, use_predicted_step: 1 }}}, gain_controller2: { enabled: 0, fixed_digital: { gain_db: 0 }, adaptive_digital: { enabled: 0, headroom_db: 5, max_gain_db: 50, initial_gain_db: 15, max_gain_change_db_per_second: 6, max_output_noise_level_dbfs: -50 }, input_volume_control : { enabled 0}}
+(audio_processing_impl.cc:618): AudioProcessing::InitializeLocked input sampleRate:16000 output sampleRate:16000
+(transparent_mode.cc:243): AEC3 Transparent Mode: Legacy
+(echo_canceller3.cc:820): AEC3 created with sample rate: 16000 Hz, num render channels: 1, num capture channels: 1
+(webrtc_voice_engine.cc:649): Applied audio processing options: AudioOptions {aec: 1, agc: 1, ns: 1, hf: 0, audio_jitter_buffer_max_packets: 200, audio_jitter_buffer_fast_accelerate: 0, audio_jitter_buffer_min_delay_ms: 0, }
+(webrtc_voice_engine.cc:1239): Set voice send channel options. Current options: AudioOptions {aec: 1, agc: 1, ns: 1, hf: 0, audio_jitter_buffer_max_packets: 200, audio_jitter_buffer_fast_accelerate: 0, audio_jitter_buffer_min_delay_ms: 0, }
+(rtc_peerconnection_impl.cc:150): OnSetLocalDescriptionComplete
+(basic_port_allocator.cc:372): Start getting ports with turn_port_prune_policy 0
+(basic_port_allocator.cc:372): Start getting ports with turn_port_prune_policy 0
+(basic_port_allocator.cc:372): Start getting ports with turn_port_prune_policy 0
+(basic_port_allocator.cc:697): Count of networks: 3
+(basic_port_allocator.cc:699): Net[eth0:172.18.0.x/16:Ethernet:id=1]
+(basic_port_allocator.cc:699): Net[lo:0:0:0:x:x:x:x:x/128:Loopback:id=3]
+(basic_port_allocator.cc:699): Net[lo:127.0.0.x/8:Loopback:id=2]
+(basic_port_allocator.cc:125): Filtered out ignored networks:
+(basic_port_allocator.cc:127): Net[lo:0:0:0:x:x:x:x:x/128:Loopback:id=3]
+(basic_port_allocator.cc:127): Net[lo:127.0.0.x/8:Loopback:id=2]
+(basic_port_allocator.cc:893): Network manager has started
+(basic_port_allocator.cc:697): Count of networks: 3
+(basic_port_allocator.cc:699): Net[eth0:172.18.0.x/16:Ethernet:id=1]
+(basic_port_allocator.cc:699): Net[lo:0:0:0:x:x:x:x:x/128:Loopback:id=3]
+(basic_port_allocator.cc:699): Net[lo:127.0.0.x/8:Loopback:id=2]
+(basic_port_allocator.cc:125): Filtered out ignored networks:
+(basic_port_allocator.cc:127): Net[lo:0:0:0:x:x:x:x:x/128:Loopback:id=3]
+(basic_port_allocator.cc:127): Net[lo:127.0.0.x/8:Loopback:id=2]
+(basic_port_allocator.cc:893): Network manager has started
+(basic_port_allocator.cc:697): Count of networks: 3
+(basic_port_allocator.cc:699): Net[eth0:172.18.0.x/16:Ethernet:id=1]
+(basic_port_allocator.cc:699): Net[lo:0:0:0:x:x:x:x:x/128:Loopback:id=3]
+(basic_port_allocator.cc:699): Net[lo:127.0.0.x/8:Loopback:id=2]
+(basic_port_allocator.cc:125): Filtered out ignored networks:
+(basic_port_allocator.cc:127): Net[lo:0:0:0:x:x:x:x:x/128:Loopback:id=3]
+(basic_port_allocator.cc:127): Net[lo:127.0.0.x/8:Loopback:id=2]
+(basic_port_allocator.cc:893): Network manager has started
+(basic_port_allocator.cc:697): Count of networks: 3
+(basic_port_allocator.cc:699): Net[eth0:172.18.0.x/16:Ethernet:id=1]
+(basic_port_allocator.cc:699): Net[lo:0:0:0:x:x:x:x:x/128:Loopback:id=3]
+(basic_port_allocator.cc:699): Net[lo:127.0.0.x/8:Loopback:id=2]
+(basic_port_allocator.cc:125): Filtered out ignored networks:
+(basic_port_allocator.cc:127): Net[lo:0:0:0:x:x:x:x:x/128:Loopback:id=3]
+(basic_port_allocator.cc:127): Net[lo:127.0.0.x/8:Loopback:id=2]
+(basic_port_allocator.cc:697): Count of networks: 3
+(basic_port_allocator.cc:699): Net[eth0:172.18.0.x/16:Ethernet:id=1]
+(basic_port_allocator.cc:699): Net[lo:0:0:0:x:x:x:x:x/128:Loopback:id=3]
+(basic_port_allocator.cc:699): Net[lo:127.0.0.x/8:Loopback:id=2]
+(basic_port_allocator.cc:125): Filtered out ignored networks:
+(basic_port_allocator.cc:127): Net[lo:0:0:0:x:x:x:x:x/128:Loopback:id=3]
+(basic_port_allocator.cc:127): Net[lo:127.0.0.x/8:Loopback:id=2]
+(basic_port_allocator.cc:697): Count of networks: 3
+(basic_port_allocator.cc:699): Net[eth0:172.18.0.x/16:Ethernet:id=1]
+(basic_port_allocator.cc:699): Net[lo:0:0:0:x:x:x:x:x/128:Loopback:id=3]
+(basic_port_allocator.cc:699): Net[lo:127.0.0.x/8:Loopback:id=2]
+(basic_port_allocator.cc:125): Filtered out ignored networks:
+(basic_port_allocator.cc:127): Net[lo:0:0:0:x:x:x:x:x/128:Loopback:id=3]
+(basic_port_allocator.cc:127): Net[lo:127.0.0.x/8:Loopback:id=2]
+(basic_port_allocator.cc:697): Count of networks: 3
+(basic_port_allocator.cc:699): Net[eth0:172.18.0.x/16:Ethernet:id=1]
+(basic_port_allocator.cc:699): Net[lo:0:0:0:x:x:x:x:x/128:Loopback:id=3]
+(basic_port_allocator.cc:699): Net[lo:127.0.0.x/8:Loopback:id=2]
+(basic_port_allocator.cc:125): Filtered out ignored networks:
+(basic_port_allocator.cc:127): Net[lo:0:0:0:x:x:x:x:x/128:Loopback:id=3]
+(basic_port_allocator.cc:127): Net[lo:127.0.0.x/8:Loopback:id=2]
+(basic_port_allocator.cc:697): Count of networks: 3
+(basic_port_allocator.cc:699): Net[eth0:172.18.0.x/16:Ethernet:id=1]
+(basic_port_allocator.cc:699): Net[lo:0:0:0:x:x:x:x:x/128:Loopback:id=3]
+(basic_port_allocator.cc:699): Net[lo:127.0.0.x/8:Loopback:id=2]
+(basic_port_allocator.cc:125): Filtered out ignored networks:
+(basic_port_allocator.cc:127): Net[lo:0:0:0:x:x:x:x:x/128:Loopback:id=3]
+(basic_port_allocator.cc:127): Net[lo:127.0.0.x/8:Loopback:id=2]
+(basic_port_allocator.cc:697): Count of networks: 3
+(basic_port_allocator.cc:699): Net[eth0:172.18.0.x/16:Ethernet:id=1]
+(basic_port_allocator.cc:699): Net[lo:0:0:0:x:x:x:x:x/128:Loopback:id=3]
+(basic_port_allocator.cc:699): Net[lo:127.0.0.x/8:Loopback:id=2]
+(basic_port_allocator.cc:125): Filtered out ignored networks:
+(basic_port_allocator.cc:127): Net[lo:0:0:0:x:x:x:x:x/128:Loopback:id=3]
+(basic_port_allocator.cc:127): Net[lo:127.0.0.x/8:Loopback:id=2]
+(basic_port_allocator.cc:697): Count of networks: 3
+(basic_port_allocator.cc:699): Net[eth0:172.18.0.x/16:Ethernet:id=1]
+(basic_port_allocator.cc:699): Net[lo:0:0:0:x:x:x:x:x/128:Loopback:id=3]
+(basic_port_allocator.cc:699): Net[lo:127.0.0.x/8:Loopback:id=2]
+(basic_port_allocator.cc:125): Filtered out ignored networks:
+(basic_port_allocator.cc:127): Net[lo:0:0:0:x:x:x:x:x/128:Loopback:id=3]
+(basic_port_allocator.cc:127): Net[lo:127.0.0.x/8:Loopback:id=2]
+(basic_port_allocator.cc:805): Allocate ports on eth0 
+(basic_port_allocator.cc:697): Count of networks: 3
+(basic_port_allocator.cc:699): Net[eth0:172.18.0.x/16:Ethernet:id=1]
+(basic_port_allocator.cc:699): Net[lo:0:0:0:x:x:x:x:x/128:Loopback:id=3]
+(basic_port_allocator.cc:699): Net[lo:127.0.0.x/8:Loopback:id=2]
+(basic_port_allocator.cc:125): Filtered out ignored networks:
+(basic_port_allocator.cc:127): Net[lo:0:0:0:x:x:x:x:x/128:Loopback:id=3]
+(basic_port_allocator.cc:127): Net[lo:127.0.0.x/8:Loopback:id=2]
+(basic_port_allocator.cc:805): Allocate ports on eth0 
+(basic_port_allocator.cc:697): Count of networks: 3
+(basic_port_allocator.cc:699): Net[eth0:172.18.0.x/16:Ethernet:id=1]
+(basic_port_allocator.cc:699): Net[lo:0:0:0:x:x:x:x:x/128:Loopback:id=3]
+(basic_port_allocator.cc:699): Net[lo:127.0.0.x/8:Loopback:id=2]
+(basic_port_allocator.cc:125): Filtered out ignored networks:
+(basic_port_allocator.cc:127): Net[lo:0:0:0:x:x:x:x:x/128:Loopback:id=3]
+(basic_port_allocator.cc:127): Net[lo:127.0.0.x/8:Loopback:id=2]
+(basic_port_allocator.cc:805): Allocate ports on eth0 
+(basic_port_allocator.cc:1404): Net[eth0:172.18.0.x/16:Ethernet:id=1]: Allocation Phase=Udp
+(port.cc:135): Port[fc00c110:0:1:0:host:Net[eth0:172.18.0.x/16:Ethernet:id=1]]: Port created with network cost 0
+(basic_port_allocator.cc:1491): AllocationSequence: UDPPort will be handling the STUN candidate generation.
+(basic_port_allocator.cc:915): Adding allocated port for 0
+(basic_port_allocator.cc:937): Port[fc00c110:0:1:0:host:Net[eth0:172.18.0.x/16:Ethernet:id=1]]: Added port to allocator
+(basic_port_allocator.cc:954): Port[fc00c110:0:1:0:host:Net[eth0:172.18.0.x/16:Ethernet:id=1]]: Gathered candidate: Cand[:559001012:1:udp:2122260223:172.18.0.x:44484:host::0:NjZf:PVSbQa7eFREI34xAQ/BuooQr:1:0:0]
+(basic_port_allocator.cc:987): Port[fc00c110:0:1:0:host:Net[eth0:172.18.0.x/16:Ethernet:id=1]]: Port ready.
+(rtc_peerconnection_impl.cc:374): OnIceCandidate, mid 0, mline 0, sdpcandidate:559001012 1 udp 2122260223 172.18.0.4 44484 typ host generation 0 ufrag NjZf network-id 1
+(basic_port_allocator.cc:1404): Net[eth0:172.18.0.x/16:Ethernet:id=1]: Allocation Phase=Udp
+(port.cc:135): Port[fc00da10:1:1:0:host:Net[eth0:172.18.0.x/16:Ethernet:id=1]]: Port created with network cost 0
+(basic_port_allocator.cc:1491): AllocationSequence: UDPPort will be handling the STUN candidate generation.
+(basic_port_allocator.cc:915): Adding allocated port for 1
+(basic_port_allocator.cc:937): Port[fc00da10:1:1:0:host:Net[eth0:172.18.0.x/16:Ethernet:id=1]]: Added port to allocator
+(basic_port_allocator.cc:954): Port[fc00da10:1:1:0:host:Net[eth0:172.18.0.x/16:Ethernet:id=1]]: Gathered candidate: Cand[:559001012:1:udp:2122260223:172.18.0.x:41064:host::0:NjZf:PVSbQa7eFREI34xAQ/BuooQr:1:0:0]
+(basic_port_allocator.cc:987): Port[fc00da10:1:1:0:host:Net[eth0:172.18.0.x/16:Ethernet:id=1]]: Port ready.
+(basic_port_allocator.cc:1404): Net[eth0:172.18.0.x/16:Ethernet:id=1]: Allocation Phase=Udp
+(rtc_peerconnection_impl.cc:374): OnIceCandidate, mid 1, mline 1, sdpcandidate:559001012 1 udp 2122260223 172.18.0.4 41064 typ host generation 0 ufrag NjZf network-id 1
+(port.cc:135): Port[fc00ee20:2:1:0:host:Net[eth0:172.18.0.x/16:Ethernet:id=1]]: Port created with network cost 0
+(basic_port_allocator.cc:1491): AllocationSequence: UDPPort will be handling the STUN candidate generation.
+(basic_port_allocator.cc:915): Adding allocated port for 2
+(basic_port_allocator.cc:937): Port[fc00ee20:2:1:0:host:Net[eth0:172.18.0.x/16:Ethernet:id=1]]: Added port to allocator
+(basic_port_allocator.cc:954): Port[fc00ee20:2:1:0:host:Net[eth0:172.18.0.x/16:Ethernet:id=1]]: Gathered candidate: Cand[:559001012:1:udp:2122260223:172.18.0.x:44989:host::0:NjZf:PVSbQa7eFREI34xAQ/BuooQr:1:0:0]
+(basic_port_allocator.cc:987): Port[fc00ee20:2:1:0:host:Net[eth0:172.18.0.x/16:Ethernet:id=1]]: Port ready.
+(rtc_peerconnection_impl.cc:374): OnIceCandidate, mid 2, mline 2, sdpcandidate:559001012 1 udp 2122260223 172.18.0.4 44989 typ host generation 0 ufrag NjZf network-id 1
+(audio_device_buffer.cc:281): Size of recording buffer: 441
+(audio_processing_impl.cc:618): AudioProcessing::InitializeLocked input sampleRate:48000 output sampleRate:48000
+(transparent_mode.cc:243): AEC3 Transparent Mode: Legacy
+(echo_canceller3.cc:820): AEC3 created with sample rate: 32000 Hz, num render channels: 1, num capture channels: 1
+(basic_port_allocator.cc:1404): Net[eth0:172.18.0.x/16:Ethernet:id=1]: Allocation Phase=Relay
+(port.cc:135): Port[fc0101e0:0:1:0:relay:Net[eth0:172.18.0.x/16:Ethernet:id=1]]: Port created with network cost 0
+(basic_port_allocator.cc:915): Adding allocated port for 0
+(basic_port_allocator.cc:937): Port[fc0101e0:0:1:0:relay:Net[eth0:172.18.0.x/16:Ethernet:id=1]]: Added port to allocator
+(turn_port.cc:417): Port[fc0101e0:0:1:0:relay:Net[eth0:172.18.0.x/16:Ethernet:id=1]]: Trying to connect to TURN server via udp @ 172.18.0.x:3478
+(turn_port.cc:1387): Port[fc0101e0:0:1:0:relay:Net[eth0:172.18.0.x/16:Ethernet:id=1]]: TURN allocate request sent, id=674c656c6667643046384659
+(thread.cc:551): Message to network_thread took 19ms to dispatch.
+(basic_port_allocator.cc:1404): Net[eth0:172.18.0.x/16:Ethernet:id=1]: Allocation Phase=Relay
+(port.cc:135): Port[fc010c70:1:1:0:relay:Net[eth0:172.18.0.x/16:Ethernet:id=1]]: Port created with network cost 0
+(basic_port_allocator.cc:915): Adding allocated port for 1
+(basic_port_allocator.cc:937): Port[fc010c70:1:1:0:relay:Net[eth0:172.18.0.x/16:Ethernet:id=1]]: Added port to allocator
+(turn_port.cc:417): Port[fc010c70:1:1:0:relay:Net[eth0:172.18.0.x/16:Ethernet:id=1]]: Trying to connect to TURN server via udp @ 172.18.0.x:3478
+(turn_port.cc:1387): Port[fc010c70:1:1:0:relay:Net[eth0:172.18.0.x/16:Ethernet:id=1]]: TURN allocate request sent, id=42664e346864364d6758436e
+(basic_port_allocator.cc:1404): Net[eth0:172.18.0.x/16:Ethernet:id=1]: Allocation Phase=Relay
+(port.cc:135): Port[fc011ea0:2:1:0:relay:Net[eth0:172.18.0.x/16:Ethernet:id=1]]: Port created with network cost 0
+(basic_port_allocator.cc:915): Adding allocated port for 2
+(basic_port_allocator.cc:937): Port[fc011ea0:2:1:0:relay:Net[eth0:172.18.0.x/16:Ethernet:id=1]]: Added port to allocator
+(turn_port.cc:417): Port[fc011ea0:2:1:0:relay:Net[eth0:172.18.0.x/16:Ethernet:id=1]]: Trying to connect to TURN server via udp @ 172.18.0.x:3478
+(turn_port.cc:1387): Port[fc011ea0:2:1:0:relay:Net[eth0:172.18.0.x/16:Ethernet:id=1]]: TURN allocate request sent, id=4971392f36483451514a524d
+(basic_port_allocator.cc:1404): Net[eth0:172.18.0.x/16:Ethernet:id=1]: Allocation Phase=Tcp
+(port.cc:135): Port[fc012b10:0:1:0:host:Net[eth0:172.18.0.x/16:Ethernet:id=1]]: Port created with network cost 0
+(basic_port_allocator.cc:915): Adding allocated port for 0
+(basic_port_allocator.cc:937): Port[fc012b10:0:1:0:host:Net[eth0:172.18.0.x/16:Ethernet:id=1]]: Added port to allocator
+(basic_port_allocator.cc:954): Port[fc012b10:0:1:0:host:Net[eth0:172.18.0.x/16:Ethernet:id=1]]: Gathered candidate: Cand[:1607436473:1:tcp:1518280447:172.18.0.x:34055:host::0:NjZf:PVSbQa7eFREI34xAQ/BuooQr:1:0:0]
+(basic_port_allocator.cc:987): Port[fc012b10:0:1:0:host:Net[eth0:172.18.0.x/16:Ethernet:id=1]]: Port ready.
+(basic_port_allocator.cc:1099): Port[fc012b10:0:1:0:host:Net[eth0:172.18.0.x/16:Ethernet:id=1]]: Port completed gathering candidates.
+(thread.cc:551): Message to network_thread took 99ms to dispatch.
+(basic_port_allocator.cc:1404): Net[eth0:172.18.0.x/16:Ethernet:id=1]: Allocation Phase=Tcp
+(port.cc:135): Port[fc013c30:1:1:0:host:Net[eth0:172.18.0.x/16:Ethernet:id=1]]: Port created with network cost 0
+(basic_port_allocator.cc:915): Adding allocated port for 1
+(basic_port_allocator.cc:937): Port[fc013c30:1:1:0:host:Net[eth0:172.18.0.x/16:Ethernet:id=1]]: Added port to allocator
+(basic_port_allocator.cc:954): Port[fc013c30:1:1:0:host:Net[eth0:172.18.0.x/16:Ethernet:id=1]]: Gathered candidate: Cand[:1607436473:1:tcp:1518280447:172.18.0.x:60403:host::0:NjZf:PVSbQa7eFREI34xAQ/BuooQr:1:0:0]
+(basic_port_allocator.cc:987): Port[fc013c30:1:1:0:host:Net[eth0:172.18.0.x/16:Ethernet:id=1]]: Port ready.
+(basic_port_allocator.cc:1099): Port[fc013c30:1:1:0:host:Net[eth0:172.18.0.x/16:Ethernet:id=1]]: Port completed gathering candidates.
+(basic_port_allocator.cc:1404): Net[eth0:172.18.0.x/16:Ethernet:id=1]: Allocation Phase=Tcp
+(port.cc:135): Port[fc014b90:2:1:0:host:Net[eth0:172.18.0.x/16:Ethernet:id=1]]: Port created with network cost 0
+(basic_port_allocator.cc:915): Adding allocated port for 2
+(basic_port_allocator.cc:937): Port[fc014b90:2:1:0:host:Net[eth0:172.18.0.x/16:Ethernet:id=1]]: Added port to allocator
+(basic_port_allocator.cc:954): Port[fc014b90:2:1:0:host:Net[eth0:172.18.0.x/16:Ethernet:id=1]]: Gathered candidate: Cand[:1607436473:1:tcp:1518280447:172.18.0.x:58159:host::0:NjZf:PVSbQa7eFREI34xAQ/BuooQr:1:0:0]
+(basic_port_allocator.cc:987): Port[fc014b90:2:1:0:host:Net[eth0:172.18.0.x/16:Ethernet:id=1]]: Port ready.
+(basic_port_allocator.cc:1099): Port[fc014b90:2:1:0:host:Net[eth0:172.18.0.x/16:Ethernet:id=1]]: Port completed gathering candidates.
+(rtc_peerconnection_impl.cc:374): OnIceCandidate, mid 0, mline 0, sdpcandidate:1607436473 1 tcp 1518280447 172.18.0.4 34055 typ host tcptype passive generation 0 ufrag NjZf network-id 1
+(rtc_peerconnection_impl.cc:374): OnIceCandidate, mid 1, mline 1, sdpcandidate:1607436473 1 tcp 1518280447 172.18.0.4 60403 typ host tcptype passive generation 0 ufrag NjZf network-id 1
+(rtc_peerconnection_impl.cc:374): OnIceCandidate, mid 2, mline 2, sdpcandidate:1607436473 1 tcp 1518280447 172.18.0.4 58159 typ host tcptype passive generation 0 ufrag NjZf network-id 1
+(turn_port.cc:1387): Port[fc0101e0:0:1:0:relay:Net[eth0:172.18.0.x/16:Ethernet:id=1]]: TURN allocate request sent, id=674c656c6667643046384659
+(turn_port.cc:1387): Port[fc010c70:1:1:0:relay:Net[eth0:172.18.0.x/16:Ethernet:id=1]]: TURN allocate request sent, id=42664e346864364d6758436e
+(turn_port.cc:1387): Port[fc011ea0:2:1:0:relay:Net[eth0:172.18.0.x/16:Ethernet:id=1]]: TURN allocate request sent, id=4971392f36483451514a524d
+(turn_port.cc:1387): Port[fc0101e0:0:1:0:relay:Net[eth0:172.18.0.x/16:Ethernet:id=1]]: TURN allocate request sent, id=674c656c6667643046384659
+(turn_port.cc:1387): Port[fc010c70:1:1:0:relay:Net[eth0:172.18.0.x/16:Ethernet:id=1]]: TURN allocate request sent, id=42664e346864364d6758436e
+(turn_port.cc:1387): Port[fc011ea0:2:1:0:relay:Net[eth0:172.18.0.x/16:Ethernet:id=1]]: TURN allocate request sent, id=4971392f36483451514a524d
+(basic_port_allocator.cc:1099): Port[fc00c110:0:1:0:host:Net[eth0:172.18.0.x/16:Ethernet:id=1]]: Port completed gathering candidates.
+(basic_port_allocator.cc:1099): Port[fc00da10:1:1:0:host:Net[eth0:172.18.0.x/16:Ethernet:id=1]]: Port completed gathering candidates.
+(basic_port_allocator.cc:1099): Port[fc00ee20:2:1:0:host:Net[eth0:172.18.0.x/16:Ethernet:id=1]]: Port completed gathering candidates.
+(turn_port.cc:1439): Port[fc0101e0:0:1:0:relay:Net[eth0:172.18.0.x/16:Ethernet:id=1]]: Received TURN allocate error response, id=674c656c6667643046384659, code=401, rtt=85821 us
+(turn_port.cc:1387): Port[fc0101e0:0:1:0:relay:Net[eth0:172.18.0.x/16:Ethernet:id=1]]: TURN allocate request sent, id=4d547a6e797a676132436f4b
+(turn_port.cc:1439): Port[fc010c70:1:1:0:relay:Net[eth0:172.18.0.x/16:Ethernet:id=1]]: Received TURN allocate error response, id=42664e346864364d6758436e, code=401, rtt=109240 us
+(turn_port.cc:1387): Port[fc010c70:1:1:0:relay:Net[eth0:172.18.0.x/16:Ethernet:id=1]]: TURN allocate request sent, id=48554373794e7a744e565167
+(turn_port.cc:1439): Port[fc011ea0:2:1:0:relay:Net[eth0:172.18.0.x/16:Ethernet:id=1]]: Received TURN allocate error response, id=4971392f36483451514a524d, code=401, rtt=132353 us
+(turn_port.cc:1387): Port[fc011ea0:2:1:0:relay:Net[eth0:172.18.0.x/16:Ethernet:id=1]]: TURN allocate request sent, id=372f3845647271426a77742f
+(turn_port.cc:1387): Port[fc0101e0:0:1:0:relay:Net[eth0:172.18.0.x/16:Ethernet:id=1]]: TURN allocate request sent, id=4d547a6e797a676132436f4b
+(turn_port.cc:1387): Port[fc010c70:1:1:0:relay:Net[eth0:172.18.0.x/16:Ethernet:id=1]]: TURN allocate request sent, id=48554373794e7a744e565167
+(turn_port.cc:1387): Port[fc011ea0:2:1:0:relay:Net[eth0:172.18.0.x/16:Ethernet:id=1]]: TURN allocate request sent, id=372f3845647271426a77742f
+(turn_port.cc:1393): Port[fc0101e0:0:1:0:relay:Net[eth0:172.18.0.x/16:Ethernet:id=1]]: TURN allocate requested successfully, id=4d547a6e797a676132436f4b, code=0, rtt=195996 us
+(basic_port_allocator.cc:954): Port[fc0101e0:0:1:0:relay:Net[eth0:172.18.0.x/16:Ethernet:id=1]]: Gathered candidate: Cand[:4171749782:1:udp:58662911:172.18.0.x:49646:relay:172.18.0.x:44484:NjZf:PVSbQa7eFREI34xAQ/BuooQr:1:0:0]
+(basic_port_allocator.cc:987): Port[fc0101e0:0:1:0:relay:Net[eth0:172.18.0.x/16:Ethernet:id=1]]: Port ready.
+(basic_port_allocator.cc:1099): Port[fc0101e0:0:1:0:relay:Net[eth0:172.18.0.x/16:Ethernet:id=1]]: Port completed gathering candidates.
+(basic_port_allocator.cc:1173): All candidates gathered for 0:1:0
+(p2p_transport_channel.cc:977): P2PTransportChannel: 0, component 1 gathering complete
+(rtc_peerconnection_impl.cc:374): OnIceCandidate, mid 0, mline 0, sdpcandidate:4171749782 1 udp 58662911 172.18.0.3 49646 typ relay raddr 172.18.0.4 rport 44484 generation 0 ufrag NjZf network-id 1
+(turn_port.cc:1181): Port[fc0101e0:0:1:0:relay:Net[eth0:172.18.0.x/16:Ethernet:id=1]]: Scheduled refresh in 540000ms.
+(turn_port.cc:1393): Port[fc010c70:1:1:0:relay:Net[eth0:172.18.0.x/16:Ethernet:id=1]]: TURN allocate requested successfully, id=48554373794e7a744e565167, code=0, rtt=198864 us
+(basic_port_allocator.cc:954): Port[fc010c70:1:1:0:relay:Net[eth0:172.18.0.x/16:Ethernet:id=1]]: Gathered candidate: Cand[:4171749782:1:udp:58662911:172.18.0.x:49955:relay:172.18.0.x:41064:NjZf:PVSbQa7eFREI34xAQ/BuooQr:1:0:0]
+(basic_port_allocator.cc:987): Port[fc010c70:1:1:0:relay:Net[eth0:172.18.0.x/16:Ethernet:id=1]]: Port ready.
+(basic_port_allocator.cc:1099): Port[fc010c70:1:1:0:relay:Net[eth0:172.18.0.x/16:Ethernet:id=1]]: Port completed gathering candidates.
+(basic_port_allocator.cc:1173): All candidates gathered for 1:1:0
+(p2p_transport_channel.cc:977): P2PTransportChannel: 1, component 1 gathering complete
+(rtc_peerconnection_impl.cc:374): OnIceCandidate, mid 1, mline 1, sdpcandidate:4171749782 1 udp 58662911 172.18.0.3 49955 typ relay raddr 172.18.0.4 rport 41064 generation 0 ufrag NjZf network-id 1
+(turn_port.cc:1181): Port[fc010c70:1:1:0:relay:Net[eth0:172.18.0.x/16:Ethernet:id=1]]: Scheduled refresh in 540000ms.
+(turn_port.cc:1393): Port[fc011ea0:2:1:0:relay:Net[eth0:172.18.0.x/16:Ethernet:id=1]]: TURN allocate requested successfully, id=372f3845647271426a77742f, code=0, rtt=195657 us
+(basic_port_allocator.cc:954): Port[fc011ea0:2:1:0:relay:Net[eth0:172.18.0.x/16:Ethernet:id=1]]: Gathered candidate: Cand[:4171749782:1:udp:58662911:172.18.0.x:49733:relay:172.18.0.x:44989:NjZf:PVSbQa7eFREI34xAQ/BuooQr:1:0:0]
+(basic_port_allocator.cc:987): Port[fc011ea0:2:1:0:relay:Net[eth0:172.18.0.x/16:Ethernet:id=1]]: Port ready.
+(basic_port_allocator.cc:1099): Port[fc011ea0:2:1:0:relay:Net[eth0:172.18.0.x/16:Ethernet:id=1]]: Port completed gathering candidates.
+(basic_port_allocator.cc:1173): All candidates gathered for 2:1:0
+(p2p_transport_channel.cc:977): P2PTransportChannel: 2, component 1 gathering complete
+(turn_port.cc:1181): Port[fc011ea0:2:1:0:relay:Net[eth0:172.18.0.x/16:Ethernet:id=1]]: Scheduled refresh in 540000ms.
+(rtc_peerconnection_impl.cc:374): OnIceCandidate, mid 2, mline 2, sdpcandidate:4171749782 1 udp 58662911 172.18.0.3 49733 typ relay raddr 172.18.0.4 rport 44989 generation 0 ufrag NjZf network-id 1
+(port.cc:405): Received STUN BINDING request id=384747724468554739302b61 from unknown address 172.18.0.x:49087
+(connection.cc:268): Conn[fc049200:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:w0s0Vb4G:1:0:host:udp:172.18.0.x:44484->Es1thZs8:1:1853824767:prflx:udp:172.18.0.x:49087|C--W|-|0|0|7962116751024340479|-]: Connection created
+(p2p_transport_channel.cc:1115): Adding connection from peer reflexive candidate: Cand[:2835524976:1:udp:1853824767:172.18.0.x:49087:prflx::0:WNgz::1:0:0]
+(connection.cc:879): Conn[fc049200:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:w0s0Vb4G:1:0:host:udp:172.18.0.x:44484->Es1thZs8:1:1853824767:prflx:udp:172.18.0.x:49087|CR-W|-|0|0|7962116751024340479|-]: Sent STUN BINDING response, to=172.18.0.x:49087, id=384747724468554739302b61
+(p2p_transport_channel.cc:1952): Channel[0|1|R_: Transport channel state changed from 0 to 2
+(jsep_transport_controller.cc:1366): 0 Transport 1 state changed. Check if state is complete.
+(peer_connection.cc:1929): Changing standardized IceConnectionState new => checking
+(connection.cc:558): Conn[fc049200:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:w0s0Vb4G:1:0:host:udp:172.18.0.x:44484->Es1thZs8:1:1853824767:prflx:udp:172.18.0.x:49087|CR-W|-|0|0|7962116751024340479|-]: Received STUN BINDING request, id=476476497a49772f486e7059
+(connection.cc:879): Conn[fc049200:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:w0s0Vb4G:1:0:host:udp:172.18.0.x:44484->Es1thZs8:1:1853824767:prflx:udp:172.18.0.x:49087|CR-W|-|0|0|7962116751024340479|-]: Sent STUN BINDING response, to=172.18.0.x:49087, id=476476497a49772f486e7059
+(connection.cc:558): Conn[fc049200:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:w0s0Vb4G:1:0:host:udp:172.18.0.x:44484->Es1thZs8:1:1853824767:prflx:udp:172.18.0.x:49087|CR-W|-|0|0|7962116751024340479|-]: Received STUN BINDING request, id=393253425336343665773852
+(connection.cc:879): Conn[fc049200:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:w0s0Vb4G:1:0:host:udp:172.18.0.x:44484->Es1thZs8:1:1853824767:prflx:udp:172.18.0.x:49087|CR-W|-|0|0|7962116751024340479|-]: Sent STUN BINDING response, to=172.18.0.x:49087, id=393253425336343665773852
+(connection.cc:558): Conn[fc049200:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:w0s0Vb4G:1:0:host:udp:172.18.0.x:44484->Es1thZs8:1:1853824767:prflx:udp:172.18.0.x:49087|CR-W|-|0|0|7962116751024340479|-]: Received STUN BINDING request, id=784a73626846524569377859
+(connection.cc:879): Conn[fc049200:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:w0s0Vb4G:1:0:host:udp:172.18.0.x:44484->Es1thZs8:1:1853824767:prflx:udp:172.18.0.x:49087|CR-W|-|0|0|7962116751024340479|-]: Sent STUN BINDING response, to=172.18.0.x:49087, id=784a73626846524569377859
+(connection.cc:558): Conn[fc049200:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:w0s0Vb4G:1:0:host:udp:172.18.0.x:44484->Es1thZs8:1:1853824767:prflx:udp:172.18.0.x:49087|CR-W|-|0|0|7962116751024340479|-]: Received STUN BINDING request, id=477651786c49756659717552
+(connection.cc:879): Conn[fc049200:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:w0s0Vb4G:1:0:host:udp:172.18.0.x:44484->Es1thZs8:1:1853824767:prflx:udp:172.18.0.x:49087|CR-W|-|0|0|7962116751024340479|-]: Sent STUN BINDING response, to=172.18.0.x:49087, id=477651786c49756659717552
+(connection.cc:558): Conn[fc049200:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:w0s0Vb4G:1:0:host:udp:172.18.0.x:44484->Es1thZs8:1:1853824767:prflx:udp:172.18.0.x:49087|CR-W|-|0|0|7962116751024340479|-]: Received STUN BINDING request, id=644a584851755275364b7278
+(connection.cc:879): Conn[fc049200:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:w0s0Vb4G:1:0:host:udp:172.18.0.x:44484->Es1thZs8:1:1853824767:prflx:udp:172.18.0.x:49087|CR-W|-|0|0|7962116751024340479|-]: Sent STUN BINDING response, to=172.18.0.x:49087, id=644a584851755275364b7278
+(connection.cc:558): Conn[fc049200:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:w0s0Vb4G:1:0:host:udp:172.18.0.x:44484->Es1thZs8:1:1853824767:prflx:udp:172.18.0.x:49087|CR-W|-|0|0|7962116751024340479|-]: Received STUN BINDING request, id=44596e4a766b42614d53754a
+(connection.cc:879): Conn[fc049200:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:w0s0Vb4G:1:0:host:udp:172.18.0.x:44484->Es1thZs8:1:1853824767:prflx:udp:172.18.0.x:49087|CR-W|-|0|0|7962116751024340479|-]: Sent STUN BINDING response, to=172.18.0.x:49087, id=44596e4a766b42614d53754a
+(connection.cc:558): Conn[fc049200:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:w0s0Vb4G:1:0:host:udp:172.18.0.x:44484->Es1thZs8:1:1853824767:prflx:udp:172.18.0.x:49087|CR-W|-|0|0|7962116751024340479|-]: Received STUN BINDING request, id=3370464c357a4c5046663949
+(connection.cc:879): Conn[fc049200:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:w0s0Vb4G:1:0:host:udp:172.18.0.x:44484->Es1thZs8:1:1853824767:prflx:udp:172.18.0.x:49087|CR-W|-|0|0|7962116751024340479|-]: Sent STUN BINDING response, to=172.18.0.x:49087, id=3370464c357a4c5046663949
+(connection.cc:558): Conn[fc049200:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:w0s0Vb4G:1:0:host:udp:172.18.0.x:44484->Es1thZs8:1:1853824767:prflx:udp:172.18.0.x:49087|CR-W|-|0|0|7962116751024340479|-]: Received STUN BINDING request, id=754c4b346a4d424f78384535
+(connection.cc:879): Conn[fc049200:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:w0s0Vb4G:1:0:host:udp:172.18.0.x:44484->Es1thZs8:1:1853824767:prflx:udp:172.18.0.x:49087|CR-W|-|0|0|7962116751024340479|-]: Sent STUN BINDING response, to=172.18.0.x:49087, id=754c4b346a4d424f78384535
+(dtls_transport.cc:908): DtlsTransport[0|1|__]: Packet received before we know if we are doing DTLS or not.
+(dtls_transport.cc:914): DtlsTransport[0|1|__]: Caching DTLS ClientHello packet until DTLS is started.
+(dtls_transport.cc:606): DtlsTransport[0|1|__]: DTLS setup complete, dtls_in_stun: 0
+(physical_socket_server.cc:1020): Assuming benign blocking error : [0x0000006B] Transport endpoint is not connected
+(port.cc:405): Received STUN BINDING request id=3679562f7652727165797264 from unknown address 172.18.0.x:34253
+(connection.cc:268): Conn[fc04bdf0:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:LkpVWcYe:1:0:host:tcp:172.18.0.x:34055->z1zUsbMw:1:1350508287:prflx:tcp:172.18.0.x:34253|C--W|-|0|0|5800388928678542847|-]: Connection created
+(p2p_transport_channel.cc:1115): Adding connection from peer reflexive candidate: Cand[:3045283616:1:tcp:1350508287:172.18.0.x:34253:prflx::0:WNgz::1:0:0]
+(connection.cc:879): Conn[fc04bdf0:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:LkpVWcYe:1:0:host:tcp:172.18.0.x:34055->z1zUsbMw:1:1350508287:prflx:tcp:172.18.0.x:34253|CR-W|-|0|0|5800388928678542847|-]: Sent STUN BINDING response, to=172.18.0.x:34253, id=3679562f7652727165797264
+(p2p_transport_channel.cc:1952): Channel[0|1|R_: Transport channel state changed from 2 to 1
+(jsep_transport_controller.cc:1366): 0 Transport 1 state changed. Check if state is complete.
+(connection.cc:558): Conn[fc04bdf0:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:LkpVWcYe:1:0:host:tcp:172.18.0.x:34055->z1zUsbMw:1:1350508287:prflx:tcp:172.18.0.x:34253|CR-W|-|0|0|5800388928678542847|-]: Received STUN BINDING request, id=4a534a7771326b4e6b433941
+(connection.cc:879): Conn[fc04bdf0:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:LkpVWcYe:1:0:host:tcp:172.18.0.x:34055->z1zUsbMw:1:1350508287:prflx:tcp:172.18.0.x:34253|CR-W|-|0|0|5800388928678542847|-]: Sent STUN BINDING response, to=172.18.0.x:34253, id=4a534a7771326b4e6b433941
+(connection.cc:558): Conn[fc04bdf0:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:LkpVWcYe:1:0:host:tcp:172.18.0.x:34055->z1zUsbMw:1:1350508287:prflx:tcp:172.18.0.x:34253|CR-W|-|0|0|5800388928678542847|-]: Received STUN BINDING request, id=4e754551526f516f537a716a
+(connection.cc:879): Conn[fc04bdf0:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:LkpVWcYe:1:0:host:tcp:172.18.0.x:34055->z1zUsbMw:1:1350508287:prflx:tcp:172.18.0.x:34253|CR-W|-|0|0|5800388928678542847|-]: Sent STUN BINDING response, to=172.18.0.x:34253, id=4e754551526f516f537a716a
+(connection.cc:558): Conn[fc04bdf0:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:LkpVWcYe:1:0:host:tcp:172.18.0.x:34055->z1zUsbMw:1:1350508287:prflx:tcp:172.18.0.x:34253|CR-W|-|0|0|5800388928678542847|-]: Received STUN BINDING request, id=585354547a72477956353963
+(connection.cc:879): Conn[fc04bdf0:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:LkpVWcYe:1:0:host:tcp:172.18.0.x:34055->z1zUsbMw:1:1350508287:prflx:tcp:172.18.0.x:34253|CR-W|-|0|0|5800388928678542847|-]: Sent STUN BINDING response, to=172.18.0.x:34253, id=585354547a72477956353963
+(dtls_transport.cc:905): DtlsTransport[0|1|__]: Packet received before DTLS started.
+(dtls_transport.cc:914): DtlsTransport[0|1|__]: Caching DTLS ClientHello packet until DTLS is started.
+(connection.cc:558): Conn[fc04bdf0:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:LkpVWcYe:1:0:host:tcp:172.18.0.x:34055->z1zUsbMw:1:1350508287:prflx:tcp:172.18.0.x:34253|CR-W|-|0|0|5800388928678542847|-]: Received STUN BINDING request, id=7948595a41465a422b4b7374
+(connection.cc:879): Conn[fc04bdf0:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:LkpVWcYe:1:0:host:tcp:172.18.0.x:34055->z1zUsbMw:1:1350508287:prflx:tcp:172.18.0.x:34253|CR-W|-|0|0|5800388928678542847|-]: Sent STUN BINDING response, to=172.18.0.x:34253, id=7948595a41465a422b4b7374
+(connection.cc:558): Conn[fc049200:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:w0s0Vb4G:1:0:host:udp:172.18.0.x:44484->Es1thZs8:1:1853824767:prflx:udp:172.18.0.x:49087|CR-W|-|0|0|7962116751024340479|-]: Received STUN BINDING request, id=78744e485342507836645363
+(connection.cc:879): Conn[fc049200:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:w0s0Vb4G:1:0:host:udp:172.18.0.x:44484->Es1thZs8:1:1853824767:prflx:udp:172.18.0.x:49087|CR-W|-|0|0|7962116751024340479|-]: Sent STUN BINDING response, to=172.18.0.x:49087, id=78744e485342507836645363
+(connection.cc:558): Conn[fc04bdf0:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:LkpVWcYe:1:0:host:tcp:172.18.0.x:34055->z1zUsbMw:1:1350508287:prflx:tcp:172.18.0.x:34253|CR-W|-|0|0|5800388928678542847|-]: Received STUN BINDING request, id=724b77374e61716a47462b47
+(connection.cc:879): Conn[fc04bdf0:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:LkpVWcYe:1:0:host:tcp:172.18.0.x:34055->z1zUsbMw:1:1350508287:prflx:tcp:172.18.0.x:34253|CR-W|-|0|0|5800388928678542847|-]: Sent STUN BINDING response, to=172.18.0.x:34253, id=724b77374e61716a47462b47
+(connection.cc:558): Conn[fc049200:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:w0s0Vb4G:1:0:host:udp:172.18.0.x:44484->Es1thZs8:1:1853824767:prflx:udp:172.18.0.x:49087|CR-W|-|0|0|7962116751024340479|-]: Received STUN BINDING request, id=6a736f4476324b7053632b42
+(connection.cc:879): Conn[fc049200:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:w0s0Vb4G:1:0:host:udp:172.18.0.x:44484->Es1thZs8:1:1853824767:prflx:udp:172.18.0.x:49087|CR-W|-|0|0|7962116751024340479|-]: Sent STUN BINDING response, to=172.18.0.x:49087, id=6a736f4476324b7053632b42
+(connection.cc:558): Conn[fc04bdf0:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:LkpVWcYe:1:0:host:tcp:172.18.0.x:34055->z1zUsbMw:1:1350508287:prflx:tcp:172.18.0.x:34253|CR-W|-|0|0|5800388928678542847|-]: Received STUN BINDING request, id=4149635070546b4549456b78
+(connection.cc:879): Conn[fc04bdf0:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:LkpVWcYe:1:0:host:tcp:172.18.0.x:34055->z1zUsbMw:1:1350508287:prflx:tcp:172.18.0.x:34253|CR-W|-|0|0|5800388928678542847|-]: Sent STUN BINDING response, to=172.18.0.x:34253, id=4149635070546b4549456b78
+(connection.cc:558): Conn[fc049200:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:w0s0Vb4G:1:0:host:udp:172.18.0.x:44484->Es1thZs8:1:1853824767:prflx:udp:172.18.0.x:49087|CR-W|-|0|0|7962116751024340479|-]: Received STUN BINDING request, id=5532624d6c67473074454372
+(connection.cc:879): Conn[fc049200:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:w0s0Vb4G:1:0:host:udp:172.18.0.x:44484->Es1thZs8:1:1853824767:prflx:udp:172.18.0.x:49087|CR-W|-|0|0|7962116751024340479|-]: Sent STUN BINDING response, to=172.18.0.x:49087, id=5532624d6c67473074454372
+(connection.cc:558): Conn[fc04bdf0:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:LkpVWcYe:1:0:host:tcp:172.18.0.x:34055->z1zUsbMw:1:1350508287:prflx:tcp:172.18.0.x:34253|CR-W|-|0|0|5800388928678542847|-]: Received STUN BINDING request, id=7231753365564a2b50783061
+(connection.cc:879): Conn[fc04bdf0:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:LkpVWcYe:1:0:host:tcp:172.18.0.x:34055->z1zUsbMw:1:1350508287:prflx:tcp:172.18.0.x:34253|CR-W|-|0|0|5800388928678542847|-]: Sent STUN BINDING response, to=172.18.0.x:34253, id=7231753365564a2b50783061
+(connection.cc:558): Conn[fc049200:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:w0s0Vb4G:1:0:host:udp:172.18.0.x:44484->Es1thZs8:1:1853824767:prflx:udp:172.18.0.x:49087|CR-W|-|0|0|7962116751024340479|-]: Received STUN BINDING request, id=4676526341676944384c5a30
+(connection.cc:879): Conn[fc049200:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:w0s0Vb4G:1:0:host:udp:172.18.0.x:44484->Es1thZs8:1:1853824767:prflx:udp:172.18.0.x:49087|CR-W|-|0|0|7962116751024340479|-]: Sent STUN BINDING response, to=172.18.0.x:49087, id=4676526341676944384c5a30
+(connection.cc:558): Conn[fc04bdf0:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:LkpVWcYe:1:0:host:tcp:172.18.0.x:34055->z1zUsbMw:1:1350508287:prflx:tcp:172.18.0.x:34253|CR-W|-|0|0|5800388928678542847|-]: Received STUN BINDING request, id=5a66766f637a6a2b7470756a
+(connection.cc:879): Conn[fc04bdf0:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:LkpVWcYe:1:0:host:tcp:172.18.0.x:34055->z1zUsbMw:1:1350508287:prflx:tcp:172.18.0.x:34253|CR-W|-|0|0|5800388928678542847|-]: Sent STUN BINDING response, to=172.18.0.x:34253, id=5a66766f637a6a2b7470756a
+(connection.cc:558): Conn[fc049200:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:w0s0Vb4G:1:0:host:udp:172.18.0.x:44484->Es1thZs8:1:1853824767:prflx:udp:172.18.0.x:49087|CR-W|-|0|0|7962116751024340479|-]: Received STUN BINDING request, id=46644b7a6564576370317a68
+(connection.cc:879): Conn[fc049200:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:w0s0Vb4G:1:0:host:udp:172.18.0.x:44484->Es1thZs8:1:1853824767:prflx:udp:172.18.0.x:49087|CR-W|-|0|0|7962116751024340479|-]: Sent STUN BINDING response, to=172.18.0.x:49087, id=46644b7a6564576370317a68
+(dtls_transport.cc:905): DtlsTransport[0|1|__]: Packet received before DTLS started.
+(dtls_transport.cc:914): DtlsTransport[0|1|__]: Caching DTLS ClientHello packet until DTLS is started.
+(connection.cc:558): Conn[fc049200:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:w0s0Vb4G:1:0:host:udp:172.18.0.x:44484->Es1thZs8:1:1853824767:prflx:udp:172.18.0.x:49087|CR-W|-|0|0|7962116751024340479|-]: Received STUN BINDING request, id=522b574f396d6f5a71747462
+(connection.cc:879): Conn[fc049200:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:w0s0Vb4G:1:0:host:udp:172.18.0.x:44484->Es1thZs8:1:1853824767:prflx:udp:172.18.0.x:49087|CR-W|-|0|0|7962116751024340479|-]: Sent STUN BINDING response, to=172.18.0.x:49087, id=522b574f396d6f5a71747462
+(audio_device_buffer.cc:480): [REC : 10000msec, 44kHz] callbacks: 1000, samples: 441000, rate: 44100, rate diff: 0%, level: 0
+(connection.cc:558): Conn[fc04bdf0:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:LkpVWcYe:1:0:host:tcp:172.18.0.x:34055->z1zUsbMw:1:1350508287:prflx:tcp:172.18.0.x:34253|CR-W|-|0|0|5800388928678542847|-]: Received STUN BINDING request, id=7a776231573774783951544c
+(connection.cc:879): Conn[fc04bdf0:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:LkpVWcYe:1:0:host:tcp:172.18.0.x:34055->z1zUsbMw:1:1350508287:prflx:tcp:172.18.0.x:34253|CR-W|-|0|0|5800388928678542847|-]: Sent STUN BINDING response, to=172.18.0.x:34253, id=7a776231573774783951544c
+(connection.cc:558): Conn[fc049200:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:w0s0Vb4G:1:0:host:udp:172.18.0.x:44484->Es1thZs8:1:1853824767:prflx:udp:172.18.0.x:49087|CR-W|-|0|0|7962116751024340479|-]: Received STUN BINDING request, id=7a36734477324c73665a4949
+(connection.cc:879): Conn[fc049200:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:w0s0Vb4G:1:0:host:udp:172.18.0.x:44484->Es1thZs8:1:1853824767:prflx:udp:172.18.0.x:49087|CR-W|-|0|0|7962116751024340479|-]: Sent STUN BINDING response, to=172.18.0.x:49087, id=7a36734477324c73665a4949
+(rtc_peerconnection_impl.cc:531):  Received session description :v=0
+o=- 2354573161427338754 2 IN IP4 127.0.0.1
+s=-
+t=0 0
+a=group:BUNDLE 0 1 2
+a=extmap-allow-mixed
+a=msid-semantic: WMS c32bd0ff-15f3-41ea-8733-330e1d99f3d3
+m=audio 49087 UDP/TLS/RTP/SAVPF 111 63 9 0 8 13 110 126
+c=IN IP4 172.18.0.5
+a=rtcp:9 IN IP4 0.0.0.0
+a=candidate:427056832 1 udp 2122260223 172.18.0.5 49087 typ host generation 0 network-id 1
+a=candidate:1740356696 1 tcp 1518280447 172.18.0.5 41465 typ host tcptype passive generation 0 network-id 1
+a=ice-ufrag:WNgz
+a=ice-pwd:qvxGpL4VfRQkq7TLSGXjww4C
+a=ice-options:trickle
+a=fingerprint:sha-256 63:0F:32:75:39:34:A0:1D:58:03:6B:7D:27:C8:19:7C:70:8B:DF:E5:9C:E6:A5:8C:3D:1B:ED:E9:C6:08:0E:31
+a=setup:active
+a=mid:0
+a=extmap:1 urn:ietf:params:rtp-hdrext:ssrc-audio-level
+a=extmap:4 urn:ietf:params:rtp-hdrext:sdes:mid
+a=sendrecv
+a=msid:c32bd0ff-15f3-41ea-8733-330e1d99f3d3 7996376a-6694-4852-b82b-088324fa2775
+a=rtcp-mux
+a=rtcp-rsize
+a=rtpmap:111 opus/48000/2
+a=fmtp:111 maxaveragebitrate=12000;minptime=10;usedtx=1;useinbandfec=1
+a=rtpmap:63 red/48000/2
+a=fmtp:63 111/111
+a=rtpmap:9 G722/8000
+a=rtpmap:0 PCMU/8000
+a=rtpmap:8 PCMA/8000
+a=rtpmap:13 CN/8000
+a=rtpmap:110 telephone-event/48000
+a=rtpmap:126 telephone-event/8000
+a=ptime:60
+a=ssrc:496228560 cname:ndqG79sheHQ7gfpB
+m=video 9 UDP/TLS/RTP/SAVPF 96 97 103 104 107 108 109 114 115 116 117 118 39 40 45 46 98 99 100 101 119 120 121
+c=IN IP4 0.0.0.0
+a=rtcp:9 IN IP4 0.0.0.0
+a=ice-ufrag:WNgz
+a=ice-pwd:qvxGpL4VfRQkq7TLSGXjww4C
+a=ice-options:trickle
+a=fingerprint:sha-256 63:0F:32:75:39:34:A0:1D:58:03:6B:7D:27:C8:19:7C:70:8B:DF:E5:9C:E6:A5:8C:3D:1B:ED:E9:C6:08:0E:31
+a=setup:active
+a=mid:1
+a=extmap:14 urn:ietf:params:rtp-hdrext:toffset
+a=extmap:2 http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time
+a=extmap:13 urn:3gpp:video-orientation
+a=extmap:3 http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01
+a=extmap:5 http://www.webrtc.org/experiments/rtp-hdrext/playout-delay
+a=extmap:6 http://www.webrtc.org/experiments/rtp-hdrext/video-content-type
+a=extmap:7 http://www.webrtc.org/experiments/rtp-hdrext/video-timing
+a=extmap:8 http://www.webrtc.org/experiments/rtp-hdrext/color-space
+a=extmap:4 urn:ietf:params:rtp-hdrext:sdes:mid
+a=extmap:10 urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id
+a=extmap:11 urn:ietf:params:rtp-hdrext:sdes:repaired-rtp-stream-id
+a=recvonly
+a=rtcp-mux
+a=rtcp-rsize
+a=rtpmap:96 VP8/90000
+a=rtcp-fb:96 goog-remb
+a=rtcp-fb:96 transport-cc
+a=rtcp-fb:96 ccm fir
+a=rtcp-fb:96 nack
+a=rtcp-fb:96 nack pli
+a=rtpmap:97 rtx/90000
+a=fmtp:97 apt=96
+a=rtpmap:103 H264/90000
+a=rtcp-fb:103 goog-remb
+a=rtcp-fb:103 transport-cc
+a=rtcp-fb:103 ccm fir
+a=rtcp-fb:103 nack
+a=rtcp-fb:103 nack pli
+a=fmtp:103 level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=42001f
+a=rtpmap:104 rtx/90000
+a=fmtp:104 apt=103
+a=rtpmap:107 H264/90000
+a=rtcp-fb:107 goog-remb
+a=rtcp-fb:107 transport-cc
+a=rtcp-fb:107 ccm fir
+a=rtcp-fb:107 nack
+a=rtcp-fb:107 nack pli
+a=fmtp:107 level-asymmetry-allowed=1;packetization-mode=0;profile-level-id=42001f
+a=rtpmap:108 rtx/90000
+a=fmtp:108 apt=107
+a=rtpmap:109 H264/90000
+a=rtcp-fb:109 goog-remb
+a=rtcp-fb:109 transport-cc
+a=rtcp-fb:109 ccm fir
+a=rtcp-fb:109 nack
+a=rtcp-fb:109 nack pli
+a=fmtp:109 level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=42e01f
+a=rtpmap:114 rtx/90000
+a=fmtp:114 apt=109
+a=rtpmap:115 H264/90000
+a=rtcp-fb:115 goog-remb
+a=rtcp-fb:115 transport-cc
+a=rtcp-fb:115 ccm fir
+a=rtcp-fb:115 nack
+a=rtcp-fb:115 nack pli
+a=fmtp:115 level-asymmetry-allowed=1;packetization-mode=0;profile-level-id=42e01f
+a=rtpmap:116 rtx/90000
+a=fmtp:116 apt=115
+a=rtpmap:117 H264/90000
+a=rtcp-fb:117 goog-remb
+a=rtcp-fb:117 transport-cc
+a=rtcp-fb:117 ccm fir
+a=rtcp-fb:117 nack
+a=rtcp-fb:117 nack pli
+a=fmtp:117 level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=4d001f
+a=rtpmap:118 rtx/90000
+a=fmtp:118 apt=117
+a=rtpmap:39 H264/90000
+a=rtcp-fb:39 goog-remb
+a=rtcp-fb:39 transport-cc
+a=rtcp-fb:39 ccm fir
+a=rtcp-fb:39 nack
+a=rtcp-fb:39 nack pli
+a=fmtp:39 level-asymmetry-allowed=1;packetization-mode=0;profile-level-id=4d001f
+a=rtpmap:40 rtx/90000
+a=fmtp:40 apt=39
+a=rtpmap:45 AV1/90000
+a=rtcp-fb:45 goog-remb
+a=rtcp-fb:45 transport-cc
+a=rtcp-fb:45 ccm fir
+a=rtcp-fb:45 nack
+a=rtcp-fb:45 nack pli
+a=fmtp:45 level-idx=5;profile=0;tier=0
+a=rtpmap:46 rtx/90000
+a=fmtp:46 apt=45
+a=rtpmap:98 VP9/90000
+a=rtcp-fb:98 goog-remb
+a=rtcp-fb:98 transport-cc
+a=rtcp-fb:98 ccm fir
+a=rtcp-fb:98 nack
+a=rtcp-fb:98 nack pli
+a=fmtp:98 profile-id=0
+a=rtpmap:99 rtx/90000
+a=fmtp:99 apt=98
+a=rtpmap:100 VP9/90000
+a=rtcp-fb:100 goog-remb
+a=rtcp-fb:100 transport-cc
+a=rtcp-fb:100 ccm fir
+a=rtcp-fb:100 nack
+a=rtcp-fb:100 nack pli
+a=fmtp:100 profile-id=2
+a=rtpmap:101 rtx/90000
+a=fmtp:101 apt=100
+a=rtpmap:119 red/90000
+a=rtpmap:120 rtx/90000
+a=fmtp:120 apt=119
+a=rtpmap:121 ulpfec/90000
+m=application 9 UDP/DTLS/SCTP webrtc-datachannel
+c=IN IP4 0.0.0.0
+a=ice-ufrag:WNgz
+a=ice-pwd:qvxGpL4VfRQkq7TLSGXjww4C
+a=ice-options:trickle
+a=fingerprint:sha-256 63:0F:32:75:39:34:A0:1D:58:03:6B:7D:27:C8:19:7C:70:8B:DF:E5:9C:E6:A5:8C:3D:1B:ED:E9:C6:08:0E:31
+a=setup:active
+a=mid:2
+a=sctp-port:5000
+a=max-message-size:262144
+
+(dtls_srtp_transport.cc:54): Setting RTP Transport on 0 transport fc0027d0
+(p2p_transport_channel.cc:505): Received remote ICE parameters: ufrag=WNgz, renomination disabled
+(p2p_transport_channel.cc:576): Set ping most likely connection to 0
+(turn_port.cc:1583): Port[fc010c70:1:1:0:relay:Net[eth0:172.18.0.x/16:Ethernet:id=1]]: TURN refresh request sent, id=5435715a42435561714f6145
+(turn_port.cc:1583): Port[fc011ea0:2:1:0:relay:Net[eth0:172.18.0.x/16:Ethernet:id=1]]: TURN refresh request sent, id=4366565575706a5067516153
+(p2p_transport_channel.cc:1743): Channel[0|1|R_: Have a pingable connection for the first time; starting to ping.
+(peer_connection.cc:2211): Creating data channel, mid=2
+(basic_ice_controller.cc:258): Selecting connection for triggered check: Conn[fc04bdf0:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:LkpVWcYe:1:0:host:tcp:172.18.0.x:34055->z1zUsbMw:1:1350508287:prflx:tcp:172.18.0.x:34253|CR-W|-|0|0|5800388928678542847|-]
+(connection.cc:1649): Conn[fc04bdf0:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:LkpVWcYe:1:0:host:tcp:172.18.0.x:34055->z1zUsbMw:1:1350508287:prflx:tcp:172.18.0.x:34253|CR-W|-|0|0|5800388928678542847|-]: Sent STUN BINDING request, id=7150763878684b38765a3176, use_candidate=1, nomination=0
+(sdp_offer_answer.cc:3423): Session: 2591945473396503909 Old state: have-local-offer New state: stable
+(channel.cc:610): Channel enabled: {mid: 0, media_type: audio}
+(channel.cc:633): Changing state, recv=1 send=0 for {mid: 0, media_type: audio}
+(channel.cc:610): Channel enabled: {mid: 1, media_type: video}
+(channel.cc:633): Changing state, recv=1 send=0 for {mid: 1, media_type: video}
+(webrtc_voice_engine.cc:2469): ResetUnsignaledRecvStream.
+(webrtc_video_engine.cc:3147): ResetUnsignaledRecvStream.
+(channel.cc:756): Setting remote description for {mid: 0, media_type: audio}
+(webrtc_voice_engine.cc:1248): WebRtcVoiceMediaChannel::SetSenderParameters: {codecs: [AudioCodec[111:opus:48000:0:2], AudioCodec[63:red:48000:0:2], AudioCodec[9:G722:8000:0:1], AudioCodec[0:PCMU:8000:0:1], AudioCodec[8:PCMA:8000:0:1], AudioCodec[13:CN:8000:0:1], AudioCodec[110:telephone-event:48000:0:1], AudioCodec[126:telephone-event:8000:0:1]], extensions: [{uri: urn:ietf:params:rtp-hdrext:sdes:mid, id: 4}, {uri: urn:ietf:params:rtp-hdrext:ssrc-audio-level, id: 1}], extmap-allow-mixed: true, max_bandwidth_bps: -1, mid: 0, options: AudioOptions {}, rtcp: {reduced_size:1, remote_estimate:0}}
+(audio_send_stream.cc:235): AudioSendStream::ConfigureStream: {rtp: {ssrc: 2253650649, csrcs: [], extmap-allow-mixed: true, extensions: [], c_name: nlfSMGkKTXxe/XRW}, rtcp_report_interval_ms: 5000, send_transport: (Transport), min_bitrate_bps: 12000, max_bitrate_bps: 12000, has audio_network_adaptor_config: false, has_dscp: false, send_codec_spec: {nack_enabled: false, enable_non_sender_rtt: false, cng_payload_type: <unset>, red_payload_type: <unset>, payload_type: 111, format: {name: opus, clockrate_hz: 48000, num_channels: 2, parameters: {maxaveragebitrate: 12000, minptime: 10, ptime: 60, usedtx: 1, useinbandfec: 1}}}}
+(audio_send_stream.cc:235): AudioSendStream::ConfigureStream: {rtp: {ssrc: 2253650649, csrcs: [], extmap-allow-mixed: true, extensions: [{uri: urn:ietf:params:rtp-hdrext:sdes:mid, id: 4}, {uri: urn:ietf:params:rtp-hdrext:ssrc-audio-level, id: 1}], c_name: nlfSMGkKTXxe/XRW}, rtcp_report_interval_ms: 5000, send_transport: (Transport), min_bitrate_bps: 12000, max_bitrate_bps: 12000, has audio_network_adaptor_config: false, has_dscp: false, send_codec_spec: {nack_enabled: false, enable_non_sender_rtt: false, cng_payload_type: <unset>, red_payload_type: <unset>, payload_type: 111, format: {name: opus, clockrate_hz: 48000, num_channels: 2, parameters: {maxaveragebitrate: 12000, minptime: 10, ptime: 60, usedtx: 1, useinbandfec: 1}}}}
+(audio_send_stream.cc:235): AudioSendStream::ConfigureStream: {rtp: {ssrc: 2253650649, mid: 0, csrcs: [], extmap-allow-mixed: true, extensions: [{uri: urn:ietf:params:rtp-hdrext:sdes:mid, id: 4}, {uri: urn:ietf:params:rtp-hdrext:ssrc-audio-level, id: 1}], c_name: nlfSMGkKTXxe/XRW}, rtcp_report_interval_ms: 5000, send_transport: (Transport), min_bitrate_bps: 12000, max_bitrate_bps: 12000, has audio_network_adaptor_config: false, has_dscp: false, send_codec_spec: {nack_enabled: false, enable_non_sender_rtt: false, cng_payload_type: <unset>, red_payload_type: <unset>, payload_type: 111, format: {name: opus, clockrate_hz: 48000, num_channels: 2, parameters: {maxaveragebitrate: 12000, minptime: 10, ptime: 60, usedtx: 1, useinbandfec: 1}}}}
+(webrtc_voice_engine.cc:1749): WebRtcVoiceMediaChannel::SetMaxSendBitrate.
+(audio_send_stream.cc:235): AudioSendStream::ConfigureStream: {rtp: {ssrc: 2253650649, mid: 0, csrcs: [], extmap-allow-mixed: true, extensions: [{uri: urn:ietf:params:rtp-hdrext:sdes:mid, id: 4}, {uri: urn:ietf:params:rtp-hdrext:ssrc-audio-level, id: 1}], c_name: nlfSMGkKTXxe/XRW}, rtcp_report_interval_ms: 5000, send_transport: (Transport), min_bitrate_bps: 12000, max_bitrate_bps: 12000, has audio_network_adaptor_config: false, has_dscp: false, send_codec_spec: {nack_enabled: false, enable_non_sender_rtt: false, cng_payload_type: <unset>, red_payload_type: <unset>, payload_type: 111, format: {name: opus, clockrate_hz: 48000, num_channels: 2, parameters: {maxaveragebitrate: 12000, minptime: 10, ptime: 60, usedtx: 1, useinbandfec: 1}}}}
+(webrtc_voice_engine.cc:1219): Setting voice channel options: AudioOptions {}
+(webrtc_voice_engine.cc:609): WebRtcVoiceEngine::ApplyOptions: AudioOptions {aec: 1, agc: 1, ns: 1, hf: 0, audio_jitter_buffer_max_packets: 200, audio_jitter_buffer_fast_accelerate: 0, audio_jitter_buffer_min_delay_ms: 0, }
+(audio_device_impl.cc:831): BuiltInAECIsAvailable
+(audio_device_impl.cc:834): output: 0
+(audio_device_impl.cc:847): BuiltInAGCIsAvailable
+(audio_device_impl.cc:850): output: 0
+(audio_device_impl.cc:863): BuiltInNSIsAvailable
+(audio_device_impl.cc:866): output: 0
+(audio_processing_impl.cc:685): AudioProcessing::ApplyConfig: AudioProcessing::Config{ pipeline: { maximum_internal_processing_rate: 32000, multi_channel_render: 1, multi_channel_capture: 1 }, pre_amplifier: { enabled: 0, fixed_gain_factor: 1 },capture_level_adjustment: { enabled: 0, pre_gain_factor: 1, post_gain_factor: 1, analog_mic_gain_emulation: { enabled: 0, initial_level: 255 }}, high_pass_filter: { enabled: 0 }, echo_canceller: { enabled: 1, enforce_high_pass_filtering: 1 }, noise_suppression: { enabled: 1, level: High }, transient_suppression: { enabled: 0 }, gain_controller1: { enabled: 1, mode: AdaptiveAnalog, target_level_dbfs: 3, compression_gain_db: 9, enable_limiter: 1, analog_gain_controller { enabled: 1, startup_min_volume: 0, clipped_level_min: 70, enable_digital_adaptive: 1, clipped_level_step: 15, clipped_ratio_threshold: 0.1, clipped_wait_frames: 300, clipping_predictor:  { enabled: 0, mode: 0, window_length: 5, reference_window_length: 5, reference_window_delay: 5, clipping_threshold: -1, crest_factor_margin: 3, use_predicted_step: 1 }}}, gain_controller2: { enabled: 0, fixed_digital: { gain_db: 0 }, adaptive_digital: { enabled: 0, headroom_db: 5, max_gain_db: 50, initial_gain_db: 15, max_gain_change_db_per_second: 6, max_output_noise_level_dbfs: -50 }, input_volume_control : { enabled 0}}
+(webrtc_voice_engine.cc:649): Applied audio processing options: AudioOptions {aec: 1, agc: 1, ns: 1, hf: 0, audio_jitter_buffer_max_packets: 200, audio_jitter_buffer_fast_accelerate: 0, audio_jitter_buffer_min_delay_ms: 0, }
+(webrtc_voice_engine.cc:1239): Set voice send channel options. Current options: AudioOptions {aec: 1, agc: 1, ns: 1, hf: 0, audio_jitter_buffer_max_packets: 200, audio_jitter_buffer_fast_accelerate: 0, audio_jitter_buffer_min_delay_ms: 0, }
+(webrtc_voice_engine.cc:2166): WebRtcVoiceMediaChannel::SetReceiverParameters: {codecs: [AudioCodec[111:opus:48000:0:2], AudioCodec[63:red:48000:0:2], AudioCodec[9:G722:8000:0:1], AudioCodec[0:PCMU:8000:0:1], AudioCodec[8:PCMA:8000:0:1], AudioCodec[13:CN:8000:0:1], AudioCodec[110:telephone-event:48000:0:1], AudioCodec[126:telephone-event:8000:0:1]], extensions: [{uri: urn:ietf:params:rtp-hdrext:sdes:mid, id: 4}, {uri: urn:ietf:params:rtp-hdrext:ssrc-audio-level, id: 1}], rtcp: {reduced_size:1, remote_estimate:0}}
+(webrtc_voice_engine.cc:2350): Changing RTCP mode on receive streams.
+(webrtc_voice_engine.cc:2400): AddRecvStream: {id:7996376a-6694-4852-b82b-088324fa2775;ssrcs:[496228560];ssrc_groups:;cname:ndqG79sheHQ7gfpB;stream_ids:c32bd0ff-15f3-41ea-8733-330e1d99f3d3;}
+(neteq_impl.cc:160): NetEq config: sample_rate_hz=48000, max_packets_in_buffer=200, min_delay_ms=0, enable_fast_accelerate=false, enable_muted_state=true, enable_rtx_handling=false
+(audio_receive_stream.cc:124): AudioReceiveStreamImpl: 496228560
+(audio_receive_stream.cc:168): AudioReceiveStreamImpl::Start: 496228560
+(audio_device_impl.cc:777): Playing
+(audio_device_impl.cc:714): InitPlayout
+(audio_device_impl.cc:740): PlayoutIsInitialized
+(audio_device_buffer.cc:222): SetPlayoutSampleRate(44100)
+(audio_device_buffer.cc:242): SetPlayoutChannels(2)
+(audio_device_impl.cc:720): output: 0
+(audio_device_impl.cc:752): StartPlayout
+(audio_device_impl.cc:777): Playing
+(audio_device_buffer.cc:356): Size of playout buffer: 882
+(audio_device_impl.cc:759): output: 0
+(channel.cc:1045): Add remote ssrc: 496228560 to {mid: 0, media_type: audio}
+(channel.cc:633): Changing state, recv=1 send=0 for {mid: 0, media_type: audio}
+(channel.cc:756): Setting remote description for {mid: 1, media_type: video}
+(webrtc_video_engine.cc:1233): SetSenderParameters: {codecs: [VideoCodec[96:VP8], VideoCodec[97:rtx], VideoCodec[103:H264], VideoCodec[104:rtx], VideoCodec[107:H264], VideoCodec[108:rtx], VideoCodec[109:H264], VideoCodec[114:rtx], VideoCodec[115:H264], VideoCodec[116:rtx], VideoCodec[117:H264], VideoCodec[118:rtx], VideoCodec[39:H264], VideoCodec[40:rtx], VideoCodec[45:AV1], VideoCodec[46:rtx], VideoCodec[98:VP9], VideoCodec[99:rtx], VideoCodec[100:VP9], VideoCodec[101:rtx], VideoCodec[119:red], VideoCodec[120:rtx], VideoCodec[121:ulpfec]], conference_mode: no, extensions: [{uri: http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01, id: 3}, {uri: http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time, id: 2}, {uri: http://www.webrtc.org/experiments/rtp-hdrext/color-space, id: 8}, {uri: http://www.webrtc.org/experiments/rtp-hdrext/playout-delay, id: 5}, {uri: http://www.webrtc.org/experiments/rtp-hdrext/video-content-type, id: 6}, {uri: http://www.webrtc.org/experiments/rtp-hdrext/video-timing, id: 7}, {uri: urn:3gpp:video-orientation, id: 13}, {uri: urn:ietf:params:rtp-hdrext:sdes:mid, id: 4}, {uri: urn:ietf:params:rtp-hdrext:sdes:repaired-rtp-stream-id, id: 11}, {uri: urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id, id: 10}, {uri: urn:ietf:params:rtp-hdrext:toffset, id: 14}], extmap-allow-mixed: true, max_bandwidth_bps: -1, mid: 1, rtcp: {reduced_size:1, remote_estimate:0}}
+(audio_processing_impl.cc:618): AudioProcessing::InitializeLocked input sampleRate:48000 output sampleRate:48000
+(webrtc_video_engine.cc:1241): Negotiated codec: VideoCodec[96:VP8]
+(webrtc_video_engine.cc:1241): Negotiated codec: VideoCodec[103:H264]
+(webrtc_video_engine.cc:1241): Negotiated codec: VideoCodec[107:H264]
+(webrtc_video_engine.cc:1241): Negotiated codec: VideoCodec[109:H264]
+(webrtc_video_engine.cc:1241): Negotiated codec: VideoCodec[115:H264]
+(webrtc_video_engine.cc:1241): Negotiated codec: VideoCodec[117:H264]
+(webrtc_video_engine.cc:1241): Negotiated codec: VideoCodec[39:H264]
+(webrtc_video_engine.cc:1241): Negotiated codec: VideoCodec[45:AV1]
+(webrtc_video_engine.cc:1241): Negotiated codec: VideoCodec[98:VP9]
+(webrtc_video_engine.cc:1241): Negotiated codec: VideoCodec[100:VP9]
+(webrtc_video_engine.cc:2116): RecreateWebRtcStream (send) because of SetCodec.
+(video_send_stream_impl.cc:524): VideoSendStreamImpl: {encoder_settings: { experiment_cpu_load_estimator: off}}, rtp: {ssrcs: [2684106432], rids: [], mid: '1', rtcp_mode: RtcpMode::kReducedSize, max_packet_size: 1200, extmap-allow-mixed: true, extensions: [{uri: http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01, id: 3}, {uri: http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time, id: 2}, {uri: http://www.webrtc.org/experiments/rtp-hdrext/color-space, id: 8}, {uri: http://www.webrtc.org/experiments/rtp-hdrext/playout-delay, id: 5}, {uri: http://www.webrtc.org/experiments/rtp-hdrext/video-content-type, id: 6}, {uri: http://www.webrtc.org/experiments/rtp-hdrext/video-timing, id: 7}, {uri: urn:3gpp:video-orientation, id: 13}, {uri: urn:ietf:params:rtp-hdrext:sdes:mid, id: 4}, {uri: urn:ietf:params:rtp-hdrext:sdes:repaired-rtp-stream-id, id: 11}, {uri: urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id, id: 10}], lntf: {enabled: false}, nack: {rtp_history_ms: 1000}, ulpfec: {ulpfec_payload_type: 121, red_payload_type: 119, red_rtx_payload_type: 120}, payload_name: VP8, payload_type: 96, raw_payload: false, stream_configs: [{ssrc: 2684106432, rid: , payload_name: VP8, payload_type: 96, raw_payload: false, rtx: {ssrc: 3566388371, payload_type: 97}}], flexfec: {payload_type: -1, ssrc: 0, protected_media_ssrcs: []}, rtx: {ssrcs: [3566388371], payload_type: 97}, c_name: nlfSMGkKTXxe/XRW}, rtcp_report_interval_ms: 1000, send_transport: (Transport), render_delay_ms: 0, target_delay_ms: 0, suspend_below_min_bitrate: off}
+(video_stream_encoder.cc:934): SetStartBitrate 300000
+(video_send_stream_impl.cc:619): Encoder config: {codec_type: VP8, content_type: kRealtimeVideo, frame_drop_enabled: 1, encoder_specific_settings: (ptr), min_transmit_bitrate_bps: 0, number_of_streams: 1, legacy_conference_mode: 0, is_quality_scaling_allowed: 1, max_qp: -1, simulcast_layers[0]: {width: 0, height: 0, max_framerate: -1, min_bitrate_bps:-1, target_bitrate_bps:-1, max_bitrate_bps:-1, max_qp: -1, num_temporal_layers: 1, bitrate_priority: 0, active: 1, scale_down_by: -1}} VideoSendStream config: {encoder_settings: { experiment_cpu_load_estimator: off}}, rtp: {ssrcs: [2684106432], rids: [], mid: '1', rtcp_mode: RtcpMode::kReducedSize, max_packet_size: 1200, extmap-allow-mixed: true, extensions: [{uri: http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01, id: 3}, {uri: http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time, id: 2}, {uri: http://www.webrtc.org/experiments/rtp-hdrext/color-space, id: 8}, {uri: http://www.webrtc.org/experiments/rtp-hdrext/playout-delay, id: 5}, {uri: http://www.webrtc.org/experiments/rtp-hdrext/video-content-type, id: 6}, {uri: http://www.webrtc.org/experiments/rtp-hdrext/video-timing, id: 7}, {uri: urn:3gpp:video-orientation, id: 13}, {uri: urn:ietf:params:rtp-hdrext:sdes:mid, id: 4}, {uri: urn:ietf:params:rtp-hdrext:sdes:repaired-rtp-stream-id, id: 11}, {uri: urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id, id: 10}], lntf: {enabled: false}, nack: {rtp_history_ms: 1000}, ulpfec: {ulpfec_payload_type: 121, red_payload_type: 119, red_rtx_payload_type: 120}, payload_name: VP8, payload_type: 96, raw_payload: false, stream_configs: [{ssrc: 2684106432, rid: , payload_name: VP8, payload_type: 96, raw_payload: false, rtx: {ssrc: 3566388371, payload_type: 97}}], flexfec: {payload_type: -1, ssrc: 0, protected_media_ssrcs: []}, rtx: {ssrcs: [3566388371], payload_type: 97}, c_name: nlfSMGkKTXxe/XRW}, rtcp_report_interval_ms: 1000, send_transport: (Transport), render_delay_ms: 0, target_delay_ms: 0, suspend_below_min_bitrate: off}
+(video_send_stream_impl.cc:748): VideoSendStreamImpl::Stop
+(video_stream_encoder.cc:1006): ConfigureEncoder requested.
+(webrtc_video_engine.cc:2987): SetReceiverParameters: {codecs: [VideoCodec[96:VP8], VideoCodec[97:rtx], VideoCodec[103:H264], VideoCodec[104:rtx], VideoCodec[107:H264], VideoCodec[108:rtx], VideoCodec[109:H264], VideoCodec[114:rtx], VideoCodec[115:H264], VideoCodec[116:rtx], VideoCodec[117:H264], VideoCodec[118:rtx], VideoCodec[39:H264], VideoCodec[40:rtx], VideoCodec[45:AV1], VideoCodec[46:rtx], VideoCodec[98:VP9], VideoCodec[99:rtx], VideoCodec[100:VP9], VideoCodec[101:rtx], VideoCodec[119:red], VideoCodec[120:rtx], VideoCodec[121:ulpfec]], extensions: [{uri: http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01, id: 3}, {uri: http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time, id: 2}, {uri: http://www.webrtc.org/experiments/rtp-hdrext/color-space, id: 8}, {uri: http://www.webrtc.org/experiments/rtp-hdrext/playout-delay, id: 5}, {uri: http://www.webrtc.org/experiments/rtp-hdrext/video-content-type, id: 6}, {uri: http://www.webrtc.org/experiments/rtp-hdrext/video-timing, id: 7}, {uri: urn:3gpp:video-orientation, id: 13}, {uri: urn:ietf:params:rtp-hdrext:sdes:mid, id: 4}, {uri: urn:ietf:params:rtp-hdrext:sdes:repaired-rtp-stream-id, id: 11}, {uri: urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id, id: 10}, {uri: urn:ietf:params:rtp-hdrext:toffset, id: 14}], rtcp: {reduced_size:1, remote_estimate:0}}
+(video_send_stream_impl.cc:748): VideoSendStreamImpl::Stop
+(channel.cc:633): Changing state, recv=1 send=0 for {mid: 1, media_type: video}
+(connection.cc:268): Conn[fc0272d0:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:Qhwwz8te:1:0:relay:udp:172.18.0.x:49646->UlJwDkfP:1:2122260223:host:udp:172.18.0.x:49087|C--W|-|0|0|251955288477679102|-]: Connection created
+(peer_connection.cc:1907): Changing IceConnectionState new => checking
+(turn_port.cc:1680): Port[fc0101e0:0:1:0:relay:Net[eth0:172.18.0.x/16:Ethernet:id=1]]: TURN create permission request sent, id=554830344c65437a477a3551
+(p2p_transport_channel.cc:1496): Channel[0|1|R_: Created connection with origin: 2, total: 3
+(connection.cc:268): Conn[fc027e30:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:LkpVWcYe:1:0:host:tcp:172.18.0.x:34055->+VNGsbCe:1:1518280447:host:tcp:172.18.0.x:41465|C--W|-|0|0|6520964869057822206|-]: Connection created
+(p2p_transport_channel.cc:1496): Channel[0|1|R_: Created connection with origin: 2, total: 4
+(sdp_offer_answer.cc:2564): Processing the MSIDs for MID=0 (streams=[c32bd0ff-15f3-41ea-8733-330e1d99f3d3]).
+(sdp_offer_answer.cc:2574): Processing the addition of a remote track for MID=0.
+(rtp_transceiver.cc:891): Changing transceiver (MID=0) current direction from <not set> to kSendRecv
+(rtp_transceiver.cc:891): Changing transceiver (MID=1) current direction from <not set> to kSendOnly
+(webrtc_voice_engine.cc:2557): SetBaseMinimumPlayoutDelayMs() to 0 for recv stream with ssrc 496228560
+(webrtc_voice_engine.cc:2508): WRVMC::SetOutputVolume({ssrc=496228560}, {volume=1.00})
+(webrtc_voice_engine.cc:2518): WRVMC::SetOutputVolume => (stream with SSRC 496228560 now uses volume 1.00)
+(rtc_audio_track_impl.cc:8): AudioTrackImpl: ctor 
+(rtc_audio_track_impl.cc:8): AudioTrackImpl: ctor 
+(rtc_audio_track_impl.cc:8): AudioTrackImpl: ctor 
+(rtc_audio_track_impl.cc:14): ~AudioTrackImpl: dtor 
+(rtc_audio_track_impl.cc:8): AudioTrackImpl: ctor 
+(rtc_audio_track_impl.cc:14): ~AudioTrackImpl: dtor 
+(transparent_mode.cc:243): AEC3 Transparent Mode: Legacy
+(echo_canceller3.cc:820): AEC3 created with sample rate: 32000 Hz, num render channels: 2, num capture channels: 1
+(rtc_audio_track_impl.cc:8): AudioTrackImpl: ctor 
+(rtc_audio_track_impl.cc:14): ~AudioTrackImpl: dtor 
+(rtc_audio_track_impl.cc:8): AudioTrackImpl: ctor 
+(rtc_audio_track_impl.cc:14): ~AudioTrackImpl: dtor 
+(rtc_media_stream_impl.cc:32): ~MediaStreamImpl: dtor 
+(rtc_audio_track_impl.cc:14): ~AudioTrackImpl: dtor 
+(rtc_audio_track_impl.cc:8): AudioTrackImpl: ctor 
+(rtc_audio_track_impl.cc:8): AudioTrackImpl: ctor 
+(rtc_audio_track_impl.cc:14): ~AudioTrackImpl: dtor 
+(rtc_media_stream_impl.cc:32): ~MediaStreamImpl: dtor 
+(rtc_audio_track_impl.cc:14): ~AudioTrackImpl: dtor 
+(rtc_peerconnection_impl.cc:265): OnAddStream c32bd0ff-15f3-41ea-8733-330e1d99f3d3
+(rtc_audio_track_impl.cc:8): AudioTrackImpl: ctor 
+(rtc_peerconnection_impl.cc:159): OnSetRemoteDescriptionComplete
+(basic_ice_controller.cc:258): Selecting connection for triggered check: Conn[fc049200:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:w0s0Vb4G:1:0:host:udp:172.18.0.x:44484->UlJwDkfP:1:2122260223:host:udp:172.18.0.x:49087|CR-W|-|0|0|9115038255631187454|-]
+(connection.cc:1649): Conn[fc049200:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:w0s0Vb4G:1:0:host:udp:172.18.0.x:44484->UlJwDkfP:1:2122260223:host:udp:172.18.0.x:49087|CR-W|-|0|0|9115038255631187454|-]: Sent STUN BINDING request, id=545763513641687a74674873, use_candidate=1, nomination=0
+(connection.cc:1649): Conn[fc0272d0:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:Qhwwz8te:1:0:relay:udp:172.18.0.x:49646->UlJwDkfP:1:2122260223:host:udp:172.18.0.x:49087|C--W|-|0|0|251955288477679102|-]: Sent STUN BINDING request, id=535371463950767a48677732, use_candidate=1, nomination=0
+(connection.cc:1649): Conn[fc04bdf0:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:LkpVWcYe:1:0:host:tcp:172.18.0.x:34055->z1zUsbMw:1:1350508287:prflx:tcp:172.18.0.x:34253|CR-I|-|0|0|5800388928678542847|-]: Sent STUN BINDING request, id=57564471524d655255776730, use_candidate=1, nomination=0
+(connection.cc:1649): Conn[fc049200:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:w0s0Vb4G:1:0:host:udp:172.18.0.x:44484->UlJwDkfP:1:2122260223:host:udp:172.18.0.x:49087|CR-I|-|0|0|9115038255631187454|-]: Sent STUN BINDING request, id=69466f45524a626237684d42, use_candidate=1, nomination=0
+(connection.cc:558): Conn[fc04bdf0:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:LkpVWcYe:1:0:host:tcp:172.18.0.x:34055->z1zUsbMw:1:1350508287:prflx:tcp:172.18.0.x:34253|CR-I|-|0|0|5800388928678542847|-]: Received STUN BINDING request, id=71476666766f48313574486a
+(connection.cc:879): Conn[fc04bdf0:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:LkpVWcYe:1:0:host:tcp:172.18.0.x:34055->z1zUsbMw:1:1350508287:prflx:tcp:172.18.0.x:34253|CR-I|-|0|0|5800388928678542847|-]: Sent STUN BINDING response, to=172.18.0.x:34253, id=71476666766f48313574486a
+(basic_ice_controller.cc:258): Selecting connection for triggered check: Conn[fc04bdf0:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:LkpVWcYe:1:0:host:tcp:172.18.0.x:34055->z1zUsbMw:1:1350508287:prflx:tcp:172.18.0.x:34253|CR-I|-|0|0|5800388928678542847|-]
+(connection.cc:1649): Conn[fc04bdf0:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:LkpVWcYe:1:0:host:tcp:172.18.0.x:34055->z1zUsbMw:1:1350508287:prflx:tcp:172.18.0.x:34253|CR-I|-|0|0|5800388928678542847|-]: Sent STUN BINDING request, id=4a6c6155674b4e5032513553, use_candidate=1, nomination=0
+(turn_port.cc:1680): Port[fc0101e0:0:1:0:relay:Net[eth0:172.18.0.x/16:Ethernet:id=1]]: TURN create permission request sent, id=554830344c65437a477a3551
+(connection.cc:1649): Conn[fc0272d0:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:Qhwwz8te:1:0:relay:udp:172.18.0.x:49646->UlJwDkfP:1:2122260223:host:udp:172.18.0.x:49087|C--I|-|0|0|251955288477679102|-]: Sent STUN BINDING request, id=784e4374753737453954554e, use_candidate=1, nomination=0
+(connection.cc:1649): Conn[fc049200:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:w0s0Vb4G:1:0:host:udp:172.18.0.x:44484->UlJwDkfP:1:2122260223:host:udp:172.18.0.x:49087|CR-I|-|0|0|9115038255631187454|-]: Sent STUN BINDING request, id=48712b2b3949695132733173, use_candidate=1, nomination=0
+(connection.cc:558): Conn[fc049200:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:w0s0Vb4G:1:0:host:udp:172.18.0.x:44484->UlJwDkfP:1:2122260223:host:udp:172.18.0.x:49087|CR-I|-|0|0|9115038255631187454|-]: Received STUN BINDING request, id=777446577341346a45464a6a
+(connection.cc:879): Conn[fc049200:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:w0s0Vb4G:1:0:host:udp:172.18.0.x:44484->UlJwDkfP:1:2122260223:host:udp:172.18.0.x:49087|CR-I|-|0|0|9115038255631187454|-]: Sent STUN BINDING response, to=172.18.0.x:49087, id=777446577341346a45464a6a
+(basic_ice_controller.cc:258): Selecting connection for triggered check: Conn[fc049200:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:w0s0Vb4G:1:0:host:udp:172.18.0.x:44484->UlJwDkfP:1:2122260223:host:udp:172.18.0.x:49087|CR-I|-|0|0|9115038255631187454|-]
+(connection.cc:1649): Conn[fc049200:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:w0s0Vb4G:1:0:host:udp:172.18.0.x:44484->UlJwDkfP:1:2122260223:host:udp:172.18.0.x:49087|CR-I|-|0|0|9115038255631187454|-]: Sent STUN BINDING request, id=494e496f41782f542b344b4e, use_candidate=1, nomination=0
+(connection.cc:558): Conn[fc04bdf0:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:LkpVWcYe:1:0:host:tcp:172.18.0.x:34055->z1zUsbMw:1:1350508287:prflx:tcp:172.18.0.x:34253|CR-I|-|0|0|5800388928678542847|-]: Received STUN BINDING request, id=6e7767796431783668346262
+(connection.cc:879): Conn[fc04bdf0:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:LkpVWcYe:1:0:host:tcp:172.18.0.x:34055->z1zUsbMw:1:1350508287:prflx:tcp:172.18.0.x:34253|CR-I|-|0|0|5800388928678542847|-]: Sent STUN BINDING response, to=172.18.0.x:34253, id=6e7767796431783668346262
+(basic_ice_controller.cc:258): Selecting connection for triggered check: Conn[fc04bdf0:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:LkpVWcYe:1:0:host:tcp:172.18.0.x:34055->z1zUsbMw:1:1350508287:prflx:tcp:172.18.0.x:34253|CR-I|-|0|0|5800388928678542847|-]
+(connection.cc:1649): Conn[fc04bdf0:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:LkpVWcYe:1:0:host:tcp:172.18.0.x:34055->z1zUsbMw:1:1350508287:prflx:tcp:172.18.0.x:34253|CR-I|-|0|0|5800388928678542847|-]: Sent STUN BINDING request, id=4b647a505a7a382f61306131, use_candidate=1, nomination=0
+(connection.cc:1649): Conn[fc0272d0:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:Qhwwz8te:1:0:relay:udp:172.18.0.x:49646->UlJwDkfP:1:2122260223:host:udp:172.18.0.x:49087|C--I|-|0|0|251955288477679102|-]: Sent STUN BINDING request, id=576f614c4133614e54552b6b, use_candidate=1, nomination=0
+(connection.cc:558): Conn[fc049200:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:w0s0Vb4G:1:0:host:udp:172.18.0.x:44484->UlJwDkfP:1:2122260223:host:udp:172.18.0.x:49087|CR-I|-|0|0|9115038255631187454|-]: Received STUN BINDING request, id=2b4b61334a6561554a6d5078
+(connection.cc:879): Conn[fc049200:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:w0s0Vb4G:1:0:host:udp:172.18.0.x:44484->UlJwDkfP:1:2122260223:host:udp:172.18.0.x:49087|CR-I|-|0|0|9115038255631187454|-]: Sent STUN BINDING response, to=172.18.0.x:49087, id=2b4b61334a6561554a6d5078
+(basic_ice_controller.cc:258): Selecting connection for triggered check: Conn[fc049200:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:w0s0Vb4G:1:0:host:udp:172.18.0.x:44484->UlJwDkfP:1:2122260223:host:udp:172.18.0.x:49087|CR-I|-|0|0|9115038255631187454|-]
+(connection.cc:1649): Conn[fc049200:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:w0s0Vb4G:1:0:host:udp:172.18.0.x:44484->UlJwDkfP:1:2122260223:host:udp:172.18.0.x:49087|CR-I|-|0|0|9115038255631187454|-]: Sent STUN BINDING request, id=356c53724f4f4b7746636a76, use_candidate=1, nomination=0
+(connection.cc:1525): Conn[fc04bdf0:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:LkpVWcYe:1:0:host:tcp:172.18.0.x:34055->z1zUsbMw:1:1350508287:prflx:tcp:172.18.0.x:34253|CR-I|-|0|0|5800388928678542847|-]: Received STUN BINDING response, id=7150763878684b38765a3176, code=0, rtt=548757 us, pings_since_last_response=7150763878684b38765a3176 57564471524d655255776730 4a6c6155674b4e5032513553 4b647a505a7a382f61306131 
+(wrapping_active_ice_controller.cc:189): Switching selected connection due to: candidate pair state changed
+(p2p_transport_channel.cc:1867): Channel[0|1|R_: New selected connection: Conn[fc04bdf0:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:LkpVWcYe:1:0:host:tcp:172.18.0.x:34055->z1zUsbMw:1:1350508287:prflx:tcp:172.18.0.x:34253|CRWS|S|0|0|5800388928678542847|549]
+(rtp_transceiver.cc:1431): Network route changed for mid=0
+(rtp_transceiver.cc:1431): Network route changed for mid=1
+(connection.cc:913): Conn[fc0272d0:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:Qhwwz8te:1:0:relay:udp:172.18.0.x:49646->UlJwDkfP:1:2122260223:host:udp:172.18.0.x:49087|C--I|-|0|0|251955288477679102|-]: Connection pruned
+(dtls_transport.cc:821): DtlsTransport[0|1|__]: ice_transport writable state changed to 1 dtls_state: kNew
+(dtls_transport.cc:1219): DtlsTransport[0|1|__]: configuring DTLS handshake timeout 1098ms based on ICE RTT 549
+(dtls_transport.cc:1069): DtlsTransport[0|1|__]: DtlsTransportInternalImpl: Start DTLS handshake active=1 role=server
+(openssl_adapter.cc:825): TLS server start_accept
+(openssl_adapter.cc:825): TLS server read_client_hello
+(openssl_adapter.cc:825): TLS server read_client_hello
+(srtp_transport.cc:285): The params in SRTP transport are reset.
+(dtls_transport.cc:1092): DtlsTransport[0|1|__]: Handling #3 cached DTLS ClientHello packet(s).
+(openssl_adapter.cc:825): TLS server read_client_hello_after_ech
+(openssl_adapter.cc:825): TLS server cert_callback
+(openssl_adapter.cc:825): TLS 1.3 server select_parameters
+(openssl_adapter.cc:825): TLS 1.3 server select_session
+(openssl_adapter.cc:825): TLS 1.3 server send_server_hello
+(openssl_adapter.cc:825): TLS 1.3 server send_server_certificate_verify
+(openssl_adapter.cc:825): TLS 1.3 server send_server_finished
+(openssl_adapter.cc:825): TLS 1.3 server send_half_rtt_ticket
+(openssl_adapter.cc:825): TLS 1.3 server read_second_client_flight
+(openssl_adapter.cc:825): TLS 1.3 server process_end_of_early_data
+(openssl_adapter.cc:825): TLS 1.3 server read_client_encrypted_extensions
+(openssl_adapter.cc:825): TLS 1.3 server read_client_certificate
+(openssl_adapter.cc:825): TLS 1.3 server read_client_certificate
+(openssl_adapter.cc:825): TLS 1.3 server read_client_certificate
+(openssl_adapter.cc:825): TLS 1.3 server read_client_certificate
+(jsep_transport_controller.cc:1366): 0 Transport 1 state changed. Check if state is complete.
+(rtp_transport_controller_send.cc:354): Network route changed on transport 0: new_route = [ connected: 1 local: [ 1/1 Ethernet turn: 0 ] remote: [ 1/1 Ethernet turn: 0 ] packet_overhead_bytes: 40 ]
+(peer_connection.cc:1929): Changing standardized IceConnectionState checking => connected
+(turn_port.cc:1687): Port[fc0101e0:0:1:0:relay:Net[eth0:172.18.0.x/16:Ethernet:id=1]]: TURN permission requested successfully, id=554830344c65437a477a3551, code=0, rtt=305309 us
+(turn_port.cc:1874): Port[fc0101e0:0:1:0:relay:Net[eth0:172.18.0.x/16:Ethernet:id=1]]: Create permission for 172.18.0.x:49087 succeeded
+(turn_port.cc:1888): Port[fc0101e0:0:1:0:relay:Net[eth0:172.18.0.x/16:Ethernet:id=1]]: Scheduled create-permission-request in 240000ms.
+(connection.cc:1525): Conn[fc049200:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:w0s0Vb4G:1:0:host:udp:172.18.0.x:44484->UlJwDkfP:1:2122260223:host:udp:172.18.0.x:49087|CR-I|-|0|0|9115038255631187454|-]: Received STUN BINDING response, id=545763513641687a74674873, code=0, rtt=541175 us, pings_since_last_response=545763513641687a74674873 69466f45524a626237684d42 48712b2b3949695132733173 494e496f41782f542b344b4e 356c53724f4f4b7746636a76 
+(wrapping_active_ice_controller.cc:189): Switching selected connection due to: candidate pair state changed
+(p2p_transport_channel.cc:1864): Channel[0|1|RW: Previous selected connection: Conn[fc04bdf0:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:LkpVWcYe:1:0:host:tcp:172.18.0.x:34055->z1zUsbMw:1:1350508287:prflx:tcp:172.18.0.x:34253|CRWS|-|0|0|5800388928678542847|549]
+(p2p_transport_channel.cc:1867): Channel[0|1|RW: New selected connection: Conn[fc049200:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:w0s0Vb4G:1:0:host:udp:172.18.0.x:44484->UlJwDkfP:1:2122260223:host:udp:172.18.0.x:49087|CRWS|S|0|0|9115038255631187454|541]
+(rtp_transceiver.cc:1431): Network route changed for mid=0
+(rtp_transceiver.cc:1431): Network route changed for mid=1
+(rtp_transport_controller_send.cc:354): Network route changed on transport 0: new_route = [ connected: 1 local: [ 1/1 Ethernet turn: 0 ] remote: [ 1/1 Ethernet turn: 0 ] packet_overhead_bytes: 28 ]
+(rtp_transport_controller_send.cc:357): old_route = [ connected: 1 local: [ 1/1 Ethernet turn: 0 ] remote: [ 1/1 Ethernet turn: 0 ] packet_overhead_bytes: 40 ]
+(connection.cc:913): Conn[fc04bdf0:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:LkpVWcYe:1:0:host:tcp:172.18.0.x:34055->z1zUsbMw:1:1350508287:prflx:tcp:172.18.0.x:34253|CRWS|-|0|0|5800388928678542847|549]: Connection pruned
+(connection.cc:913): Conn[fc027e30:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:LkpVWcYe:1:0:host:tcp:172.18.0.x:34055->+VNGsbCe:1:1518280447:host:tcp:172.18.0.x:41465|C--W|-|0|0|6520964869057822206|-]: Connection pruned
+(p2p_transport_channel.cc:1952): Channel[0|1|RW: Transport channel state changed from 1 to 2
+(jsep_transport_controller.cc:1366): 0 Transport 1 state changed. Check if state is complete.
+(connection.cc:558): Conn[fc0272d0:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:Qhwwz8te:1:0:relay:udp:172.18.0.x:49646->UlJwDkfP:1:2122260223:host:udp:172.18.0.x:49087|C-xI|-|0|0|251955288477679102|-]: Received STUN BINDING request, id=6a50454d766759684d5a5351
+(connection.cc:879): Conn[fc0272d0:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:Qhwwz8te:1:0:relay:udp:172.18.0.x:49646->UlJwDkfP:1:2122260223:host:udp:172.18.0.x:49087|CRxI|-|0|0|251955288477679102|-]: Sent STUN BINDING response, to=172.18.0.x:49087, id=6a50454d766759684d5a5351
+(openssl_stream_adapter.cc:903): DTLS retransmission
+(openssl_adapter.cc:825): TLS 1.3 server read_client_certificate
+(openssl_adapter.cc:825): TLS 1.3 server read_client_certificate_verify
+(openssl_adapter.cc:825): TLS 1.3 server read_channel_id
+(openssl_adapter.cc:825): TLS 1.3 server read_client_finished
+(openssl_adapter.cc:825): TLS 1.3 server send_new_session_ticket
+(openssl_adapter.cc:825): TLS 1.3 server done
+(openssl_adapter.cc:825): TLS server finish_server_handshake
+(openssl_adapter.cc:825): TLS server done
+(openssl_adapter.cc:825): TLS server done
+(openssl_adapter.cc:825): TLS server done
+(dtls_transport.cc:995): DtlsTransport[0|1|__]: DTLS handshake complete.
+(jsep_transport_controller.cc:1304):  Transport 0 writability changed to 1.
+(call.cc:1258): UpdateAggregateNetworkState: aggregate_state change to up
+(pacing_controller.cc:120): PacedSender resumed.
+(rtp_transport_controller_send.cc:811): Creating Goog CC Factory.
+(peer_connection.cc:2514): Changing to ICE completed state because all transports are complete.
+(peer_connection.cc:1907): Changing IceConnectionState checking => connected
+(dtls_srtp_transport.cc:254): Extracting keys from transport: 0
+(alr_experiment.cc:69): Using ALR experiment settings: pacing factor: 1, max pacer queue length: 2875, ALR bandwidth usage percent: 80, ALR start budget level percent: 40, ALR end budget level percent: -60, ALR experiment group ID: 3
+(trendline_estimator.cc:185): Using Trendline filter for delay change estimation with settings sort:false,cap:false,beginning_packets:7,end_packets:7,cap_uncertainty:0,window_size:20 and no network state predictor
+(trendline_estimator.cc:185): Using Trendline filter for delay change estimation with settings sort:false,cap:false,beginning_packets:7,end_packets:7,cap_uncertainty:0,window_size:20 and no network state predictor
+(aimd_rate_control.cc:88): Using aimd rate control with back off factor 0.85
+(delay_based_bwe.cc:90): Initialized DelayBasedBwe with separate audio overuse detectionenabled:false,packet_threshold:10,time_threshold:1 s
+(delay_based_bwe.cc:295): BWE Setting start bitrate to: 300 kbps
+(bitrate_allocator.cc:500): Current BWE 300000
+(bitrate_prober.cc:130): Probe cluster (bitrate_bps:min bytes:min packets): (900 kbps:1688:5, Inactive)
+(bitrate_prober.cc:130): Probe cluster (bitrate_bps:min bytes:min packets): (1800 kbps:3375:5, Inactive)
+(pacing_controller.cc:301): Elapsed time (23914296 us) longer than expected, limiting to 2 s
+(peer_connection.cc:1907): Changing IceConnectionState connected => completed
+(peer_connection.cc:1929): Changing standardized IceConnectionState connected => completed
+(srtp_transport.cc:220): SRTP activated with negotiated parameters: send crypto_suite 1 recv crypto_suite 1 cryptex 0/0
+(channel.cc:875): Channel writable ({mid: 0, media_type: audio}) for the first time
+(channel.cc:875): Channel writable ({mid: 1, media_type: video}) for the first time
+(webrtc_voice_engine.cc:609): WebRtcVoiceEngine::ApplyOptions: AudioOptions {aec: 1, agc: 1, ns: 1, hf: 0, audio_jitter_buffer_max_packets: 200, audio_jitter_buffer_fast_accelerate: 0, audio_jitter_buffer_min_delay_ms: 0, }
+(audio_device_impl.cc:831): BuiltInAECIsAvailable
+(audio_device_impl.cc:834): output: 0
+(audio_device_impl.cc:847): BuiltInAGCIsAvailable
+(audio_device_impl.cc:850): output: 0
+(audio_device_impl.cc:863): BuiltInNSIsAvailable
+(audio_device_impl.cc:866): output: 0
+(audio_processing_impl.cc:685): AudioProcessing::ApplyConfig: AudioProcessing::Config{ pipeline: { maximum_internal_processing_rate: 32000, multi_channel_render: 1, multi_channel_capture: 1 }, pre_amplifier: { enabled: 0, fixed_gain_factor: 1 },capture_level_adjustment: { enabled: 0, pre_gain_factor: 1, post_gain_factor: 1, analog_mic_gain_emulation: { enabled: 0, initial_level: 255 }}, high_pass_filter: { enabled: 0 }, echo_canceller: { enabled: 1, enforce_high_pass_filtering: 1 }, noise_suppression: { enabled: 1, level: High }, transient_suppression: { enabled: 0 }, gain_controller1: { enabled: 1, mode: AdaptiveAnalog, target_level_dbfs: 3, compression_gain_db: 9, enable_limiter: 1, analog_gain_controller { enabled: 1, startup_min_volume: 0, clipped_level_min: 70, enable_digital_adaptive: 1, clipped_level_step: 15, clipped_ratio_threshold: 0.1, clipped_wait_frames: 300, clipping_predictor:  { enabled: 0, mode: 0, window_length: 5, reference_window_length: 5, reference_window_delay: 5, clipping_threshold: -1, crest_factor_margin: 3, use_predicted_step: 1 }}}, gain_controller2: { enabled: 0, fixed_digital: { gain_db: 0 }, adaptive_digital: { enabled: 0, headroom_db: 5, max_gain_db: 50, initial_gain_db: 15, max_gain_change_db_per_second: 6, max_output_noise_level_dbfs: -50 }, input_volume_control : { enabled 0}}
+(webrtc_voice_engine.cc:649): Applied audio processing options: AudioOptions {aec: 1, agc: 1, ns: 1, hf: 0, audio_jitter_buffer_max_packets: 200, audio_jitter_buffer_fast_accelerate: 0, audio_jitter_buffer_min_delay_ms: 0, }
+(audio_device_impl.cc:746): RecordingIsInitialized
+(audio_send_stream.cc:366): AudioSendStream::Start: 2253650649
+(audio_device_impl.cc:808): Recording
+(channel.cc:633): Changing state, recv=1 send=1 for {mid: 0, media_type: audio}
+(channel.cc:633): Changing state, recv=1 send=1 for {mid: 1, media_type: video}
+(webrtc_video_engine.cc:2520): VideoSendStream stats: 312089609, {input_fps: 0.0, encode_fps: 0, encode_ms: 0, encode_usage_perc: 0, target_bps: 0, media_bps: 0, suspended: false, bw_adapted_res: false, cpu_adapted_res: false, bw_adapted_fps: false, cpu_adapted_fps: false, #cpu_adaptations: 0, #quality_adaptations: 0} {ssrc: 2684106432, type: media, width: 0, height: 0, key: 0, delta: 0, total_bps: 0, retransmit_bps: 0, avg_delay_ms: 0, max_delay_ms: 0, nack: 0, fir: 0, pli: 0}
+(webrtc_video_engine.cc:1689): Call stats: 312089609, {send_bw_bps: 300000, recv_bw_bps: 0, max_pad_bps: 0, pacer_delay_ms: 0, rtt_ms: -1}
+(rtp_sender_audio.cc:270): First audio RTP packet sent to pacer
+(data_channel_controller.cc:499): AllocateSctpSids: Id assigned, ready to send.
+(probe_controller.cc:485): kWaitingForProbingResult: timeout
+(sctp_data_channel.cc:703): DataChannel received OPEN_ACK message, sid = 1
+(audio_device_pulse_linux.cc:1872): Playout underflow
+(audio_device_buffer.cc:480): [REC : 10000msec, 44kHz] callbacks: 1001, samples: 441441, rate: 44144, rate diff: 0%, level: 3609
+(audio_device_buffer.cc:506): [PLAY: 10000msec, 44kHz] callbacks: 534, samples: 235494, rate: 23549, rate diff: 47%, level: 3
+(bitrate_allocator.cc:500): Current BWE 300000
+(p2p_transport_channel.cc:2166): Channel[0|1|RW: Removed connection fc027e30 (3 remaining)
+(webrtc_video_engine.cc:2520): VideoSendStream stats: 312101766, {input_fps: 0.0, encode_fps: 0, encode_ms: 0, encode_usage_perc: 0, target_bps: 0, media_bps: 0, suspended: false, bw_adapted_res: false, cpu_adapted_res: false, bw_adapted_fps: false, cpu_adapted_fps: false, #cpu_adaptations: 0, #quality_adaptations: 0} {ssrc: 2684106432, type: media, width: 0, height: 0, key: 0, delta: 0, total_bps: 0, retransmit_bps: 0, avg_delay_ms: 0, max_delay_ms: 0, nack: 0, fir: 0, pli: 0}
+(webrtc_video_engine.cc:1689): Call stats: 312101766, {send_bw_bps: 325000, recv_bw_bps: 0, max_pad_bps: 0, pacer_delay_ms: 0, rtt_ms: 435}
+(thread.cc:551): Message to worker_thread took 447ms to dispatch.
+(webrtc_video_engine.cc:1549): SetVideoSend (ssrc= 2684106432, options: VideoOptions {is_screencast : 0, }, source = (source))
+(video_send_stream_impl.cc:619): Encoder config: {codec_type: VP8, content_type: kRealtimeVideo, frame_drop_enabled: 1, encoder_specific_settings: (ptr), min_transmit_bitrate_bps: 0, number_of_streams: 1, legacy_conference_mode: 0, is_quality_scaling_allowed: 1, max_qp: -1, simulcast_layers[0]: {width: 0, height: 0, max_framerate: -1, min_bitrate_bps:-1, target_bitrate_bps:-1, max_bitrate_bps:-1, max_qp: -1, num_temporal_layers: 1, bitrate_priority: 0, active: 1, scale_down_by: -1}} VideoSendStream config: {encoder_settings: { experiment_cpu_load_estimator: off}}, rtp: {ssrcs: [2684106432], rids: [], mid: '1', rtcp_mode: RtcpMode::kReducedSize, max_packet_size: 1200, extmap-allow-mixed: true, extensions: [{uri: http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01, id: 3}, {uri: http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time, id: 2}, {uri: http://www.webrtc.org/experiments/rtp-hdrext/color-space, id: 8}, {uri: http://www.webrtc.org/experiments/rtp-hdrext/playout-delay, id: 5}, {uri: http://www.webrtc.org/experiments/rtp-hdrext/video-content-type, id: 6}, {uri: http://www.webrtc.org/experiments/rtp-hdrext/video-timing, id: 7}, {uri: urn:3gpp:video-orientation, id: 13}, {uri: urn:ietf:params:rtp-hdrext:sdes:mid, id: 4}, {uri: urn:ietf:params:rtp-hdrext:sdes:repaired-rtp-stream-id, id: 11}, {uri: urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id, id: 10}], lntf: {enabled: false}, nack: {rtp_history_ms: 1000}, ulpfec: {ulpfec_payload_type: 121, red_payload_type: 119, red_rtx_payload_type: 120}, payload_name: VP8, payload_type: 96, raw_payload: false, stream_configs: [{ssrc: 2684106432, rid: , payload_name: VP8, payload_type: 96, raw_payload: false, rtx: {ssrc: 3566388371, payload_type: 97}}], flexfec: {payload_type: -1, ssrc: 0, protected_media_ssrcs: []}, rtx: {ssrcs: [3566388371], payload_type: 97}, c_name: nlfSMGkKTXxe/XRW}, rtcp_report_interval_ms: 1000, send_transport: (Transport), render_delay_ms: 0, target_delay_ms: 0, suspend_below_min_bitrate: off}
+(video_stream_encoder.cc:1006): ConfigureEncoder requested.
+(video_stream_encoder.cc:1937): Video frame parameters changed: dimensions=1280x720, texture=0.
+(video_stream_encoder.cc:1067): [VSE] ReconfigureEncoder [encoder_config={codec_type: VP8, content_type: kRealtimeVideo, frame_drop_enabled: 1, encoder_specific_settings: (ptr), min_transmit_bitrate_bps: 0, number_of_streams: 1, legacy_conference_mode: 0, is_quality_scaling_allowed: 1, max_qp: -1, simulcast_layers[0]: {width: 0, height: 0, max_framerate: -1, min_bitrate_bps:-1, target_bitrate_bps:-1, max_bitrate_bps:-1, max_qp: -1, num_temporal_layers: 1, bitrate_priority: 0, active: 1, scale_down_by: -1}}]
+(sdp_video_format.cc:280): Matched SdpVideoFormat Codec name: VP8, parameters: { } with Codec name: VP8, parameters: { }, scalability_modes: [L1T1, L1T2, L1T3]
+(video_stream_encoder.cc:1321): [VSE] ReconfigureEncoder: simulcast streams: {0: 1280x720 L1T1, min_kbps: 30, target_kbps: 2500, max_kbps: 2500, max_fps: 60, max_qp: 56, num_tl: 1, active: true}
+(simulcast_encoder_adapter.cc:444): [SEA] InitEncode: total_streams_count: 1, active_streams_count: 1, separate_encoders_needed: true
+(simulcast_encoder_adapter.cc:451): [SEA] InitEncode: Single-encoder mode
+(resource_adaptation_processor.cc:128): Registered resource "EncoderUsageResource".
+(quality_scaling_experiment.cc:53): QP thresholds: low: 29, high: 95
+(quality_scaler.cc:221): QP thresholds: low: 29, high: 95
+(resource_adaptation_processor.cc:128): Registered resource "QualityScalerResource".
+(video_stream_encoder.cc:1984): Dropping frame. Too large for target bitrate.
+(video_stream_adapter.cc:499): Scaling down resolution, max pixels: 552960
+(video_stream_encoder_resource_manager.cc:723): Downgrade counts: fps: {quality:0cpu:0}, resolution {quality:1cpu:0}
+(video_stream_encoder.cc:2601): Updating sink restrictions from QualityScalerResource to { max_pixels_per_frame=552960 }
+(video_stream_encoder.cc:1984): Dropping frame. Too large for target bitrate.
+(bitrate_allocator.cc:687): UpdateAllocationLimits : total_requested_min_bitrate: 30 kbps, total_requested_padding_bitrate: 0 bps, total_requested_max_bitrate: 2500 kbps
+(video_stream_encoder.cc:2540): Video suspend state changed to: not suspended
+(video_adapter.cc:285): Frame size changed: scaled 1 / out 1484 / in 1484 Changes: 2 Input: 1280x720 Scale: 3/4 Output: 960x540 fps: 2147483647/-1 alignment: 1
+(video_stream_encoder.cc:1937): Video frame parameters changed: dimensions=960x540, texture=0.
+(video_stream_encoder.cc:1067): [VSE] ReconfigureEncoder [encoder_config={codec_type: VP8, content_type: kRealtimeVideo, frame_drop_enabled: 1, encoder_specific_settings: (ptr), min_transmit_bitrate_bps: 0, number_of_streams: 1, legacy_conference_mode: 0, is_quality_scaling_allowed: 1, max_qp: -1, simulcast_layers[0]: {width: 0, height: 0, max_framerate: -1, min_bitrate_bps:-1, target_bitrate_bps:-1, max_bitrate_bps:-1, max_qp: -1, num_temporal_layers: 1, bitrate_priority: 0, active: 1, scale_down_by: -1}}]
+(video_stream_encoder.cc:1321): [VSE] ReconfigureEncoder: simulcast streams: {0: 960x540 L1T1, min_kbps: 30, target_kbps: 2000, max_kbps: 2000, max_fps: 60, max_qp: 56, num_tl: 1, active: true}
+(simulcast_encoder_adapter.cc:444): [SEA] InitEncode: total_streams_count: 1, active_streams_count: 1, separate_encoders_needed: true
+(simulcast_encoder_adapter.cc:451): [SEA] InitEncode: Single-encoder mode
+(video_stream_encoder.cc:1984): Dropping frame. Too large for target bitrate.
+(bitrate_allocator.cc:687): UpdateAllocationLimits : total_requested_min_bitrate: 30 kbps, total_requested_padding_bitrate: 0 bps, total_requested_max_bitrate: 2000 kbps
+(video_stream_adapter.cc:499): Scaling down resolution, max pixels: 311040
+(video_stream_encoder_resource_manager.cc:723): Downgrade counts: fps: {quality:0cpu:0}, resolution {quality:2cpu:0}
+(video_stream_encoder.cc:2601): Updating sink restrictions from QualityScalerResource to { max_pixels_per_frame=311040 }
+(video_adapter.cc:285): Frame size changed: scaled 2 / out 1485 / in 1485 Changes: 3 Input: 1280x720 Scale: 1/2 Output: 640x360 fps: 2147483647/-1 alignment: 1
+(video_stream_encoder.cc:1937): Video frame parameters changed: dimensions=640x360, texture=0.
+(video_stream_encoder.cc:1067): [VSE] ReconfigureEncoder [encoder_config={codec_type: VP8, content_type: kRealtimeVideo, frame_drop_enabled: 1, encoder_specific_settings: (ptr), min_transmit_bitrate_bps: 0, number_of_streams: 1, legacy_conference_mode: 0, is_quality_scaling_allowed: 1, max_qp: -1, simulcast_layers[0]: {width: 0, height: 0, max_framerate: -1, min_bitrate_bps:-1, target_bitrate_bps:-1, max_bitrate_bps:-1, max_qp: -1, num_temporal_layers: 1, bitrate_priority: 0, active: 1, scale_down_by: -1}}]
+(video_stream_encoder.cc:1321): [VSE] ReconfigureEncoder: simulcast streams: {0: 640x360 L1T1, min_kbps: 30, target_kbps: 1700, max_kbps: 1700, max_fps: 60, max_qp: 56, num_tl: 1, active: true}
+(simulcast_encoder_adapter.cc:444): [SEA] InitEncode: total_streams_count: 1, active_streams_count: 1, separate_encoders_needed: true
+(simulcast_encoder_adapter.cc:451): [SEA] InitEncode: Single-encoder mode
+(video_stream_encoder.cc:2096): [VSE] Encoder info changed to EncoderInfo { ScalingSettings { Thresholds { low = 29, high = 95}, min_pixels_per_frame = 57600 }, requested_resolution_alignment = 1, apply_alignment_to_all_simulcast_layers = 0, supports_native_handle = 0, implementation_name = 'libvpx', has_trusted_rate_controller = 1, is_hardware_accelerated = 0, enable_cpu_overuse_detection = 1, fps_allocation = [[ 1] ], resolution_bitrate_limits = [] , supports_simulcast = 1, preferred_pixel_formats = [kI420, kNV12], mapped_resolution = 640 x 360}
+(bitrate_allocator.cc:687): UpdateAllocationLimits : total_requested_min_bitrate: 30 kbps, total_requested_padding_bitrate: 0 bps, total_requested_max_bitrate: 1700 kbps
+(video_send_stream_impl.cc:839): SignalEncoderActive, Encoder is active.
+(rtp_sender_video.cc:775): Sent first RTP packet of the first video frame (pre-pacer)
+(rtp_sender_video.cc:779): Sent last RTP packet of the first video frame (pre-pacer)
+(trendline_estimator.cc:185): Using Trendline filter for delay change estimation with settings sort:false,cap:false,beginning_packets:7,end_packets:7,cap_uncertainty:0,window_size:20 and no network state predictor
+(trendline_estimator.cc:185): Using Trendline filter for delay change estimation with settings sort:false,cap:false,beginning_packets:7,end_packets:7,cap_uncertainty:0,window_size:20 and no network state predictor
+(bitrate_allocator.cc:500): Current BWE 301000
+(video_send_stream_impl.cc:839): SignalEncoderActive, Encoder is active.
+(probe_bitrate_estimator.cc:164): Probing successful [cluster id: 1] [send: 2658 bytes / 25 ms = 850560 bps ] [receive: 3549 bytes / 574 ms = 49463 bps]
+(probe_bitrate_estimator.cc:164): Probing successful [cluster id: 1] [send: 3872 bytes / 36 ms = 860444 bps ] [receive: 3872 bytes / 628 ms = 49324 bps]
+(probe_bitrate_estimator.cc:164): Probing successful [cluster id: 2] [send: 1816 bytes / 14 ms = 1037714 bps ] [receive: 2663 bytes / 432 ms = 49314 bps]
+(probe_bitrate_estimator.cc:164): Probing successful [cluster id: 2] [send: 2986 bytes / 19 ms = 1257263 bps ] [receive: 3406 bytes / 578 ms = 47141 bps]
+(audio_device_buffer.cc:480): [REC : 10000msec, 44kHz] callbacks: 1000, samples: 441000, rate: 44100, rate diff: 0%, level: 26216
+(audio_device_buffer.cc:506): [PLAY: 10000msec, 44kHz] callbacks: 1002, samples: 441882, rate: 44188, rate diff: 0%, level: 4
+(quality_scaler.cc:300): Checking average QP 104 (104).
+(video_stream_adapter.cc:499): Scaling down resolution, max pixels: 138240
+(video_stream_encoder_resource_manager.cc:723): Downgrade counts: fps: {quality:0cpu:0}, resolution {quality:3cpu:0}
+(video_stream_encoder.cc:2601): Updating sink restrictions from QualityScalerResource to { max_pixels_per_frame=138240 }
+(resource_adaptation_processor.cc:226): Resource "QualityScalerResource" signalled kOveruse. Adapted down successfully. Unfiltered adaptations: { res=3 fps=0 }
+(video_adapter.cc:285): Frame size changed: scaled 110 / out 1593 / in 1593 Changes: 4 Input: 1280x720 Scale: 3/8 Output: 480x270 fps: 2147483647/-1 alignment: 1
+(video_stream_encoder.cc:1937): Video frame parameters changed: dimensions=480x270, texture=0.
+(video_stream_encoder.cc:1067): [VSE] ReconfigureEncoder [encoder_config={codec_type: VP8, content_type: kRealtimeVideo, frame_drop_enabled: 1, encoder_specific_settings: (ptr), min_transmit_bitrate_bps: 0, number_of_streams: 1, legacy_conference_mode: 0, is_quality_scaling_allowed: 1, max_qp: -1, simulcast_layers[0]: {width: 0, height: 0, max_framerate: -1, min_bitrate_bps:-1, target_bitrate_bps:-1, max_bitrate_bps:-1, max_qp: -1, num_temporal_layers: 1, bitrate_priority: 0, active: 1, scale_down_by: -1}}]
+(video_stream_encoder.cc:1321): [VSE] ReconfigureEncoder: simulcast streams: {0: 480x270 L1T1, min_kbps: 30, target_kbps: 1700, max_kbps: 1700, max_fps: 60, max_qp: 56, num_tl: 1, active: true}
+(simulcast_encoder_adapter.cc:444): [SEA] InitEncode: total_streams_count: 1, active_streams_count: 1, separate_encoders_needed: true
+(simulcast_encoder_adapter.cc:451): [SEA] InitEncode: Single-encoder mode
+(loss_based_bwe_v2.cc:356): 401e250 Switch to HOLD. Bounded BWE: 52, duration: 300, avg loss rate: 0.0417344
+(send_side_bandwidth_estimation.cc:567): Estimated available bandwidth 25276 bps is below configured min bitrate 30 kbps.
+(connection.cc:1039): Conn[fc049200:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:w0s0Vb4G:1:0:host:udp:172.18.0.x:44484->UlJwDkfP:1:2122260223:host:udp:172.18.0.x:49087|CRWI|S|0|0|9115038255631187454|462]: Unwritable after 5 ping failures and 5008501 us ms without a response, ms since last received ping=551152 us ms since last received data=40481 us rtt=924332 us
+(basic_ice_controller.cc:258): Selecting connection for triggered check: Conn[fc0272d0:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:Qhwwz8te:1:0:relay:udp:172.18.0.x:49646->UlJwDkfP:1:2122260223:host:udp:172.18.0.x:49087|C-xI|-|0|0|251955288477679102|-]
+(connection.cc:1649): Conn[fc0272d0:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:Qhwwz8te:1:0:relay:udp:172.18.0.x:49646->UlJwDkfP:1:2122260223:host:udp:172.18.0.x:49087|C-xI|-|0|0|251955288477679102|-]: Sent STUN BINDING request, id=6d37424a564964586846776a, use_candidate=1, nomination=0
+(dtls_transport.cc:821): DtlsTransport[0|1|_W]: ice_transport writable state changed to 0 dtls_state: kConnected
+(jsep_transport_controller.cc:1304):  Transport 0 writability changed to 0.
+(jsep_transport_controller.cc:1366): 0 Transport 1 state changed. Check if state is complete.
+(peer_connection.cc:1907): Changing IceConnectionState completed => disconnected
+(peer_connection.cc:1929): Changing standardized IceConnectionState completed => connected
+(peer_connection.cc:1929): Changing standardized IceConnectionState connected => disconnected
+(basic_ice_controller.cc:258): Selecting connection for triggered check: Conn[fc049200:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:w0s0Vb4G:1:0:host:udp:172.18.0.x:44484->UlJwDkfP:1:2122260223:host:udp:172.18.0.x:49087|CRwI|S|0|0|9115038255631187454|462]
+(connection.cc:1649): Conn[fc049200:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:w0s0Vb4G:1:0:host:udp:172.18.0.x:44484->UlJwDkfP:1:2122260223:host:udp:172.18.0.x:49087|CRwI|S|0|0|9115038255631187454|462]: Sent STUN BINDING request, id=50596e436a35366468534c76, use_candidate=1, nomination=0
+(thread.cc:551): Message to network_thread took 104ms to dispatch.
+(connection.cc:1649): Conn[fc04bdf0:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:LkpVWcYe:1:0:host:tcp:172.18.0.x:34055->z1zUsbMw:1:1350508287:prflx:tcp:172.18.0.x:34253|CRxS|-|0|0|5800388928678542847|549]: Sent STUN BINDING request, id=67746177754b524f68746839, use_candidate=1, nomination=0
+(connection.cc:1649): Conn[fc0272d0:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:Qhwwz8te:1:0:relay:udp:172.18.0.x:49646->UlJwDkfP:1:2122260223:host:udp:172.18.0.x:49087|C-xI|-|0|0|251955288477679102|-]: Sent STUN BINDING request, id=52754b62763877727178574a, use_candidate=1, nomination=0
+(connection.cc:1649): Conn[fc049200:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:w0s0Vb4G:1:0:host:udp:172.18.0.x:44484->UlJwDkfP:1:2122260223:host:udp:172.18.0.x:49087|CRwI|S|0|0|9115038255631187454|462]: Sent STUN BINDING request, id=325a676a6c6b4b6d6b376755, use_candidate=1, nomination=0
+(connection.cc:1649): Conn[fc04bdf0:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:LkpVWcYe:1:0:host:tcp:172.18.0.x:34055->z1zUsbMw:1:1350508287:prflx:tcp:172.18.0.x:34253|C-xI|-|0|0|5800388928678542847|549]: Sent STUN BINDING request, id=764a3466317967346c6a6b36, use_candidate=1, nomination=0
+(connection.cc:558): Conn[fc04bdf0:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:LkpVWcYe:1:0:host:tcp:172.18.0.x:34055->z1zUsbMw:1:1350508287:prflx:tcp:172.18.0.x:34253|C-xI|-|0|0|5800388928678542847|549]: Received STUN BINDING request, id=4e584b384b476f3146446375
+(connection.cc:879): Conn[fc04bdf0:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:LkpVWcYe:1:0:host:tcp:172.18.0.x:34055->z1zUsbMw:1:1350508287:prflx:tcp:172.18.0.x:34253|CRxI|-|0|0|5800388928678542847|549]: Sent STUN BINDING response, to=172.18.0.x:34253, id=4e584b384b476f3146446375
+(basic_ice_controller.cc:258): Selecting connection for triggered check: Conn[fc04bdf0:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:LkpVWcYe:1:0:host:tcp:172.18.0.x:34055->z1zUsbMw:1:1350508287:prflx:tcp:172.18.0.x:34253|CRxI|-|0|0|5800388928678542847|549]
+(connection.cc:1649): Conn[fc04bdf0:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:LkpVWcYe:1:0:host:tcp:172.18.0.x:34055->z1zUsbMw:1:1350508287:prflx:tcp:172.18.0.x:34253|CRxI|-|0|0|5800388928678542847|549]: Sent STUN BINDING request, id=694d5a65304538636e316566, use_candidate=1, nomination=0
+(connection.cc:1649): Conn[fc0272d0:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:Qhwwz8te:1:0:relay:udp:172.18.0.x:49646->UlJwDkfP:1:2122260223:host:udp:172.18.0.x:49087|C-xI|-|0|0|251955288477679102|-]: Sent STUN BINDING request, id=313045433576546248503770, use_candidate=1, nomination=0
+(connection.cc:558): Conn[fc049200:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:w0s0Vb4G:1:0:host:udp:172.18.0.x:44484->UlJwDkfP:1:2122260223:host:udp:172.18.0.x:49087|CRwI|S|0|0|9115038255631187454|462]: Received STUN BINDING request, id=386244753569503671514d6c
+(connection.cc:879): Conn[fc049200:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:w0s0Vb4G:1:0:host:udp:172.18.0.x:44484->UlJwDkfP:1:2122260223:host:udp:172.18.0.x:49087|CRwI|S|0|0|9115038255631187454|462]: Sent STUN BINDING response, to=172.18.0.x:49087, id=386244753569503671514d6c
+(connection.cc:558): Conn[fc04bdf0:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:LkpVWcYe:1:0:host:tcp:172.18.0.x:34055->z1zUsbMw:1:1350508287:prflx:tcp:172.18.0.x:34253|CRxI|-|0|0|5800388928678542847|549]: Received STUN BINDING request, id=7a4e505837574d3267423862
+(connection.cc:879): Conn[fc04bdf0:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:LkpVWcYe:1:0:host:tcp:172.18.0.x:34055->z1zUsbMw:1:1350508287:prflx:tcp:172.18.0.x:34253|CRxI|-|0|0|5800388928678542847|549]: Sent STUN BINDING response, to=172.18.0.x:34253, id=7a4e505837574d3267423862
+(basic_ice_controller.cc:258): Selecting connection for triggered check: Conn[fc049200:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:w0s0Vb4G:1:0:host:udp:172.18.0.x:44484->UlJwDkfP:1:2122260223:host:udp:172.18.0.x:49087|CRwI|S|0|0|9115038255631187454|462]
+(connection.cc:1649): Conn[fc049200:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:w0s0Vb4G:1:0:host:udp:172.18.0.x:44484->UlJwDkfP:1:2122260223:host:udp:172.18.0.x:49087|CRwI|S|0|0|9115038255631187454|462]: Sent STUN BINDING request, id=374f50514c372f68684e5262, use_candidate=1, nomination=0
+(basic_ice_controller.cc:258): Selecting connection for triggered check: Conn[fc04bdf0:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:LkpVWcYe:1:0:host:tcp:172.18.0.x:34055->z1zUsbMw:1:1350508287:prflx:tcp:172.18.0.x:34253|CRxI|-|0|0|5800388928678542847|549]
+(connection.cc:1649): Conn[fc04bdf0:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:LkpVWcYe:1:0:host:tcp:172.18.0.x:34055->z1zUsbMw:1:1350508287:prflx:tcp:172.18.0.x:34253|CRxI|-|0|0|5800388928678542847|549]: Sent STUN BINDING request, id=6651763264474c484a304261, use_candidate=1, nomination=0
+(connection.cc:1525): Conn[fc049200:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:w0s0Vb4G:1:0:host:udp:172.18.0.x:44484->UlJwDkfP:1:2122260223:host:udp:172.18.0.x:49087|CRwI|S|0|0|9115038255631187454|462]: Received STUN BINDING response, id=783242414172477a4a76376b, code=0, rtt=5722156 us, pings_since_last_response=783242414172477a4a76376b 2f713070554c695a6357504d 426576354e2b7a584e6d2b4d 6c4f41575632424e34717563 36497151754859527a6a626a ... 3 more
+(dtls_transport.cc:821): DtlsTransport[0|1|__]: ice_transport writable state changed to 1 dtls_state: kConnected
+(jsep_transport_controller.cc:1304):  Transport 0 writability changed to 1.
+(jsep_transport_controller.cc:1366): 0 Transport 1 state changed. Check if state is complete.
+(peer_connection.cc:2514): Changing to ICE completed state because all transports are complete.
+(peer_connection.cc:1907): Changing IceConnectionState disconnected => connected
+(peer_connection.cc:1907): Changing IceConnectionState connected => completed
+(peer_connection.cc:1929): Changing standardized IceConnectionState disconnected => completed
+(connection.cc:558): Conn[fc0272d0:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:Qhwwz8te:1:0:relay:udp:172.18.0.x:49646->UlJwDkfP:1:2122260223:host:udp:172.18.0.x:49087|C-xI|-|0|0|251955288477679102|-]: Received STUN BINDING request, id=43573266794b6f5178666655
+(connection.cc:879): Conn[fc0272d0:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:Qhwwz8te:1:0:relay:udp:172.18.0.x:49646->UlJwDkfP:1:2122260223:host:udp:172.18.0.x:49087|CRxI|-|0|0|251955288477679102|-]: Sent STUN BINDING response, to=172.18.0.x:49087, id=43573266794b6f5178666655
+(connection.cc:558): Conn[fc04bdf0:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:LkpVWcYe:1:0:host:tcp:172.18.0.x:34055->z1zUsbMw:1:1350508287:prflx:tcp:172.18.0.x:34253|CRxI|-|0|0|5800388928678542847|549]: Received STUN BINDING request, id=416571474561766667556b4f
+(connection.cc:879): Conn[fc04bdf0:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:LkpVWcYe:1:0:host:tcp:172.18.0.x:34055->z1zUsbMw:1:1350508287:prflx:tcp:172.18.0.x:34253|CRxI|-|0|0|5800388928678542847|549]: Sent STUN BINDING response, to=172.18.0.x:34253, id=416571474561766667556b4f
+(connection.cc:558): Conn[fc0272d0:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:Qhwwz8te:1:0:relay:udp:172.18.0.x:49646->UlJwDkfP:1:2122260223:host:udp:172.18.0.x:49087|CRxI|-|0|0|251955288477679102|-]: Received STUN BINDING request, id=5451416b77446446307a386d
+(connection.cc:879): Conn[fc0272d0:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:Qhwwz8te:1:0:relay:udp:172.18.0.x:49646->UlJwDkfP:1:2122260223:host:udp:172.18.0.x:49087|CRxI|-|0|0|251955288477679102|-]: Sent STUN BINDING response, to=172.18.0.x:49087, id=5451416b77446446307a386d
+(connection.cc:558): Conn[fc04bdf0:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:LkpVWcYe:1:0:host:tcp:172.18.0.x:34055->z1zUsbMw:1:1350508287:prflx:tcp:172.18.0.x:34253|CRxI|-|0|0|5800388928678542847|549]: Received STUN BINDING request, id=7a66356e465a714771556742
+(connection.cc:879): Conn[fc04bdf0:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:LkpVWcYe:1:0:host:tcp:172.18.0.x:34055->z1zUsbMw:1:1350508287:prflx:tcp:172.18.0.x:34253|CRxI|-|0|0|5800388928678542847|549]: Sent STUN BINDING response, to=172.18.0.x:34253, id=7a66356e465a714771556742
+(connection.cc:558): Conn[fc0272d0:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:Qhwwz8te:1:0:relay:udp:172.18.0.x:49646->UlJwDkfP:1:2122260223:host:udp:172.18.0.x:49087|CRxI|-|0|0|251955288477679102|-]: Received STUN BINDING request, id=314254394568445953617a6b
+(connection.cc:879): Conn[fc0272d0:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:Qhwwz8te:1:0:relay:udp:172.18.0.x:49646->UlJwDkfP:1:2122260223:host:udp:172.18.0.x:49087|CRxI|-|0|0|251955288477679102|-]: Sent STUN BINDING response, to=172.18.0.x:49087, id=314254394568445953617a6b
+(connection.cc:558): Conn[fc04bdf0:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:LkpVWcYe:1:0:host:tcp:172.18.0.x:34055->z1zUsbMw:1:1350508287:prflx:tcp:172.18.0.x:34253|CRxI|-|0|0|5800388928678542847|549]: Received STUN BINDING request, id=66786f676336347357594f36
+(connection.cc:879): Conn[fc04bdf0:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:LkpVWcYe:1:0:host:tcp:172.18.0.x:34055->z1zUsbMw:1:1350508287:prflx:tcp:172.18.0.x:34253|CRxI|-|0|0|5800388928678542847|549]: Sent STUN BINDING response, to=172.18.0.x:34253, id=66786f676336347357594f36
+(connection.cc:558): Conn[fc0272d0:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:Qhwwz8te:1:0:relay:udp:172.18.0.x:49646->UlJwDkfP:1:2122260223:host:udp:172.18.0.x:49087|CRxI|-|0|0|251955288477679102|-]: Received STUN BINDING request, id=6b764d34626c3149454a6679
+(connection.cc:879): Conn[fc0272d0:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:Qhwwz8te:1:0:relay:udp:172.18.0.x:49646->UlJwDkfP:1:2122260223:host:udp:172.18.0.x:49087|CRxI|-|0|0|251955288477679102|-]: Sent STUN BINDING response, to=172.18.0.x:49087, id=6b764d34626c3149454a6679
+(connection.cc:558): Conn[fc04bdf0:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:LkpVWcYe:1:0:host:tcp:172.18.0.x:34055->z1zUsbMw:1:1350508287:prflx:tcp:172.18.0.x:34253|CRxI|-|0|0|5800388928678542847|549]: Received STUN BINDING request, id=33376a303839564c33395646
+(connection.cc:879): Conn[fc04bdf0:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:LkpVWcYe:1:0:host:tcp:172.18.0.x:34055->z1zUsbMw:1:1350508287:prflx:tcp:172.18.0.x:34253|CRxI|-|0|0|5800388928678542847|549]: Sent STUN BINDING response, to=172.18.0.x:34253, id=33376a303839564c33395646
+(connection.cc:558): Conn[fc0272d0:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:Qhwwz8te:1:0:relay:udp:172.18.0.x:49646->UlJwDkfP:1:2122260223:host:udp:172.18.0.x:49087|CRxI|-|0|0|251955288477679102|-]: Received STUN BINDING request, id=662b357649762f452b4e4a49
+(connection.cc:879): Conn[fc0272d0:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:Qhwwz8te:1:0:relay:udp:172.18.0.x:49646->UlJwDkfP:1:2122260223:host:udp:172.18.0.x:49087|CRxI|-|0|0|251955288477679102|-]: Sent STUN BINDING response, to=172.18.0.x:49087, id=662b357649762f452b4e4a49
+(connection.cc:558): Conn[fc04bdf0:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:LkpVWcYe:1:0:host:tcp:172.18.0.x:34055->z1zUsbMw:1:1350508287:prflx:tcp:172.18.0.x:34253|CRxI|-|0|0|5800388928678542847|549]: Received STUN BINDING request, id=456e4171337753727077754d
+(connection.cc:879): Conn[fc04bdf0:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:LkpVWcYe:1:0:host:tcp:172.18.0.x:34055->z1zUsbMw:1:1350508287:prflx:tcp:172.18.0.x:34253|CRxI|-|0|0|5800388928678542847|549]: Sent STUN BINDING response, to=172.18.0.x:34253, id=456e4171337753727077754d
+(connection.cc:558): Conn[fc0272d0:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:Qhwwz8te:1:0:relay:udp:172.18.0.x:49646->UlJwDkfP:1:2122260223:host:udp:172.18.0.x:49087|CRxI|-|0|0|251955288477679102|-]: Received STUN BINDING request, id=2b636d587570455270436142
+(connection.cc:879): Conn[fc0272d0:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:Qhwwz8te:1:0:relay:udp:172.18.0.x:49646->UlJwDkfP:1:2122260223:host:udp:172.18.0.x:49087|CRxI|-|0|0|251955288477679102|-]: Sent STUN BINDING response, to=172.18.0.x:49087, id=2b636d587570455270436142
+(connection.cc:558): Conn[fc04bdf0:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:LkpVWcYe:1:0:host:tcp:172.18.0.x:34055->z1zUsbMw:1:1350508287:prflx:tcp:172.18.0.x:34253|CRxI|-|0|0|5800388928678542847|549]: Received STUN BINDING request, id=4e785874394878726730474e
+(connection.cc:879): Conn[fc04bdf0:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:LkpVWcYe:1:0:host:tcp:172.18.0.x:34055->z1zUsbMw:1:1350508287:prflx:tcp:172.18.0.x:34253|CRxI|-|0|0|5800388928678542847|549]: Sent STUN BINDING response, to=172.18.0.x:34253, id=4e785874394878726730474e
+(connection.cc:558): Conn[fc0272d0:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:Qhwwz8te:1:0:relay:udp:172.18.0.x:49646->UlJwDkfP:1:2122260223:host:udp:172.18.0.x:49087|CRxI|-|0|0|251955288477679102|-]: Received STUN BINDING request, id=533373376b57347538794a69
+(connection.cc:879): Conn[fc0272d0:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:Qhwwz8te:1:0:relay:udp:172.18.0.x:49646->UlJwDkfP:1:2122260223:host:udp:172.18.0.x:49087|CRxI|-|0|0|251955288477679102|-]: Sent STUN BINDING response, to=172.18.0.x:49087, id=533373376b57347538794a69
+(connection.cc:558): Conn[fc04bdf0:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:LkpVWcYe:1:0:host:tcp:172.18.0.x:34055->z1zUsbMw:1:1350508287:prflx:tcp:172.18.0.x:34253|CRxI|-|0|0|5800388928678542847|549]: Received STUN BINDING request, id=307831527948582b7652646d
+(connection.cc:879): Conn[fc04bdf0:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:LkpVWcYe:1:0:host:tcp:172.18.0.x:34055->z1zUsbMw:1:1350508287:prflx:tcp:172.18.0.x:34253|CRxI|-|0|0|5800388928678542847|549]: Sent STUN BINDING response, to=172.18.0.x:34253, id=307831527948582b7652646d
+(connection.cc:558): Conn[fc0272d0:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:Qhwwz8te:1:0:relay:udp:172.18.0.x:49646->UlJwDkfP:1:2122260223:host:udp:172.18.0.x:49087|CRxI|-|0|0|251955288477679102|-]: Received STUN BINDING request, id=365832624b4665586148366b
+(connection.cc:879): Conn[fc0272d0:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:Qhwwz8te:1:0:relay:udp:172.18.0.x:49646->UlJwDkfP:1:2122260223:host:udp:172.18.0.x:49087|CRxI|-|0|0|251955288477679102|-]: Sent STUN BINDING response, to=172.18.0.x:49087, id=365832624b4665586148366b
+(connection.cc:558): Conn[fc04bdf0:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:LkpVWcYe:1:0:host:tcp:172.18.0.x:34055->z1zUsbMw:1:1350508287:prflx:tcp:172.18.0.x:34253|CRxI|-|0|0|5800388928678542847|549]: Received STUN BINDING request, id=356f372b322f6c3477706258
+(connection.cc:879): Conn[fc04bdf0:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:LkpVWcYe:1:0:host:tcp:172.18.0.x:34055->z1zUsbMw:1:1350508287:prflx:tcp:172.18.0.x:34253|CRxI|-|0|0|5800388928678542847|549]: Sent STUN BINDING response, to=172.18.0.x:34253, id=356f372b322f6c3477706258
+(connection.cc:558): Conn[fc0272d0:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:Qhwwz8te:1:0:relay:udp:172.18.0.x:49646->UlJwDkfP:1:2122260223:host:udp:172.18.0.x:49087|CRxI|-|0|0|251955288477679102|-]: Received STUN BINDING request, id=346c494737356e386b765754
+(connection.cc:879): Conn[fc0272d0:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:Qhwwz8te:1:0:relay:udp:172.18.0.x:49646->UlJwDkfP:1:2122260223:host:udp:172.18.0.x:49087|CRxI|-|0|0|251955288477679102|-]: Sent STUN BINDING response, to=172.18.0.x:49087, id=346c494737356e386b765754
+(connection.cc:558): Conn[fc04bdf0:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:LkpVWcYe:1:0:host:tcp:172.18.0.x:34055->z1zUsbMw:1:1350508287:prflx:tcp:172.18.0.x:34253|CRxI|-|0|0|5800388928678542847|549]: Received STUN BINDING request, id=4966766658314c635a6c3265
+(connection.cc:879): Conn[fc04bdf0:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:LkpVWcYe:1:0:host:tcp:172.18.0.x:34055->z1zUsbMw:1:1350508287:prflx:tcp:172.18.0.x:34253|CRxI|-|0|0|5800388928678542847|549]: Sent STUN BINDING response, to=172.18.0.x:34253, id=4966766658314c635a6c3265
+(connection.cc:558): Conn[fc0272d0:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:Qhwwz8te:1:0:relay:udp:172.18.0.x:49646->UlJwDkfP:1:2122260223:host:udp:172.18.0.x:49087|CRxI|-|0|0|251955288477679102|-]: Received STUN BINDING request, id=2b5732594142325257754870
+(connection.cc:879): Conn[fc0272d0:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:Qhwwz8te:1:0:relay:udp:172.18.0.x:49646->UlJwDkfP:1:2122260223:host:udp:172.18.0.x:49087|CRxI|-|0|0|251955288477679102|-]: Sent STUN BINDING response, to=172.18.0.x:49087, id=2b5732594142325257754870
+(connection.cc:558): Conn[fc0272d0:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:Qhwwz8te:1:0:relay:udp:172.18.0.x:49646->UlJwDkfP:1:2122260223:host:udp:172.18.0.x:49087|CRxI|-|0|0|251955288477679102|-]: Received STUN BINDING request, id=544375466547786d732b7855
+(connection.cc:879): Conn[fc0272d0:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:Qhwwz8te:1:0:relay:udp:172.18.0.x:49646->UlJwDkfP:1:2122260223:host:udp:172.18.0.x:49087|CRxI|-|0|0|251955288477679102|-]: Sent STUN BINDING response, to=172.18.0.x:49087, id=544375466547786d732b7855
+(rtcp_receiver.cc:296): OnPeriodicRttUpdate: Timeout: No RTCP RR received.
+(connection.cc:558): Conn[fc0272d0:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:Qhwwz8te:1:0:relay:udp:172.18.0.x:49646->UlJwDkfP:1:2122260223:host:udp:172.18.0.x:49087|CRxI|-|0|0|251955288477679102|-]: Received STUN BINDING request, id=466b635575424d3145687361
+(connection.cc:879): Conn[fc0272d0:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:Qhwwz8te:1:0:relay:udp:172.18.0.x:49646->UlJwDkfP:1:2122260223:host:udp:172.18.0.x:49087|CRxI|-|0|0|251955288477679102|-]: Sent STUN BINDING response, to=172.18.0.x:49087, id=466b635575424d3145687361
+(connection.cc:558): Conn[fc0272d0:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:Qhwwz8te:1:0:relay:udp:172.18.0.x:49646->UlJwDkfP:1:2122260223:host:udp:172.18.0.x:49087|CRxI|-|0|0|251955288477679102|-]: Received STUN BINDING request, id=77684b764f685364616b434b
+(quality_scaler.cc:288): Reporting high QP, framedrop percent 84
+(video_stream_adapter.cc:499): Scaling down resolution, max pixels: 77760
+(video_stream_encoder_resource_manager.cc:723): Downgrade counts: fps: {quality:0cpu:0}, resolution {quality:4cpu:0}
+(video_stream_encoder.cc:2601): Updating sink restrictions from QualityScalerResource to { max_pixels_per_frame=77760 }
+(resource_adaptation_processor.cc:226): Resource "QualityScalerResource" signalled kOveruse. Adapted down successfully. Unfiltered adaptations: { res=4 fps=0 }
+(connection.cc:879): Conn[fc0272d0:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:Qhwwz8te:1:0:relay:udp:172.18.0.x:49646->UlJwDkfP:1:2122260223:host:udp:172.18.0.x:49087|CRxI|-|0|0|251955288477679102|-]: Sent STUN BINDING response, to=172.18.0.x:49087, id=77684b764f685364616b434b
+(video_adapter.cc:285): Frame size changed: scaled 249 / out 1732 / in 1732 Changes: 5 Input: 1280x720 Scale: 1/4 Output: 320x180 fps: 2147483647/-1 alignment: 1
+(video_stream_encoder.cc:1937): Video frame parameters changed: dimensions=320x180, texture=0.
+(video_stream_encoder.cc:1067): [VSE] ReconfigureEncoder [encoder_config={codec_type: VP8, content_type: kRealtimeVideo, frame_drop_enabled: 1, encoder_specific_settings: (ptr), min_transmit_bitrate_bps: 0, number_of_streams: 1, legacy_conference_mode: 0, is_quality_scaling_allowed: 1, max_qp: -1, simulcast_layers[0]: {width: 0, height: 0, max_framerate: -1, min_bitrate_bps:-1, target_bitrate_bps:-1, max_bitrate_bps:-1, max_qp: -1, num_temporal_layers: 1, bitrate_priority: 0, active: 1, scale_down_by: -1}}]
+(video_stream_encoder.cc:1321): [VSE] ReconfigureEncoder: simulcast streams: {0: 320x180 L1T1, min_kbps: 30, target_kbps: 600, max_kbps: 600, max_fps: 60, max_qp: 56, num_tl: 1, active: true}
+(simulcast_encoder_adapter.cc:444): [SEA] InitEncode: total_streams_count: 1, active_streams_count: 1, separate_encoders_needed: true
+(simulcast_encoder_adapter.cc:451): [SEA] InitEncode: Single-encoder mode
+(bitrate_allocator.cc:687): UpdateAllocationLimits : total_requested_min_bitrate: 30 kbps, total_requested_padding_bitrate: 0 bps, total_requested_max_bitrate: 600 kbps
+(connection.cc:558): Conn[fc0272d0:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:Qhwwz8te:1:0:relay:udp:172.18.0.x:49646->UlJwDkfP:1:2122260223:host:udp:172.18.0.x:49087|CRxI|-|0|0|251955288477679102|-]: Received STUN BINDING request, id=7470345a6f7579554b543979
+(connection.cc:879): Conn[fc0272d0:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:Qhwwz8te:1:0:relay:udp:172.18.0.x:49646->UlJwDkfP:1:2122260223:host:udp:172.18.0.x:49087|CRxI|-|0|0|251955288477679102|-]: Sent STUN BINDING response, to=172.18.0.x:49087, id=7470345a6f7579554b543979
+(trendline_estimator.cc:185): Using Trendline filter for delay change estimation with settings sort:false,cap:false,beginning_packets:7,end_packets:7,cap_uncertainty:0,window_size:20 and no network state predictor
+(trendline_estimator.cc:185): Using Trendline filter for delay change estimation with settings sort:false,cap:false,beginning_packets:7,end_packets:7,cap_uncertainty:0,window_size:20 and no network state predictor
+(bitrate_allocator.cc:500): Current BWE 30000
+(webrtc_video_engine.cc:2520): VideoSendStream stats: 312112616, {input_fps: 27.0, encode_fps: 15, encode_ms: 1, encode_usage_perc: 64, target_bps: 21932, media_bps: 43320, suspended: false, bw_adapted_res: true, cpu_adapted_res: false, bw_adapted_fps: false, cpu_adapted_fps: false, #cpu_adaptations: 0, #quality_adaptations: 4} {ssrc: 2684106432, type: media, width: 320, height: 180, key: 3, delta: 76, total_bps: 50536, retransmit_bps: 0, avg_delay_ms: 1630, max_delay_ms: 2645, cum_loss: 0, max_ext_seq: 8820, nack: 0, fir: 0, pli: 0}
+(webrtc_video_engine.cc:1689): Call stats: 312112616, {send_bw_bps: 30000, recv_bw_bps: 0, max_pad_bps: 0, pacer_delay_ms: 1302, rtt_ms: 5907}
+(webrtc_video_engine.cc:1549): SetVideoSend (ssrc= 2684106432, options: nullptr, source = nullptr)
+(video_stream_encoder.cc:2601): Updating sink restrictions from <null> to { }
+(resource_adaptation_processor.cc:140): Removing resource "QualityScalerResource".
+(video_stream_adapter.cc:247): Resetting restrictions
+(video_adapter.cc:285): Frame size changed: scaled 300 / out 1784 / in 1784 Changes: 6 Input: 1280x720 Scale: 1/1 Output: 1280x720 fps: 2147483647/-1 alignment: 1
+Another exception was thrown: Instance of 'DiagnosticsProperty<void>'
+(audio_device_buffer.cc:480): [REC : 10000msec, 44kHz] callbacks: 1000, samples: 441000, rate: 44100, rate diff: 0%, level: 26212
+(audio_device_buffer.cc:506): [PLAY: 10000msec, 44kHz] callbacks: 1002, samples: 441882, rate: 44188, rate diff: 0%, level: 4
+(video_send_stream_impl.cc:775): SignalEncoderTimedOut, Encoder timed out.
+(bitrate_allocator.cc:687): UpdateAllocationLimits : total_requested_min_bitrate: 0 bps, total_requested_padding_bitrate: 0 bps, total_requested_max_bitrate: 0 bps
+(connection.cc:558): Conn[fc04bdf0:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:LkpVWcYe:1:0:host:tcp:172.18.0.x:34055->z1zUsbMw:1:1350508287:prflx:tcp:172.18.0.x:34253|C-xI|-|0|0|5800388928678542847|549]: Received STUN BINDING request, id=716f61383770657768413648
+(connection.cc:879): Conn[fc04bdf0:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:LkpVWcYe:1:0:host:tcp:172.18.0.x:34055->z1zUsbMw:1:1350508287:prflx:tcp:172.18.0.x:34253|CRxI|-|0|0|5800388928678542847|549]: Sent STUN BINDING response, to=172.18.0.x:34253, id=716f61383770657768413648
+(connection.cc:558): Conn[fc04bdf0:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:LkpVWcYe:1:0:host:tcp:172.18.0.x:34055->z1zUsbMw:1:1350508287:prflx:tcp:172.18.0.x:34253|CRxI|-|0|0|5800388928678542847|549]: Received STUN BINDING request, id=782f46504e70795a2b677243
+(connection.cc:879): Conn[fc04bdf0:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:LkpVWcYe:1:0:host:tcp:172.18.0.x:34055->z1zUsbMw:1:1350508287:prflx:tcp:172.18.0.x:34253|CRxI|-|0|0|5800388928678542847|549]: Sent STUN BINDING response, to=172.18.0.x:34253, id=782f46504e70795a2b677243
+(connection.cc:558): Conn[fc04bdf0:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:LkpVWcYe:1:0:host:tcp:172.18.0.x:34055->z1zUsbMw:1:1350508287:prflx:tcp:172.18.0.x:34253|CRxI|-|0|0|5800388928678542847|549]: Received STUN BINDING request, id=4e3278442b54653364306155
+(connection.cc:879): Conn[fc04bdf0:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:LkpVWcYe:1:0:host:tcp:172.18.0.x:34055->z1zUsbMw:1:1350508287:prflx:tcp:172.18.0.x:34253|CRxI|-|0|0|5800388928678542847|549]: Sent STUN BINDING response, to=172.18.0.x:34253, id=4e3278442b54653364306155
+(connection.cc:1525): Conn[fc04bdf0:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:LkpVWcYe:1:0:host:tcp:172.18.0.x:34055->z1zUsbMw:1:1350508287:prflx:tcp:172.18.0.x:34253|CRxI|-|0|0|5800388928678542847|549]: Received STUN BINDING response, id=67746177754b524f68746839, code=0, rtt=8996015 us, pings_since_last_response=67746177754b524f68746839 764a3466317967346c6a6b36 694d5a65304538636e316566 6651763264474c484a304261 
+(connection.cc:913): Conn[fc04bdf0:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:LkpVWcYe:1:0:host:tcp:172.18.0.x:34055->z1zUsbMw:1:1350508287:prflx:tcp:172.18.0.x:34253|CRWS|-|0|0|5800388928678542847|-]: Connection pruned
+(bitrate_allocator.cc:500): Current BWE 30000
+(transport_feedback_adapter.cc:267): Failed to lookup send time for 3 packets. Packets reordered or send time history too small?
+(agc_manager_direct.cc:146): Input clipping rate: 0%
+(loss_based_bwe_v2.cc:356): 401e250 Switch to HOLD. Bounded BWE: 38, duration: 300, avg loss rate: 0
+(bitrate_allocator.cc:500): Current BWE 9830
+(webrtc_video_engine.cc:2520): VideoSendStream stats: 312123616, {input_fps: 0.0, encode_fps: 0, encode_ms: 1, encode_usage_perc: 64, target_bps: 14136, media_bps: 0, suspended: false, bw_adapted_res: false, cpu_adapted_res: false, bw_adapted_fps: false, cpu_adapted_fps: false, #cpu_adaptations: 0, #quality_adaptations: 4} {ssrc: 2684106432, type: media, width: 0, height: 0, key: 3, delta: 90, total_bps: 0, retransmit_bps: 0, avg_delay_ms: 1866, max_delay_ms: 3186, cum_loss: 4, max_ext_seq: 8876, nack: 2, fir: 0, pli: 1}
+(webrtc_video_engine.cc:1689): Call stats: 312123616, {send_bw_bps: 7864, recv_bw_bps: 0, max_pad_bps: 0, pacer_delay_ms: 0, rtt_ms: 9409}
+(remote_ntp_time_estimator.cc:94): RTP timestamp: 796845181 in NTP clock: 4001592214853 estimated time in receiver NTP clock: 4001592210247
+(audio_device_buffer.cc:480): [REC : 10001msec, 44kHz] callbacks: 1000, samples: 441000, rate: 44096, rate diff: 0%, level: 26207
+(audio_device_buffer.cc:506): [PLAY: 10001msec, 44kHz] callbacks: 1000, samples: 441000, rate: 44096, rate diff: 0%, level: 4
+(overuse_frame_detector.cc:645): CheckForOveruse: encode usage 64 overuse detections 0 rampup delay 40000 action NoAction
+(audio_device_pulse_linux.cc:1872): Playout underflow
+(bitrate_allocator.cc:500): Current BWE 5000
+(thread.cc:551): Message to worker_thread took 588ms to dispatch.
+(trendline_estimator.cc:185): Using Trendline filter for delay change estimation with settings sort:false,cap:false,beginning_packets:7,end_packets:7,cap_uncertainty:0,window_size:20 and no network state predictor
+(trendline_estimator.cc:185): Using Trendline filter for delay change estimation with settings sort:false,cap:false,beginning_packets:7,end_packets:7,cap_uncertainty:0,window_size:20 and no network state predictor
+(overuse_frame_detector.cc:645): CheckForOveruse: encode usage 64 overuse detections 0 rampup delay 40000 action NoAction
+(rtcp_receiver.cc:298): OnPeriodicRttUpdate: Timeout: No increase in RTCP RR extended highest sequence number.
+(bitrate_allocator.cc:500): Current BWE 5000
+(remote_ntp_time_estimator.cc:94): RTP timestamp: 797319617 in NTP clock: 4001592225664 estimated time in receiver NTP clock: 4001592221059
+(webrtc_video_engine.cc:2520): VideoSendStream stats: 312134306, {input_fps: 0.0, encode_fps: 0, encode_ms: 1, encode_usage_perc: 64, target_bps: 14136, media_bps: 0, suspended: false, bw_adapted_res: false, cpu_adapted_res: false, bw_adapted_fps: false, cpu_adapted_fps: false, #cpu_adaptations: 0, #quality_adaptations: 4} {ssrc: 2684106432, type: media, width: 0, height: 0, key: 3, delta: 90, total_bps: 0, retransmit_bps: 0, avg_delay_ms: 1866, max_delay_ms: 3186, cum_loss: 5, max_ext_seq: 8909, nack: 3, fir: 0, pli: 3}
+(webrtc_video_engine.cc:1689): Call stats: 312134306, {send_bw_bps: 5000, recv_bw_bps: 0, max_pad_bps: 0, pacer_delay_ms: 0, rtt_ms: 2286}
+(audio_device_buffer.cc:480): [REC : 10000msec, 44kHz] callbacks: 1000, samples: 441000, rate: 44100, rate diff: 0%, level: 26204
+(audio_device_buffer.cc:506): [PLAY: 10000msec, 44kHz] callbacks: 999, samples: 440559, rate: 44056, rate diff: 0%, level: 5
+(overuse_frame_detector.cc:645): CheckForOveruse: encode usage 64 overuse detections 0 rampup delay 40000 action NoAction
+(rtcp_receiver.cc:296): OnPeriodicRttUpdate: Timeout: No RTCP RR received.
+(bitrate_allocator.cc:500): Current BWE 5000
+(p2p_transport_channel.cc:2166): Channel[0|1|RW: Removed connection fc0272d0 (2 remaining)
+(overuse_frame_detector.cc:645): CheckForOveruse: encode usage 64 overuse detections 0 rampup delay 40000 action NoAction
+(remote_ntp_time_estimator.cc:94): RTP timestamp: 797804701 in NTP clock: 4001592235151 estimated time in receiver NTP clock: 4001592235106
+(webrtc_video_engine.cc:2520): VideoSendStream stats: 312144616, {input_fps: 0.0, encode_fps: 0, encode_ms: 1, encode_usage_perc: 64, target_bps: 14136, media_bps: 0, suspended: false, bw_adapted_res: false, cpu_adapted_res: false, bw_adapted_fps: false, cpu_adapted_fps: false, #cpu_adaptations: 0, #quality_adaptations: 4} {ssrc: 2684106432, type: media, width: 0, height: 0, key: 3, delta: 90, total_bps: 0, retransmit_bps: 0, avg_delay_ms: 1866, max_delay_ms: 3186, cum_loss: 5, max_ext_seq: 8909, nack: 3, fir: 0, pli: 3}
+(webrtc_video_engine.cc:1689): Call stats: 312144616, {send_bw_bps: 5000, recv_bw_bps: 0, max_pad_bps: 0, pacer_delay_ms: 0, rtt_ms: 518}
+(audio_device_buffer.cc:480): [REC : 10000msec, 44kHz] callbacks: 1000, samples: 441000, rate: 44100, rate diff: 0%, level: 26203
+(audio_device_buffer.cc:506): [PLAY: 10000msec, 44kHz] callbacks: 1002, samples: 441882, rate: 44188, rate diff: 0%, level: 4
+(overuse_frame_detector.cc:645): CheckForOveruse: encode usage 64 overuse detections 0 rampup delay 40000 action NoAction
+(p2p_transport_channel.cc:2166): Channel[0|1|RW: Removed connection fc04bdf0 (1 remaining)
+(agc_manager_direct.cc:146): Input clipping rate: 0%
+(overuse_frame_detector.cc:645): CheckForOveruse: encode usage 64 overuse detections 0 rampup delay 40000 action NoAction
+(bitrate_allocator.cc:500): Current BWE 5000
+(remote_ntp_time_estimator.cc:94): RTP timestamp: 798296052 in NTP clock: 4001592245177 estimated time in receiver NTP clock: 4001592245132
+(webrtc_video_engine.cc:2520): VideoSendStream stats: 312155616, {input_fps: 0.0, encode_fps: 0, encode_ms: 1, encode_usage_perc: 64, target_bps: 14136, media_bps: 0, suspended: false, bw_adapted_res: false, cpu_adapted_res: false, bw_adapted_fps: false, cpu_adapted_fps: false, #cpu_adaptations: 0, #quality_adaptations: 4} {ssrc: 2684106432, type: media, width: 0, height: 0, key: 3, delta: 90, total_bps: 0, retransmit_bps: 0, avg_delay_ms: 1866, max_delay_ms: 3186, cum_loss: 5, max_ext_seq: 8909, nack: 3, fir: 0, pli: 3}
+(webrtc_video_engine.cc:1689): Call stats: 312155616, {send_bw_bps: 5000, recv_bw_bps: 0, max_pad_bps: 0, pacer_delay_ms: 0, rtt_ms: 510}
+(audio_device_buffer.cc:480): [REC : 10000msec, 44kHz] callbacks: 999, samples: 440559, rate: 44056, rate diff: 0%, level: 26213
+(audio_device_buffer.cc:506): [PLAY: 10000msec, 44kHz] callbacks: 1002, samples: 441882, rate: 44188, rate diff: 0%, level: 5
+(overuse_frame_detector.cc:645): CheckForOveruse: encode usage 64 overuse detections 0 rampup delay 40000 action NoAction
+(connection.cc:1640): Conn[fc049200:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:w0s0Vb4G:1:0:host:udp:172.18.0.x:44484->UlJwDkfP:1:2122260223:host:udp:172.18.0.x:49087|CRWS|S|0|0|9115038255631187454|727]: Timing-out STUN ping 77685a465648543238493534 after 60000356 us ms
+(connection.cc:1640): Conn[fc049200:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:w0s0Vb4G:1:0:host:udp:172.18.0.x:44484->UlJwDkfP:1:2122260223:host:udp:172.18.0.x:49087|CRWS|S|0|0|9115038255631187454|655]: Timing-out STUN ping 4674666e484a67394e677545 after 60000998 us ms
+(bitrate_allocator.cc:500): Current BWE 5000
+(overuse_frame_detector.cc:645): CheckForOveruse: encode usage 64 overuse detections 0 rampup delay 40000 action NoAction
+(remote_ntp_time_estimator.cc:94): RTP timestamp: 798779101 in NTP clock: 4001592255173 estimated time in receiver NTP clock: 4001592255127
+(audio_device_buffer.cc:480): [REC : 10001msec, 44kHz] callbacks: 1001, samples: 441441, rate: 44140, rate diff: 0%, level: 26216
+(audio_device_buffer.cc:506): [PLAY: 10001msec, 44kHz] callbacks: 1002, samples: 441882, rate: 44184, rate diff: 0%, level: 4
+(webrtc_video_engine.cc:2520): VideoSendStream stats: 312166616, {input_fps: 0.0, encode_fps: 0, encode_ms: 1, encode_usage_perc: 64, target_bps: 14136, media_bps: 0, suspended: false, bw_adapted_res: false, cpu_adapted_res: false, bw_adapted_fps: false, cpu_adapted_fps: false, #cpu_adaptations: 0, #quality_adaptations: 4} {ssrc: 2684106432, type: media, width: 0, height: 0, key: 3, delta: 90, total_bps: 0, retransmit_bps: 0, avg_delay_ms: 1866, max_delay_ms: 3186, cum_loss: 5, max_ext_seq: 8909, nack: 3, fir: 0, pli: 3}
+(webrtc_video_engine.cc:1689): Call stats: 312166616, {send_bw_bps: 5000, recv_bw_bps: 0, max_pad_bps: 0, pacer_delay_ms: 0, rtt_ms: 510}
+(overuse_frame_detector.cc:645): CheckForOveruse: encode usage 64 overuse detections 0 rampup delay 40000 action NoAction
+(bitrate_allocator.cc:500): Current BWE 5000
+(overuse_frame_detector.cc:645): CheckForOveruse: encode usage 64 overuse detections 0 rampup delay 40000 action NoAction
+(remote_ntp_time_estimator.cc:94): RTP timestamp: 799262461 in NTP clock: 4001592265194 estimated time in receiver NTP clock: 4001592265148
+(audio_device_buffer.cc:480): [REC : 10000msec, 44kHz] callbacks: 1000, samples: 441000, rate: 44100, rate diff: 0%, level: 26212
+(audio_device_buffer.cc:506): [PLAY: 10000msec, 44kHz] callbacks: 1002, samples: 441882, rate: 44188, rate diff: 0%, level: 5
+(webrtc_video_engine.cc:2520): VideoSendStream stats: 312177616, {input_fps: 0.0, encode_fps: 0, encode_ms: 1, encode_usage_perc: 64, target_bps: 14136, media_bps: 0, suspended: false, bw_adapted_res: false, cpu_adapted_res: false, bw_adapted_fps: false, cpu_adapted_fps: false, #cpu_adaptations: 0, #quality_adaptations: 4} {ssrc: 2684106432, type: media, width: 0, height: 0, key: 3, delta: 90, total_bps: 0, retransmit_bps: 0, avg_delay_ms: 1866, max_delay_ms: 3186, cum_loss: 5, max_ext_seq: 8909, nack: 3, fir: 0, pli: 3}
+(webrtc_video_engine.cc:1689): Call stats: 312177616, {send_bw_bps: 5000, recv_bw_bps: 0, max_pad_bps: 0, pacer_delay_ms: 0, rtt_ms: 509}
+(overuse_frame_detector.cc:645): CheckForOveruse: encode usage 64 overuse detections 0 rampup delay 40000 action NoAction
+(agc_manager_direct.cc:146): Input clipping rate: 0%
+(overuse_frame_detector.cc:645): CheckForOveruse: encode usage 64 overuse detections 0 rampup delay 40000 action NoAction
+(bitrate_allocator.cc:500): Current BWE 5000
+(remote_ntp_time_estimator.cc:94): RTP timestamp: 799729021 in NTP clock: 4001592274892 estimated time in receiver NTP clock: 4001592274846
+(audio_device_buffer.cc:480): [REC : 10000msec, 44kHz] callbacks: 1000, samples: 441000, rate: 44100, rate diff: 0%, level: 26207
+(audio_device_buffer.cc:506): [PLAY: 10000msec, 44kHz] callbacks: 1002, samples: 441882, rate: 44188, rate diff: 0%, level: 4
+(overuse_frame_detector.cc:645): CheckForOveruse: encode usage 64 overuse detections 0 rampup delay 40000 action NoAction
+(webrtc_video_engine.cc:2520): VideoSendStream stats: 312188616, {input_fps: 0.0, encode_fps: 0, encode_ms: 1, encode_usage_perc: 64, target_bps: 14136, media_bps: 0, suspended: false, bw_adapted_res: false, cpu_adapted_res: false, bw_adapted_fps: false, cpu_adapted_fps: false, #cpu_adaptations: 0, #quality_adaptations: 4} {ssrc: 2684106432, type: media, width: 0, height: 0, key: 3, delta: 90, total_bps: 0, retransmit_bps: 0, avg_delay_ms: 1866, max_delay_ms: 3186, cum_loss: 5, max_ext_seq: 8909, nack: 3, fir: 0, pli: 3}
+(webrtc_video_engine.cc:1689): Call stats: 312188616, {send_bw_bps: 5000, recv_bw_bps: 0, max_pad_bps: 0, pacer_delay_ms: 0, rtt_ms: 525}
+(overuse_frame_detector.cc:645): CheckForOveruse: encode usage 64 overuse detections 0 rampup delay 40000 action NoAction
+(remote_ntp_time_estimator.cc:94): RTP timestamp: 800224617 in NTP clock: 4001592285203 estimated time in receiver NTP clock: 4001592285157
+(bitrate_allocator.cc:500): Current BWE 5000
+(connection.cc:1640): Conn[fc049200:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:w0s0Vb4G:1:0:host:udp:172.18.0.x:44484->UlJwDkfP:1:2122260223:host:udp:172.18.0.x:49087|CRWS|S|0|0|9115038255631187454|452]: Timing-out STUN ping 4d78452f65304b397850455a after 60000086 us ms
+(audio_device_buffer.cc:480): [REC : 10000msec, 44kHz] callbacks: 1000, samples: 441000, rate: 44100, rate diff: 0%, level: 26204
+(audio_device_buffer.cc:506): [PLAY: 10000msec, 44kHz] callbacks: 1002, samples: 441882, rate: 44188, rate diff: 0%, level: 5
+(overuse_frame_detector.cc:645): CheckForOveruse: encode usage 64 overuse detections 0 rampup delay 40000 action NoAction
+(webrtc_video_engine.cc:2520): VideoSendStream stats: 312198617, {input_fps: 0.0, encode_fps: 0, encode_ms: 1, encode_usage_perc: 64, target_bps: 14136, media_bps: 0, suspended: false, bw_adapted_res: false, cpu_adapted_res: false, bw_adapted_fps: false, cpu_adapted_fps: false, #cpu_adaptations: 0, #quality_adaptations: 4} {ssrc: 2684106432, type: media, width: 0, height: 0, key: 3, delta: 90, total_bps: 0, retransmit_bps: 0, avg_delay_ms: 1866, max_delay_ms: 3186, cum_loss: 5, max_ext_seq: 8909, nack: 3, fir: 0, pli: 3}
+(webrtc_video_engine.cc:1689): Call stats: 312198617, {send_bw_bps: 5000, recv_bw_bps: 0, max_pad_bps: 0, pacer_delay_ms: 0, rtt_ms: 507}
+(overuse_frame_detector.cc:645): CheckForOveruse: encode usage 64 overuse detections 0 rampup delay 40000 action NoAction
+(remote_ntp_time_estimator.cc:94): RTP timestamp: 800704872 in NTP clock: 4001592295201 estimated time in receiver NTP clock: 4001592295155
+(bitrate_allocator.cc:500): Current BWE 5000
+(audio_device_buffer.cc:480): [REC : 10000msec, 44kHz] callbacks: 1000, samples: 441000, rate: 44100, rate diff: 0%, level: 26203
+(audio_device_buffer.cc:506): [PLAY: 10000msec, 44kHz] callbacks: 1002, samples: 441882, rate: 44188, rate diff: 0%, level: 4
+(overuse_frame_detector.cc:645): CheckForOveruse: encode usage 64 overuse detections 0 rampup delay 40000 action NoAction
+(agc_manager_direct.cc:146): Input clipping rate: 0%
+(webrtc_video_engine.cc:2520): VideoSendStream stats: 312209616, {input_fps: 0.0, encode_fps: 0, encode_ms: 1, encode_usage_perc: 64, target_bps: 14136, media_bps: 0, suspended: false, bw_adapted_res: false, cpu_adapted_res: false, bw_adapted_fps: false, cpu_adapted_fps: false, #cpu_adaptations: 0, #quality_adaptations: 4} {ssrc: 2684106432, type: media, width: 0, height: 0, key: 3, delta: 90, total_bps: 0, retransmit_bps: 0, avg_delay_ms: 1866, max_delay_ms: 3186, cum_loss: 5, max_ext_seq: 8909, nack: 3, fir: 0, pli: 3}
+(webrtc_video_engine.cc:1689): Call stats: 312209616, {send_bw_bps: 5000, recv_bw_bps: 0, max_pad_bps: 0, pacer_delay_ms: 0, rtt_ms: 525}
+(bitrate_allocator.cc:500): Current BWE 5000
+(overuse_frame_detector.cc:645): CheckForOveruse: encode usage 64 overuse detections 0 rampup delay 40000 action NoAction
+(remote_ntp_time_estimator.cc:94): RTP timestamp: 801185341 in NTP clock: 4001592305205 estimated time in receiver NTP clock: 4001592305159
+(audio_device_buffer.cc:480): [REC : 10000msec, 44kHz] callbacks: 1000, samples: 441000, rate: 44100, rate diff: 0%, level: 26213
+(audio_device_buffer.cc:506): [PLAY: 10000msec, 44kHz] callbacks: 1002, samples: 441882, rate: 44188, rate diff: 0%, level: 5
+(overuse_frame_detector.cc:645): CheckForOveruse: encode usage 64 overuse detections 0 rampup delay 40000 action NoAction
+(bitrate_allocator.cc:500): Current BWE 5000
+(webrtc_video_engine.cc:2520): VideoSendStream stats: 312220616, {input_fps: 0.0, encode_fps: 0, encode_ms: 1, encode_usage_perc: 64, target_bps: 14136, media_bps: 0, suspended: false, bw_adapted_res: false, cpu_adapted_res: false, bw_adapted_fps: false, cpu_adapted_fps: false, #cpu_adaptations: 0, #quality_adaptations: 4} {ssrc: 2684106432, type: media, width: 0, height: 0, key: 3, delta: 90, total_bps: 0, retransmit_bps: 0, avg_delay_ms: 1866, max_delay_ms: 3186, cum_loss: 5, max_ext_seq: 8909, nack: 3, fir: 0, pli: 3}
+(webrtc_video_engine.cc:1689): Call stats: 312220616, {send_bw_bps: 5000, recv_bw_bps: 0, max_pad_bps: 0, pacer_delay_ms: 0, rtt_ms: 510}
+(overuse_frame_detector.cc:645): CheckForOveruse: encode usage 64 overuse detections 0 rampup delay 40000 action NoAction
+(remote_ntp_time_estimator.cc:94): RTP timestamp: 801665821 in NTP clock: 4001592315213 estimated time in receiver NTP clock: 4001592315168
+(connection.cc:1640): Conn[fc049200:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:w0s0Vb4G:1:0:host:udp:172.18.0.x:44484->UlJwDkfP:1:2122260223:host:udp:172.18.0.x:49087|CRWS|S|0|0|9115038255631187454|448]: Timing-out STUN ping 4d436a6d3536766943634e39 after 60000035 us ms
+(audio_device_buffer.cc:480): [REC : 10000msec, 44kHz] callbacks: 1000, samples: 441000, rate: 44100, rate diff: 0%, level: 26216
+(audio_device_buffer.cc:506): [PLAY: 10000msec, 44kHz] callbacks: 1002, samples: 441882, rate: 44188, rate diff: 0%, level: 4
+(bitrate_allocator.cc:500): Current BWE 5000
+(overuse_frame_detector.cc:645): CheckForOveruse: encode usage 64 overuse detections 0 rampup delay 40000 action NoAction
+(webrtc_video_engine.cc:2520): VideoSendStream stats: 312231616, {input_fps: 0.0, encode_fps: 0, encode_ms: 1, encode_usage_perc: 64, target_bps: 14136, media_bps: 0, suspended: false, bw_adapted_res: false, cpu_adapted_res: false, bw_adapted_fps: false, cpu_adapted_fps: false, #cpu_adaptations: 0, #quality_adaptations: 4} {ssrc: 2684106432, type: media, width: 0, height: 0, key: 3, delta: 90, total_bps: 0, retransmit_bps: 0, avg_delay_ms: 1866, max_delay_ms: 3186, cum_loss: 5, max_ext_seq: 8909, nack: 3, fir: 0, pli: 3}
+(webrtc_video_engine.cc:1689): Call stats: 312231616, {send_bw_bps: 5000, recv_bw_bps: 0, max_pad_bps: 0, pacer_delay_ms: 0, rtt_ms: 511}
+(overuse_frame_detector.cc:645): CheckForOveruse: encode usage 64 overuse detections 0 rampup delay 40000 action NoAction
+(remote_ntp_time_estimator.cc:94): RTP timestamp: 802144762 in NTP clock: 4001592325180 estimated time in receiver NTP clock: 4001592325134
+(bitrate_allocator.cc:500): Current BWE 5000
+(audio_device_buffer.cc:480): [REC : 10001msec, 44kHz] callbacks: 1000, samples: 441000, rate: 44096, rate diff: 0%, level: 26212
+(audio_device_buffer.cc:506): [PLAY: 10001msec, 44kHz] callbacks: 1002, samples: 441882, rate: 44184, rate diff: 0%, level: 5
+(overuse_frame_detector.cc:645): CheckForOveruse: encode usage 64 overuse detections 0 rampup delay 40000 action NoAction
+(agc_manager_direct.cc:146): Input clipping rate: 0%
+(bitrate_allocator.cc:500): Current BWE 5000
+(webrtc_video_engine.cc:2520): VideoSendStream stats: 312242619, {input_fps: 0.0, encode_fps: 0, encode_ms: 1, encode_usage_perc: 64, target_bps: 14136, media_bps: 0, suspended: false, bw_adapted_res: false, cpu_adapted_res: false, bw_adapted_fps: false, cpu_adapted_fps: false, #cpu_adaptations: 0, #quality_adaptations: 4} {ssrc: 2684106432, type: media, width: 0, height: 0, key: 3, delta: 90, total_bps: 0, retransmit_bps: 0, avg_delay_ms: 1866, max_delay_ms: 3186, cum_loss: 5, max_ext_seq: 8909, nack: 3, fir: 0, pli: 3}
+(webrtc_video_engine.cc:1689): Call stats: 312242619, {send_bw_bps: 5000, recv_bw_bps: 0, max_pad_bps: 0, pacer_delay_ms: 0, rtt_ms: 525}
+(overuse_frame_detector.cc:645): CheckForOveruse: encode usage 64 overuse detections 0 rampup delay 40000 action NoAction
+(remote_ntp_time_estimator.cc:94): RTP timestamp: 802625341 in NTP clock: 4001592335143 estimated time in receiver NTP clock: 4001592335097
+(audio_device_buffer.cc:480): [REC : 10000msec, 44kHz] callbacks: 1000, samples: 441000, rate: 44100, rate diff: 0%, level: 26207
+(audio_device_buffer.cc:506): [PLAY: 10000msec, 44kHz] callbacks: 1002, samples: 441882, rate: 44188, rate diff: 0%, level: 4
+(overuse_frame_detector.cc:645): CheckForOveruse: encode usage 64 overuse detections 0 rampup delay 40000 action NoAction
+(bitrate_allocator.cc:500): Current BWE 5000
+(overuse_frame_detector.cc:645): CheckForOveruse: encode usage 64 overuse detections 0 rampup delay 40000 action NoAction
+(webrtc_video_engine.cc:2520): VideoSendStream stats: 312253616, {input_fps: 0.0, encode_fps: 0, encode_ms: 1, encode_usage_perc: 64, target_bps: 14136, media_bps: 0, suspended: false, bw_adapted_res: false, cpu_adapted_res: false, bw_adapted_fps: false, cpu_adapted_fps: false, #cpu_adaptations: 0, #quality_adaptations: 4} {ssrc: 2684106432, type: media, width: 0, height: 0, key: 3, delta: 90, total_bps: 0, retransmit_bps: 0, avg_delay_ms: 1866, max_delay_ms: 3186, cum_loss: 5, max_ext_seq: 8909, nack: 3, fir: 0, pli: 3}
+(webrtc_video_engine.cc:1689): Call stats: 312253616, {send_bw_bps: 5000, recv_bw_bps: 0, max_pad_bps: 0, pacer_delay_ms: 0, rtt_ms: 525}
+(remote_ntp_time_estimator.cc:94): RTP timestamp: 803104861 in NTP clock: 4001592345262 estimated time in receiver NTP clock: 4001592345226
+(bitrate_allocator.cc:500): Current BWE 5000
+(audio_device_buffer.cc:480): [REC : 10000msec, 44kHz] callbacks: 1001, samples: 441441, rate: 44144, rate diff: 0%, level: 26204
+(audio_device_buffer.cc:506): [PLAY: 10000msec, 44kHz] callbacks: 1002, samples: 441882, rate: 44188, rate diff: 0%, level: 4
+(overuse_frame_detector.cc:645): CheckForOveruse: encode usage 64 overuse detections 0 rampup delay 40000 action NoAction
+(overuse_frame_detector.cc:645): CheckForOveruse: encode usage 64 overuse detections 0 rampup delay 40000 action NoAction
+(remote_ntp_time_estimator.cc:94): RTP timestamp: 803584588 in NTP clock: 4001592355256 estimated time in receiver NTP clock: 4001592355210
+(audio_device_pulse_linux.cc:1872): Playout underflow
+(audio_device_buffer.cc:480): [REC : 10000msec, 44kHz] callbacks: 853, samples: 376173, rate: 37617, rate diff: 15%, level: 26203
+(audio_device_buffer.cc:506): [PLAY: 10000msec, 44kHz] callbacks: 849, samples: 374409, rate: 37441, rate diff: 15%, level: 4
+(bitrate_allocator.cc:500): Current BWE 5000
+(overuse_frame_detector.cc:645): CheckForOveruse: encode usage 64 overuse detections 0 rampup delay 40000 action NoAction
+(agc_manager_direct.cc:146): Input clipping rate: 0%
+(webrtc_video_engine.cc:2520): VideoSendStream stats: 312271736, {input_fps: 0.0, encode_fps: 0, encode_ms: 1, encode_usage_perc: 64, target_bps: 14136, media_bps: 0, suspended: false, bw_adapted_res: false, cpu_adapted_res: false, bw_adapted_fps: false, cpu_adapted_fps: false, #cpu_adaptations: 0, #quality_adaptations: 4} {ssrc: 2684106432, type: media, width: 0, height: 0, key: 3, delta: 90, total_bps: 0, retransmit_bps: 0, avg_delay_ms: 1866, max_delay_ms: 3186, cum_loss: 5, max_ext_seq: 8909, nack: 3, fir: 0, pli: 3}
+(webrtc_video_engine.cc:1689): Call stats: 312271736, {send_bw_bps: 5000, recv_bw_bps: 0, max_pad_bps: 0, pacer_delay_ms: 0, rtt_ms: 525}
+(bitrate_allocator.cc:500): Current BWE 5000
+(overuse_frame_detector.cc:645): CheckForOveruse: encode usage 64 overuse detections 0 rampup delay 40000 action NoAction
+(remote_ntp_time_estimator.cc:94): RTP timestamp: 804063182 in NTP clock: 4001592365226 estimated time in receiver NTP clock: 4001592365181
+(audio_device_buffer.cc:480): [REC : 10001msec, 44kHz] callbacks: 890, samples: 392490, rate: 39245, rate diff: 11%, level: 4078
+(audio_device_buffer.cc:506): [PLAY: 10001msec, 44kHz] callbacks: 944, samples: 416304, rate: 41626, rate diff: 6%, level: 4
+(overuse_frame_detector.cc:645): CheckForOveruse: encode usage 64 overuse detections 0 rampup delay 40000 action NoAction
+(bitrate_allocator.cc:500): Current BWE 5000
+(webrtc_video_engine.cc:2520): VideoSendStream stats: 312282616, {input_fps: 0.0, encode_fps: 0, encode_ms: 1, encode_usage_perc: 64, target_bps: 14136, media_bps: 0, suspended: false, bw_adapted_res: false, cpu_adapted_res: false, bw_adapted_fps: false, cpu_adapted_fps: false, #cpu_adaptations: 0, #quality_adaptations: 4} {ssrc: 2684106432, type: media, width: 0, height: 0, key: 3, delta: 90, total_bps: 0, retransmit_bps: 0, avg_delay_ms: 1866, max_delay_ms: 3186, cum_loss: 5, max_ext_seq: 8909, nack: 3, fir: 0, pli: 3}
+(webrtc_video_engine.cc:1689): Call stats: 312282616, {send_bw_bps: 5000, recv_bw_bps: 0, max_pad_bps: 0, pacer_delay_ms: 0, rtt_ms: 514}
+(overuse_frame_detector.cc:645): CheckForOveruse: encode usage 64 overuse detections 0 rampup delay 40000 action NoAction
+(remote_ntp_time_estimator.cc:94): RTP timestamp: 804546781 in NTP clock: 4001592375301 estimated time in receiver NTP clock: 4001592375255
+(audio_device_buffer.cc:480): [REC : 10000msec, 44kHz] callbacks: 999, samples: 440559, rate: 44056, rate diff: 0%, level: 3985
+(audio_device_buffer.cc:506): [PLAY: 10000msec, 44kHz] callbacks: 1000, samples: 441000, rate: 44100, rate diff: 0%, level: 4
+(bitrate_allocator.cc:500): Current BWE 5000
+(overuse_frame_detector.cc:645): CheckForOveruse: encode usage 64 overuse detections 0 rampup delay 40000 action NoAction
+(connection.cc:1640): Conn[fc049200:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:w0s0Vb4G:1:0:host:udp:172.18.0.x:44484->UlJwDkfP:1:2122260223:host:udp:172.18.0.x:49087|CRWI|S|0|0|9115038255631187454|448]: Timing-out STUN ping 466e5066384a70346d486d44 after 59999870 us ms
+(overuse_frame_detector.cc:645): CheckForOveruse: encode usage 64 overuse detections 0 rampup delay 40000 action NoAction
+(remote_ntp_time_estimator.cc:94): RTP timestamp: 805027741 in NTP clock: 4001592385321 estimated time in receiver NTP clock: 4001592385276
+(audio_device_buffer.cc:480): [REC : 10001msec, 44kHz] callbacks: 1001, samples: 441441, rate: 44140, rate diff: 0%, level: 6396
+(audio_device_buffer.cc:506): [PLAY: 10001msec, 44kHz] callbacks: 1004, samples: 442764, rate: 44272, rate diff: 0%, level: 5
+(audio_device_pulse_linux.cc:1872): Playout underflow
+(overuse_frame_detector.cc:645): CheckForOveruse: encode usage 64 overuse detections 0 rampup delay 40000 action NoAction
+(bitrate_allocator.cc:500): Current BWE 5000
+(thread.cc:551): Message to worker_thread took 946ms to dispatch.
+(agc_manager_direct.cc:146): Input clipping rate: 0%
+(webrtc_video_engine.cc:2520): VideoSendStream stats: 312301161, {input_fps: 0.0, encode_fps: 0, encode_ms: 1, encode_usage_perc: 64, target_bps: 14136, media_bps: 0, suspended: false, bw_adapted_res: false, cpu_adapted_res: false, bw_adapted_fps: false, cpu_adapted_fps: false, #cpu_adaptations: 0, #quality_adaptations: 4} {ssrc: 2684106432, type: media, width: 0, height: 0, key: 3, delta: 90, total_bps: 0, retransmit_bps: 0, avg_delay_ms: 1866, max_delay_ms: 3186, cum_loss: 5, max_ext_seq: 8909, nack: 3, fir: 0, pli: 3}
+(webrtc_video_engine.cc:1689): Call stats: 312301161, {send_bw_bps: 5000, recv_bw_bps: 0, max_pad_bps: 0, pacer_delay_ms: 0, rtt_ms: 517}
+(overuse_frame_detector.cc:645): CheckForOveruse: encode usage 64 overuse detections 0 rampup delay 40000 action NoAction
+(remote_ntp_time_estimator.cc:94): RTP timestamp: 805507346 in NTP clock: 4001592395314 estimated time in receiver NTP clock: 4001592395269
+(bitrate_allocator.cc:500): Current BWE 5000
+(audio_device_buffer.cc:480): [REC : 10000msec, 44kHz] callbacks: 999, samples: 440559, rate: 44056, rate diff: 0%, level: 6010
+(audio_device_buffer.cc:506): [PLAY: 10000msec, 44kHz] callbacks: 1003, samples: 442323, rate: 44232, rate diff: 0%, level: 5
+(overuse_frame_detector.cc:645): CheckForOveruse: encode usage 64 overuse detections 0 rampup delay 40000 action NoAction
+(connection.cc:1640): Conn[fc049200:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:w0s0Vb4G:1:0:host:udp:172.18.0.x:44484->UlJwDkfP:1:2122260223:host:udp:172.18.0.x:49087|CRWS|S|0|0|9115038255631187454|476]: Timing-out STUN ping 3379786f5865517767305263 after 60000386 us ms
+(thread.cc:551): Message to network_thread took 198ms to dispatch.
+(webrtc_video_engine.cc:2520): VideoSendStream stats: 312311617, {input_fps: 0.0, encode_fps: 0, encode_ms: 1, encode_usage_perc: 64, target_bps: 14136, media_bps: 0, suspended: false, bw_adapted_res: false, cpu_adapted_res: false, bw_adapted_fps: false, cpu_adapted_fps: false, #cpu_adaptations: 0, #quality_adaptations: 4} {ssrc: 2684106432, type: media, width: 0, height: 0, key: 3, delta: 90, total_bps: 0, retransmit_bps: 0, avg_delay_ms: 1866, max_delay_ms: 3186, cum_loss: 5, max_ext_seq: 8909, nack: 3, fir: 0, pli: 3}
+(webrtc_video_engine.cc:1689): Call stats: 312311617, {send_bw_bps: 5000, recv_bw_bps: 0, max_pad_bps: 0, pacer_delay_ms: 0, rtt_ms: 510}
+(bitrate_allocator.cc:500): Current BWE 5000
+(overuse_frame_detector.cc:645): CheckForOveruse: encode usage 64 overuse detections 0 rampup delay 40000 action NoAction
+(remote_ntp_time_estimator.cc:94): RTP timestamp: 805984861 in NTP clock: 4001592405264 estimated time in receiver NTP clock: 4001592405218
+(connection.cc:1640): Conn[fc049200:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:w0s0Vb4G:1:0:host:udp:172.18.0.x:44484->UlJwDkfP:1:2122260223:host:udp:172.18.0.x:49087|CRWS|S|0|0|9115038255631187454|460]: Timing-out STUN ping 6d6e30336c4f4f4b4745374c after 60000720 us ms
+(audio_device_buffer.cc:480): [REC : 10000msec, 44kHz] callbacks: 1001, samples: 441441, rate: 44144, rate diff: 0%, level: 3727
+(audio_device_buffer.cc:506): [PLAY: 10000msec, 44kHz] callbacks: 1000, samples: 441000, rate: 44100, rate diff: 0%, level: 4
+(connection.cc:1640): Conn[fc049200:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:w0s0Vb4G:1:0:host:udp:172.18.0.x:44484->UlJwDkfP:1:2122260223:host:udp:172.18.0.x:49087|CRWI|S|0|0|9115038255631187454|460]: Timing-out STUN ping 324e63785a4b58382f357636 after 60000374 us ms
+(overuse_frame_detector.cc:645): CheckForOveruse: encode usage 64 overuse detections 0 rampup delay 40000 action NoAction
+(bitrate_allocator.cc:500): Current BWE 5000
+(overuse_frame_detector.cc:645): CheckForOveruse: encode usage 64 overuse detections 0 rampup delay 40000 action NoAction
+(audio_device_pulse_linux.cc:1965): Can't query latency
+(remote_ntp_time_estimator.cc:94): RTP timestamp: 806470563 in NTP clock: 4001592415382 estimated time in receiver NTP clock: 4001592415336
+(audio_device_buffer.cc:480): [REC : 10000msec, 44kHz] callbacks: 999, samples: 440559, rate: 44056, rate diff: 0%, level: 4292
+(audio_device_buffer.cc:506): [PLAY: 10000msec, 44kHz] callbacks: 1000, samples: 441000, rate: 44100, rate diff: 0%, level: 5
+(overuse_frame_detector.cc:645): CheckForOveruse: encode usage 64 overuse detections 0 rampup delay 40000 action NoAction
+(webrtc_video_engine.cc:2520): VideoSendStream stats: 312328450, {input_fps: 0.0, encode_fps: 0, encode_ms: 1, encode_usage_perc: 64, target_bps: 14136, media_bps: 0, suspended: false, bw_adapted_res: false, cpu_adapted_res: false, bw_adapted_fps: false, cpu_adapted_fps: false, #cpu_adaptations: 0, #quality_adaptations: 4} {ssrc: 2684106432, type: media, width: 0, height: 0, key: 3, delta: 90, total_bps: 0, retransmit_bps: 0, avg_delay_ms: 1866, max_delay_ms: 3186, cum_loss: 5, max_ext_seq: 8909, nack: 3, fir: 0, pli: 3}
+(webrtc_video_engine.cc:1689): Call stats: 312328450, {send_bw_bps: 5000, recv_bw_bps: 0, max_pad_bps: 0, pacer_delay_ms: 0, rtt_ms: 521}
+(turn_port.cc:1680): Port[fc0101e0:0:1:0:relay:Net[eth0:172.18.0.x/16:Ethernet:id=1]]: TURN create permission request sent, id=795545556269676530574644
+(turn_port.cc:1680): Port[fc0101e0:0:1:0:relay:Net[eth0:172.18.0.x/16:Ethernet:id=1]]: TURN create permission request sent, id=795545556269676530574644
+(turn_port.cc:1687): Port[fc0101e0:0:1:0:relay:Net[eth0:172.18.0.x/16:Ethernet:id=1]]: TURN permission requested successfully, id=795545556269676530574644, code=0, rtt=64635 us
+(turn_port.cc:1874): Port[fc0101e0:0:1:0:relay:Net[eth0:172.18.0.x/16:Ethernet:id=1]]: Create permission for 172.18.0.x:49087 succeeded
+(turn_port.cc:1888): Port[fc0101e0:0:1:0:relay:Net[eth0:172.18.0.x/16:Ethernet:id=1]]: Scheduled create-permission-request in 240000ms.
+(bitrate_allocator.cc:500): Current BWE 5000
+(agc_manager_direct.cc:146): Input clipping rate: 0%
+(overuse_frame_detector.cc:645): CheckForOveruse: encode usage 64 overuse detections 0 rampup delay 40000 action NoAction
+(remote_ntp_time_estimator.cc:94): RTP timestamp: 806934781 in NTP clock: 4001592425259 estimated time in receiver NTP clock: 4001592425213
+(audio_device_buffer.cc:480): [REC : 10000msec, 44kHz] callbacks: 1001, samples: 441441, rate: 44144, rate diff: 0%, level: 4211
+(audio_device_buffer.cc:506): [PLAY: 10000msec, 44kHz] callbacks: 1005, samples: 443205, rate: 44321, rate diff: 1%, level: 4
+(bitrate_allocator.cc:500): Current BWE 5000
+(overuse_frame_detector.cc:645): CheckForOveruse: encode usage 64 overuse detections 0 rampup delay 40000 action NoAction
+(webrtc_video_engine.cc:2520): VideoSendStream stats: 312338616, {input_fps: 0.0, encode_fps: 0, encode_ms: 1, encode_usage_perc: 64, target_bps: 14136, media_bps: 0, suspended: false, bw_adapted_res: false, cpu_adapted_res: false, bw_adapted_fps: false, cpu_adapted_fps: false, #cpu_adaptations: 0, #quality_adaptations: 4} {ssrc: 2684106432, type: media, width: 0, height: 0, key: 3, delta: 90, total_bps: 0, retransmit_bps: 0, avg_delay_ms: 1866, max_delay_ms: 3186, cum_loss: 5, max_ext_seq: 8909, nack: 3, fir: 0, pli: 3}
+(webrtc_video_engine.cc:1689): Call stats: 312338616, {send_bw_bps: 5000, recv_bw_bps: 0, max_pad_bps: 0, pacer_delay_ms: 0, rtt_ms: 511}
+(bitrate_allocator.cc:500): Current BWE 5000
+(overuse_frame_detector.cc:645): CheckForOveruse: encode usage 64 overuse detections 0 rampup delay 40000 action NoAction
+(remote_ntp_time_estimator.cc:94): RTP timestamp: 807432541 in NTP clock: 4001592435589 estimated time in receiver NTP clock: 4001592435544
+(audio_device_buffer.cc:480): [REC : 10000msec, 44kHz] callbacks: 1000, samples: 441000, rate: 44100, rate diff: 0%, level: 6868
+(audio_device_buffer.cc:506): [PLAY: 10000msec, 44kHz] callbacks: 1000, samples: 441000, rate: 44100, rate diff: 0%, level: 5
+(overuse_frame_detector.cc:645): CheckForOveruse: encode usage 64 overuse detections 0 rampup delay 40000 action NoAction
+(bitrate_allocator.cc:500): Current BWE 5000
+(connection.cc:1640): Conn[fc049200:0:Net[eth0:172.18.0.x/16:Ethernet:id=1]:w0s0Vb4G:1:0:host:udp:172.18.0.x:44484->UlJwDkfP:1:2122260223:host:udp:172.18.0.x:49087|CRWI|S|0|0|9115038255631187454|446]: Timing-out STUN ping 42754b766b6b6158516d6967 after 60000834 us ms
+(overuse_frame_detector.cc:645): CheckForOveruse: encode usage 64 overuse detections 0 rampup delay 40000 action NoAction
+(remote_ntp_time_estimator.cc:94): RTP timestamp: 807916366 in NTP clock: 4001592445637 estimated time in receiver NTP clock: 4001592445591
+(audio_device_buffer.cc:480): [REC : 10000msec, 44kHz] callbacks: 1000, samples: 441000, rate: 44100, rate diff: 0%, level: 2234
+(audio_device_buffer.cc:506): [PLAY: 10000msec, 44kHz] callbacks: 1000, samples: 441000, rate: 44100, rate diff: 0%, level: 4
+(webrtc_video_engine.cc:2520): VideoSendStream stats: 312356839, {input_fps: 0.0, encode_fps: 0, encode_ms: 1, encode_usage_perc: 64, target_bps: 14136, media_bps: 0, suspended: false, bw_adapted_res: false, cpu_adapted_res: false, bw_adapted_fps: false, cpu_adapted_fps: false, #cpu_adaptations: 0, #quality_adaptations: 4} {ssrc: 2684106432, type: media, width: 0, height: 0, key: 3, delta: 90, total_bps: 0, retransmit_bps: 0, avg_delay_ms: 1866, max_delay_ms: 3186, cum_loss: 5, max_ext_seq: 8909, nack: 3, fir: 0, pli: 3}
+(webrtc_video_engine.cc:1689): Call stats: 312356839, {send_bw_bps: 5000, recv_bw_bps: 0, max_pad_bps: 0, pacer_delay_ms: 0, rtt_ms: 525}
+(overuse_frame_detector.cc:645): CheckForOveruse: encode usage 64 overuse detections 0 rampup delay 40000 action NoAction
+(bitrate_allocator.cc:500): Current BWE 5000
+(agc_manager_direct.cc:146): Input clipping rate: 0%
+(overuse_frame_detector.cc:645): CheckForOveruse: encode usage 64 overuse detections 0 rampup delay 40000 action NoAction
+(remote_ntp_time_estimator.cc:94): RTP timestamp: 808395421 in NTP clock: 4001592456123 estimated time in receiver NTP clock: 4001592456078
+(audio_device_buffer.cc:480): [REC : 10000msec, 44kHz] callbacks: 1000, samples: 441000, rate: 44100, rate diff: 0%, level: 4124
+(audio_device_buffer.cc:506): [PLAY: 10000msec, 44kHz] callbacks: 1005, samples: 443205, rate: 44321, rate diff: 1%, level: 5
+(webrtc_video_engine.cc:2520): VideoSendStream stats: 312367616, {input_fps: 0.0, encode_fps: 0, encode_ms: 1, encode_usage_perc: 64, target_bps: 14136, media_bps: 0, suspended: false, bw_adapted_res: false, cpu_adapted_res: false, bw_adapted_fps: false, cpu_adapted_fps: false, #cpu_adaptations: 0, #quality_adaptations: 4} {ssrc: 2684106432, type: media, width: 0, height: 0, key: 3, delta: 90, total_bps: 0, retransmit_bps: 0, avg_delay_ms: 1866, max_delay_ms: 3186, cum_loss: 5, max_ext_seq: 8909, nack: 3, fir: 0, pli: 3}
+(webrtc_video_engine.cc:1689): Call stats: 312367616, {send_bw_bps: 5000, recv_bw_bps: 0, max_pad_bps: 0, pacer_delay_ms: 0, rtt_ms: 510}
+(overuse_frame_detector.cc:645): CheckForOveruse: encode usage 64 overuse detections 0 rampup delay 40000 action NoAction
+(overuse_frame_detector.cc:645): CheckForOveruse: encode usage 64 overuse detections 0 rampup delay 40000 action NoAction
+(remote_ntp_time_estimator.cc:94): RTP timestamp: 808878908 in NTP clock: 4001592466057 estimated time in receiver NTP clock: 4001592466012
+(bitrate_allocator.cc:500): Current BWE 5000
+(audio_device_buffer.cc:480): [REC : 10000msec, 44kHz] callbacks: 1000, samples: 441000, rate: 44100, rate diff: 0%, level: 4172
+(audio_device_buffer.cc:506): [PLAY: 10000msec, 44kHz] callbacks: 1000, samples: 441000, rate: 44100, rate diff: 0%, level: 4
+(overuse_frame_detector.cc:645): CheckForOveruse: encode usage 64 overuse detections 0 rampup delay 40000 action NoAction
+(webrtc_video_engine.cc:2520): VideoSendStream stats: 312378616, {input_fps: 0.0, encode_fps: 0, encode_ms: 1, encode_usage_perc: 64, target_bps: 14136, media_bps: 0, suspended: false, bw_adapted_res: false, cpu_adapted_res: false, bw_adapted_fps: false, cpu_adapted_fps: false, #cpu_adaptations: 0, #quality_adaptations: 4} {ssrc: 2684106432, type: media, width: 0, height: 0, key: 3, delta: 90, total_bps: 0, retransmit_bps: 0, avg_delay_ms: 1866, max_delay_ms: 3186, cum_loss: 5, max_ext_seq: 8909, nack: 3, fir: 0, pli: 3}
+(webrtc_video_engine.cc:1689): Call stats: 312378616, {send_bw_bps: 5000, recv_bw_bps: 0, max_pad_bps: 0, pacer_delay_ms: 0, rtt_ms: 519}
+(bitrate_allocator.cc:500): Current BWE 5000
+(overuse_frame_detector.cc:645): CheckForOveruse: encode usage 64 overuse detections 0 rampup delay 40000 action NoAction
+(remote_ntp_time_estimator.cc:94): RTP timestamp: 809360701 in NTP clock: 4001592476045 estimated time in receiver NTP clock: 4001592476000
+(audio_device_buffer.cc:480): [REC : 10001msec, 44kHz] callbacks: 1001, samples: 441441, rate: 44140, rate diff: 0%, level: 5840
+(audio_device_buffer.cc:506): [PLAY: 10001msec, 44kHz] callbacks: 1000, samples: 441000, rate: 44096, rate diff: 0%, level: 4
+(bitrate_allocator.cc:500): Current BWE 5000
+(overuse_frame_detector.cc:645): CheckForOveruse: encode usage 64 overuse detections 0 rampup delay 40000 action NoAction
+(webrtc_video_engine.cc:2520): VideoSendStream stats: 312389616, {input_fps: 0.0, encode_fps: 0, encode_ms: 1, encode_usage_perc: 64, target_bps: 14136, media_bps: 0, suspended: false, bw_adapted_res: false, cpu_adapted_res: false, bw_adapted_fps: false, cpu_adapted_fps: false, #cpu_adaptations: 0, #quality_adaptations: 4} {ssrc: 2684106432, type: media, width: 0, height: 0, key: 3, delta: 90, total_bps: 0, retransmit_bps: 0, avg_delay_ms: 1866, max_delay_ms: 3186, cum_loss: 5, max_ext_seq: 8909, nack: 3, fir: 0, pli: 3}
+(webrtc_video_engine.cc:1689): Call stats: 312389616, {send_bw_bps: 5000, recv_bw_bps: 0, max_pad_bps: 0, pacer_delay_ms: 0, rtt_ms: 519}
+(dcsctp_transport.cc:559): DcSctpTransport0->OnAborted(error=PEER_REPORTED, message=User-Initiated Abort, reason=Close called).
+(openssl_adapter.cc:825): SSL negotiation finished successfully
+(openssl_adapter.cc:825): SSL negotiation finished successfully
+(dtls_transport.cc:1026): DtlsTransport[0|1|_W]: DTLS transport closed by remote
+(jsep_transport_controller.cc:1304):  Transport 0 writability changed to 0.
+(peer_connection.cc:1907): Changing IceConnectionState completed => disconnected
+(channel.cc:895): Channel not writable ({mid: 0, media_type: audio})
+(channel.cc:895): Channel not writable ({mid: 1, media_type: video})
+(srtp_transport.cc:285): The params in SRTP transport are reset.
+(dtls_transport.cc:298): DTLS-STUN piggyback complete with success=0
+(peer_connection.cc:1929): Changing standardized IceConnectionState completed => connected
+(agc_manager_direct.cc:146): Input clipping rate: 0%
+(rtc_peerconnection_impl.cc:658): Close
+(peer_connection.cc:2652): Tearing down data channel transport for mid=2
+(turn_port.cc:1583): Port[fc0101e0:0:1:0:relay:Net[eth0:172.18.0.x/16:Ethernet:id=1]]: TURN refresh request sent, id=412f68374742667645382f42
+(webrtc_video_engine.cc:3223): SetDefaultSink: nullptr
+(channel.cc:619): Channel disabled: {mid: 1, media_type: video}
+(video_send_stream_impl.cc:748): VideoSendStreamImpl::Stop
+(channel.cc:633): Changing state, recv=0 send=0 for {mid: 1, media_type: video}
+(video_stream_encoder.cc:2540): Video suspend state changed to: suspended
+(resource_adaptation_processor.cc:140): Removing resource "EncoderUsageResource".
+(video_send_stream_impl.cc:748): VideoSendStreamImpl::Stop
+(video_send_stream_impl.cc:585): ~VideoSendStreamImpl: {encoder_settings: { experiment_cpu_load_estimator: off}}, rtp: {ssrcs: [2684106432], rids: [], mid: '1', rtcp_mode: RtcpMode::kReducedSize, max_packet_size: 1200, extmap-allow-mixed: true, extensions: [{uri: http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01, id: 3}, {uri: http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time, id: 2}, {uri: http://www.webrtc.org/experiments/rtp-hdrext/color-space, id: 8}, {uri: http://www.webrtc.org/experiments/rtp-hdrext/playout-delay, id: 5}, {uri: http://www.webrtc.org/experiments/rtp-hdrext/video-content-type, id: 6}, {uri: http://www.webrtc.org/experiments/rtp-hdrext/video-timing, id: 7}, {uri: urn:3gpp:video-orientation, id: 13}, {uri: urn:ietf:params:rtp-hdrext:sdes:mid, id: 4}, {uri: urn:ietf:params:rtp-hdrext:sdes:repaired-rtp-stream-id, id: 11}, {uri: urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id, id: 10}], lntf: {enabled: false}, nack: {rtp_history_ms: 1000}, ulpfec: {ulpfec_payload_type: 121, red_payload_type: 119, red_rtx_payload_type: 120}, payload_name: VP8, payload_type: 96, raw_payload: false, stream_configs: [{ssrc: 2684106432, rid: , payload_name: VP8, payload_type: 96, raw_payload: false, rtx: {ssrc: 3566388371, payload_type: 97}}], flexfec: {payload_type: -1, ssrc: 0, protected_media_ssrcs: []}, rtx: {ssrcs: [3566388371], payload_type: 97}, c_name: nlfSMGkKTXxe/XRW}, rtcp_report_interval_ms: 1000, send_transport: (Transport), render_delay_ms: 0, target_delay_ms: 0, suspend_below_min_bitrate: off}
+(send_statistics_proxy.cc:806): WebRTC.Video.InputWidthInPixels 517
+WebRTC.Video.InputHeightInPixels 291
+WebRTC.Video.InputFramesPerSecond periodic_samples:144, {min:0, avg:1, max:28}
+WebRTC.Video.SentFramesPerSecond periodic_samples:144, {min:0, avg:0, max:20}
+WebRTC.Video.SentToInputFpsRatioPercent 0
+WebRTC.Video.SentPacketsLostInPercent 4
+WebRTC.Video.NumberOfPauseEvents 0
+WebRTC.Video.PausedTimeInPercent 0
+WebRTC.Video.BitrateSentInBps periodic_samples:144, {min:0, avg:2984, max:206984}
+WebRTC.Video.MediaBitrateSentInBps periodic_samples:144, {min:0, avg:2096, max:134512}
+WebRTC.Video.PaddingBitrateSentInBps periodic_samples:144, {min:0, avg:32, max:4080}
+WebRTC.Video.RetransmittedBitrateSentInBps periodic_samples:144, {min:0, avg:8, max:1448}
+WebRTC.Video.RtxBitrateSentInBps periodic_samples:144, {min:0, avg:136, max:18088}
+WebRTC.Video.FecBitrateSentInBps periodic_samples:144, {min:0, avg:648, max:49456}
+Frames encoded 93
+WebRTC.Video.DroppedFrames.Capturer 0
+WebRTC.Video.DroppedFrames.BadTimestamp0
+WebRTC.Video.DroppedFrames.EncoderQueue 3
+WebRTC.Video.DroppedFrames.Encoder 182
+WebRTC.Video.DroppedFrames.Ratelimiter 0
+WebRTC.Video.DroppedFrames.CongestionWindow 18
+(webrtc_voice_engine.cc:1718): WebRtcVoiceSendChannel::MuteStream: APM:0
+(webrtc_voice_engine.cc:2508): WRVMC::SetOutputVolume({ssrc=496228560}, {volume=0.00})
+(webrtc_voice_engine.cc:2518): WRVMC::SetOutputVolume => (stream with SSRC 496228560 now uses volume 0.00)
+(channel.cc:619): Channel disabled: {mid: 0, media_type: audio}
+(audio_receive_stream.cc:179): AudioReceiveStreamImpl::Stop: 496228560
+(audio_device_impl.cc:766): StopPlayout
+(audio_device_buffer.cc:169): total playout time: 302589
+(audio_device_impl.cc:770): output: 0
+(audio_send_stream.cc:389): AudioSendStream::Stop: 2253650649
+(audio_device_impl.cc:797): StopRecording
+(audio_device_buffer.cc:199): HISTOGRAM(WebRTC.Audio.RecordedOnlyZeros): 0
+(audio_device_buffer.cc:202): total recording time: 325275
+(audio_device_impl.cc:801): output: 0
+(channel.cc:633): Changing state, recv=0 send=0 for {mid: 0, media_type: audio}
+(webrtc_voice_engine.cc:2450): RemoveRecvStream: 496228560
+(audio_receive_stream.cc:144): ~AudioReceiveStreamImpl: 496228560
+(webrtc_voice_engine.cc:1573): RemoveSendStream: 2253650649
+(call.cc:1258): UpdateAggregateNetworkState: aggregate_state change to down
+(pacing_controller.cc:113): PacedSender paused.
+(control_handler.cc:65): Bitrate estimate state changed, BWE: 5 kbps.
+(audio_send_stream.cc:186): ~AudioSendStream: 2253650649
+(send_delay_stats.cc:57): WebRTC.Video.SendDelayInMs, periodic_samples:6, {min:0, avg:1, max:4}
+(call.cc:666): WebRTC.Call.EstimatedSendBitrateInKbps, periodic_samples:150, {min:5, avg:21, max:325}
+(call.cc:674): WebRTC.Call.PacerBitrateInKbps, periodic_samples:150, {min:5, avg:21, max:325}
+(call.cc:622): WebRTC.Call.AudioBitrateReceivedInBps, periodic_samples:149, {min:1160, avg:6184, max:11360}
+(call.cc:630): WebRTC.Call.RtcpBitrateReceivedInBps, periodic_samples:98, {min:128, avg:352, max:2336}
+(call.cc:638): WebRTC.Call.BitrateReceivedInBps, periodic_samples:149, {min:1240, avg:6424, max:11360}
+(webrtc_voice_engine.cc:562): WebRtcVoiceEngine::Terminate
+(audio_device_impl.cc:766): StopPlayout
+(audio_device_impl.cc:770): output: 0
+(audio_device_impl.cc:797): StopRecording
+(audio_device_impl.cc:801): output: 0
+(audio_device_impl.cc:815): RegisterAudioCallback
+(audio_device_impl.cc:313): Terminate
+(rtc_video_sink_adapter.cc:13): VideoSinkAdapter: ctor f81d13e0
+(rtc_video_track_impl.cc:12): VideoTrackImpl: ctor 
+(rtc_video_track_impl.cc:18): ~VideoTrackImpl: dtor 
+(rtc_video_sink_adapter.cc:18): ~VideoSinkAdapter: dtor 
+(rtc_audio_track_impl.cc:14): ~AudioTrackImpl: dtor 
+(rtc_audio_track_impl.cc:14): ~AudioTrackImpl: dtor 
+(rtc_video_track_impl.cc:18): ~VideoTrackImpl: dtor 
+(rtc_video_sink_adapter.cc:18): ~VideoSinkAdapter: dtor 
+(rtc_video_track_impl.cc:18): ~VideoTrackImpl: dtor 
+(rtc_video_sink_adapter.cc:18): ~VideoSinkAdapter: dtor 
+(rtc_video_track_impl.cc:18): ~VideoTrackImpl: dtor 
+(rtc_video_sink_adapter.cc:18): ~VideoSinkAdapter: dtor 
