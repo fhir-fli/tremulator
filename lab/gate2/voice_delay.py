@@ -218,15 +218,19 @@ def level_at(wav, t, span=BEEP_S + 0.02):
 def coded(path, start, sent_peaks=None):
     """(time, code) for every beep in the recording at `path`, in time order,
     from its onsets in each tone's band, by the rule above CLICK_FRACTION;
-    and each band's peak. The levels are fractions of `sent_peaks` (each
-    band's peak in the sent recording) or, for the sent recording itself,
-    of its own peaks. Both sides use the same bar so a beep at full level
-    is timed at the same point of its rise on each (one 2 ms apart when
-    the sent side kept the detector's half-peak bar)."""
+    and each band's peak. Levels are fractions of one full beep through its
+    own band: the largest of `sent_peaks` (each band's peak in the sent
+    recording) or, for the sent recording itself, of its own. Every tone is
+    made at the same level, so this is each band's own peak whenever every
+    pitch was sent (26,210-26,212 in every band of all 18 calls26 runs); where a pitch was not,
+    that band's peak is only the leak of the others (calls27a: 7,800 at
+    3600 Hz, read as a full beep). Both sides use the same bar so a beep at
+    full level is timed at the same point of its rise on each (one 2 ms
+    apart when the sent side kept the detector's half-peak bar)."""
     full = to_wav(path)
     bands = [to_wav(path, tone) for tone in CODE_TONES]
     peaks = [peak(wav) for wav in bands]
-    ref = sent_peaks or peaks
+    ref = [max(sent_peaks or peaks)] * len(CODE_TONES)
     found = []
     for code, wav in enumerate(bands):
         # The detector's own bar is half the band's peak in this recording,
@@ -360,6 +364,23 @@ def self_check(d, speech=False):
     # Every click heard 10.3 s late, less the three removed (3, 6, 9).
     ok = (ok and got["late"]["clicks_heard"] == 6 and got["late"]["heard_unpaired"] == 0
           and exact(os.path.join(d, "pairs_late.jsonl"), 10300))
+    # Four clicks: no 2700 or 3600 Hz beep is sent, so those bands hold only
+    # the leak of the others (calls27a, five clicks: the 3600 Hz band's own
+    # peak was the 2700 Hz beep's leak, read as a beep of its own, and the
+    # sent codes came out 0 1 2 3 5 4).
+    short = os.path.join(d, "short.wav")
+    call_track(short, 4, speech)
+    short_sent, short_heard = os.path.join(d, "short_sent.mkv"), os.path.join(d, "short_heard.mkv")
+    sh(["ffmpeg", "-y", "-loglevel", "error", "-i", short, short_sent])
+    sh(["ffmpeg", "-y", "-loglevel", "error", "-i", short, short_heard])
+    logged(short_sent, t)
+    logged(short_heard, t + 0.3)
+    try:
+        got["short"] = measure(short_sent, short_heard, os.path.join(d, "pairs_short.jsonl"), speech)
+    except RuntimeError as e:
+        got["short"] = {"error": str(e)}
+    ok = (ok and got["short"].get("clicks_heard") == 4 and got["short"]["heard_unpaired"] == 0
+          and got["short"]["delay_min_ms"] == got["short"]["delay_max_ms"] == 300)
     if speech:
         every = "+".join(f"between(t,{10 * k - 5 - 0.1},{10 * k - 5 + 0.2})" for k in range(1, 10))
         none = os.path.join(d, "none.mkv")
