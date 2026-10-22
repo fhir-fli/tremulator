@@ -45,6 +45,10 @@ class LabOptions {
         'separate-streams',
         help: 'send the video in a stream of its own (no lip sync, RFC 8830)',
       )
+      ..addFlag(
+        'close-stopped-video',
+        help: 'when video stops, the phones agree it is off (a new offer)',
+      )
       ..addOption(
         'until-file',
         help: "the callee stays until this file exists (the lab's stop sign)",
@@ -119,6 +123,9 @@ class LabOptions {
 
   /// Whether the video goes in a stream of its own.
   bool get separateStreams => _a['separate-streams'] as bool;
+
+  /// Whether stopped video is closed on both phones.
+  bool get closeStoppedVideo => _a['close-stopped-video'] as bool;
 
   /// The stop sign.
   String? get untilFile => _a['until-file'] as String?;
@@ -223,6 +230,7 @@ Future<void> _run(
     'usedtx': o.opus.dtx,
     'audio-drop': o.audioExtensions.drop.toList(),
     'separate-streams': o.separateStreams,
+    'close-stopped-video': o.closeStoppedVideo,
   });
   final keys = await openLabKeys(
     Directory(o.state)..createSync(recursive: true),
@@ -240,6 +248,7 @@ Future<void> _run(
     opus: o.opus,
     audioExtensions: o.audioExtensions,
     separateStreams: o.separateStreams,
+    closeStoppedVideo: o.closeStoppedVideo,
     report: log.call,
   );
   final media = await _media(o, log);

@@ -600,6 +600,196 @@ void main() {
       },
     );
   }
+
+  for (final close in [false, true]) {
+    testWidgets(
+      close
+          ? 'with closeStoppedVideo stopped video is closed on both phones, '
+                'and a tap opens it again'
+          : 'by default stopped video stays open on the other phone',
+      (_) async {
+        // calls28-29: with the video only replaced by no track, Bob's phone
+        // kept a video receiver its sound waited on after video stopped.
+        var slow = false;
+        final aliceCalls = Calls(
+          alice,
+          closeStoppedVideo: close,
+          videoGuard: () => VideoGuard(startHold: const Duration(seconds: 3)),
+          guardEvery: const Duration(milliseconds: 200),
+          roundTrip: (_) async => slow ? 9.0 : 0.4,
+        );
+        final bobCalls = Calls(bob, videoGuard: null);
+        final media = await navigator.mediaDevices.getUserMedia({
+          'audio': true,
+          'video': false,
+        });
+        final screen = await navigator.mediaDevices.getDisplayMedia({
+          'video': {
+            'deviceId': {'exact': '0'},
+            'mandatory': {'frameRate': 30.0},
+          },
+          'audio': false,
+        });
+        for (final t in screen.getVideoTracks()) {
+          await media.addTrack(t);
+        }
+        final bobsCall = Completer<Call>();
+        bobCalls.ringing.listen((c) async {
+          await c.answer();
+          bobsCall.complete(c);
+        });
+        final call = await aliceCalls.start(conversation, media: media);
+        await call.connected.timeout(const Duration(seconds: 30));
+        final answered = await bobsCall.future;
+        await answered.connected.timeout(const Duration(seconds: 30));
+        final bobSays = <bool>[];
+        answered.video.listen((c) => bobSays.add(c.sending));
+
+        await _until(() => bobSays.contains(true));
+        expect(
+          await _videoDirection(answered),
+          TransceiverDirection.RecvOnly,
+          reason: 'Bob receives the video',
+        );
+        slow = true;
+        await _until(() => bobSays.contains(false));
+        // Bob sends no video, and now Alice sends none: closed (W3C WebRTC
+        // 1.0 currentDirection, the direction both descriptions agreed).
+        final want = close
+            ? TransceiverDirection.Inactive
+            : TransceiverDirection.RecvOnly;
+        await _untilAsync(() async => await _videoDirection(answered) == want);
+        expect(await _videoDirection(answered), want);
+        final heard = await _audioPackets(answered);
+        await Future<void>.delayed(const Duration(milliseconds: 1500));
+        expect(
+          await _audioPackets(answered),
+          greaterThan(heard),
+          reason: 'sound flows on',
+        );
+
+        slow = false;
+        await call.retryVideo();
+        await _until(() => bobSays.length == 3);
+        await _untilAsync(
+          () async =>
+              await _videoDirection(answered) == TransceiverDirection.RecvOnly,
+        );
+        final frames = await _videoFrames(answered);
+        await Future<void>.delayed(const Duration(milliseconds: 1500));
+        expect(
+          await _videoFrames(answered),
+          greaterThan(frames),
+          reason: 'video back',
+        );
+        if (close) {
+          expect(
+            aliceLog.where((e) => e['event'] == 'video-offer-sent').length,
+            greaterThanOrEqualTo(2),
+          );
+        }
+
+        await call.hangUp();
+        await aliceCalls.close();
+        await bobCalls.close();
+        for (final t in [...media.getTracks(), ...screen.getTracks()]) {
+          await t.stop();
+        }
+      },
+    );
+  }
+
+  testWidgets(
+    'with closeStoppedVideo the callee stopping its video has the caller '
+    'offer, and the video is closed on both phones',
+    (_) async {
+      var slow = false;
+      final aliceCalls = Calls(
+        alice,
+        closeStoppedVideo: true,
+        videoGuard: null,
+      );
+      final bobCalls = Calls(
+        bob,
+        closeStoppedVideo: true,
+        videoGuard: () => VideoGuard(startHold: const Duration(seconds: 3)),
+        guardEvery: const Duration(milliseconds: 200),
+        roundTrip: (_) async => slow ? 9.0 : 0.4,
+      );
+      final screen = await navigator.mediaDevices.getDisplayMedia({
+        'video': {
+          'deviceId': {'exact': '0'},
+          'mandatory': {'frameRate': 30.0},
+        },
+        'audio': false,
+      });
+      final bobsCall = Completer<Call>();
+      bobCalls.ringing.listen((c) async {
+        await c.answer(media: screen);
+        bobsCall.complete(c);
+      });
+      final call = await aliceCalls.start(conversation);
+      await call.connected.timeout(const Duration(seconds: 30));
+      final answered = await bobsCall.future;
+      await answered.connected.timeout(const Duration(seconds: 30));
+      final aliceHears = <bool>[];
+      call.video.listen((c) => aliceHears.add(c.sending));
+
+      await _until(() => aliceHears.contains(true));
+      slow = true;
+      await _until(() => aliceHears.contains(false));
+      await _untilAsync(
+        () async =>
+            await _videoDirection(call) == TransceiverDirection.Inactive,
+      );
+      expect(
+        aliceLog.where((e) => e['event'] == 'video-offer-sent'),
+        isNotEmpty,
+      );
+
+      await call.hangUp();
+      await aliceCalls.close();
+      await bobCalls.close();
+      for (final t in screen.getTracks()) {
+        await t.stop();
+      }
+    },
+  );
+}
+
+/// The agreed direction of [call]'s video transceiver.
+Future<TransceiverDirection?> _videoDirection(Call call) async {
+  for (final t in await call.connection!.getTransceivers()) {
+    if (t.receiver.track?.kind == 'video') {
+      return t.getCurrentDirection();
+    }
+  }
+  return null;
+}
+
+Future<int> _inbound(Call call, String kind, String key) async {
+  for (final r in await call.stats()) {
+    if (r.type == 'inbound-rtp' && r.values['kind'] == kind) {
+      return (r.values[key] as num?)?.toInt() ?? 0;
+    }
+  }
+  return 0;
+}
+
+Future<int> _audioPackets(Call call) =>
+    _inbound(call, 'audio', 'packetsReceived');
+
+Future<int> _videoFrames(Call call) =>
+    _inbound(call, 'video', 'framesReceived');
+
+Future<void> _untilAsync(Future<bool> Function() done) async {
+  final deadline = DateTime.now().add(const Duration(seconds: 30));
+  while (!await done()) {
+    if (DateTime.now().isAfter(deadline)) {
+      throw TimeoutException('condition not met in 30 s');
+    }
+    await Future<void>.delayed(const Duration(milliseconds: 100));
+  }
 }
 
 /// The stream id in each media section's msid line, by kind (RFC 8830).

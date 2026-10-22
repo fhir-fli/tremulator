@@ -47,6 +47,7 @@ class Calls {
     this.opus = const OpusReceive(),
     this.audioExtensions = const AudioExtensions(),
     this.separateStreams = false,
+    this.closeStoppedVideo = false,
     this.videoGuard = VideoGuard.new,
     this.guardEvery = const Duration(seconds: 1),
     Report? report,
@@ -121,6 +122,16 @@ class Calls {
   /// 850-1,550 ms to the end of the call while the network needed 40-100 ms
   /// (14 of 16 calls). Off: the lab's test of that cause.
   final bool separateStreams;
+
+  /// When video stops, also marks its transceiver as no longer sending
+  /// (recvonly) and has the caller make a new offer, so both descriptions
+  /// say the video is off; when it starts again, sendrecv and another offer.
+  /// Only the caller offers, so a callee that stops or starts its video
+  /// tells the caller over the control channel and the caller offers.
+  /// The other side's receiver then has no video coming, and nothing for
+  /// its sound to wait on. The alternative to [separateStreams] that keeps
+  /// sound and picture in step while video runs. Off: a lab test (E7).
+  final bool closeStoppedVideo;
 
   /// Makes the guard that stops this phone's video when the link cannot
   /// carry it (one per call); null sends video whatever the link.
@@ -271,6 +282,9 @@ class Call {
   /// The other phone's certificate fingerprints, from its first
   /// description; every later description must carry the same.
   String? _remoteFingerprints;
+
+  /// The ICE username fragment of this phone's last description.
+  String? _localUfrag;
 
   /// Set while a call that had connected has lost its link.
   DateTime? _lostAt;
@@ -443,6 +457,11 @@ class Call {
           if (!_video.isClosed) {
             _video.add(VideoChange(local: false, sending: sending));
           }
+          if (_calls.closeStoppedVideo && outgoing) {
+            // The callee has set its own direction; its answer to this
+            // offer carries it.
+            unawaited(_serial(_videoOffer));
+          }
       }
     };
   }
@@ -465,7 +484,13 @@ class Call {
 
   /// Sets [description] locally, waits for this phone's addresses (or
   /// [Calls.gatherTimeout]), and starts sending the description with them
-  /// in it (see [_deliver]); returns before it has got through.
+  /// in it (see [_deliver]); returns before it has got through. A
+  /// description with the same ICE username fragment as this phone's last
+  /// is not a restart ("To restart ICE, an agent MUST change both the
+  /// "ice-pwd" and the "ice-ufrag"", RFC 8839 section 4.4.1.1.1, read
+  /// 2026-10-21) and starts no new gathering, so no gathering event would
+  /// come: it goes at once with the addresses already found
+  /// ([Calls.closeStoppedVideo] makes such offers).
   Future<void> _sendDescription(
     RTCSessionDescription description,
     SignalType type,
@@ -480,17 +505,23 @@ class Call {
     };
     await pc.setLocalDescription(description);
     final started = DateTime.now();
+    final ufrag = _ufrag(description.sdp!);
+    final regather = ufrag == null || ufrag != _localUfrag;
+    _localUfrag = ufrag;
     var timedOut = false;
-    await gathered.future.timeout(
-      _calls.gatherTimeout,
-      onTimeout: () => timedOut = true,
-    );
+    if (regather) {
+      await gathered.future.timeout(
+        _calls.gatherTimeout,
+        onTimeout: () => timedOut = true,
+      );
+    }
     final full = await pc.getLocalDescription();
     _calls.report({
       'event': 'gathered',
       'call': id,
       'ms': DateTime.now().difference(started).inMilliseconds,
       'timed-out': timedOut,
+      'regather': regather,
     });
     unawaited(
       _deliver(
@@ -562,6 +593,16 @@ class Call {
       RTCSessionDescription(sdp, description.type),
     );
     return true;
+  }
+
+  /// The first a=ice-ufrag value in [sdp] (RFC 8839 section 5.4), or null.
+  static String? _ufrag(String sdp) {
+    for (final l in sdp.split(RegExp(r'\r?\n'))) {
+      if (l.startsWith('a=ice-ufrag:')) {
+        return l.substring('a=ice-ufrag:'.length).trim();
+      }
+    }
+    return null;
   }
 
   static String _fingerprints(String sdp) {
@@ -956,6 +997,12 @@ class Call {
             in _videoSenders.entries) {
           await sender.replaceTrack(sending ? track : null);
         }
+        if (_calls.closeStoppedVideo) {
+          await _setVideoDirection(sending);
+          if (outgoing) {
+            await _serial(_videoOffer);
+          }
+        }
         _calls.report({
           'event': 'video-sending',
           'call': id,
@@ -973,6 +1020,37 @@ class Call {
           );
         }
       });
+
+  /// Sets this phone's video transceivers to send or not
+  /// ([Calls.closeStoppedVideo]); the next offer carries it.
+  Future<void> _setVideoDirection(bool sending) async {
+    final pc = _pc;
+    if (pc == null) {
+      return;
+    }
+    final ids = {for (final s in _videoSenders.keys) s.senderId};
+    for (final t in await pc.getTransceivers()) {
+      if (ids.contains(t.sender.senderId)) {
+        await t.setDirection(
+          sending
+              ? TransceiverDirection.SendRecv
+              : TransceiverDirection.RecvOnly,
+        );
+      }
+    }
+  }
+
+  /// The caller offers again so both phones' descriptions match the video
+  /// now sent ([Calls.closeStoppedVideo]). While the link is lost the
+  /// restarts' offers carry the same directions instead.
+  Future<void> _videoOffer() async {
+    if (_pc == null || _lostAt != null || _ended.isCompleted) {
+      return;
+    }
+    _number++;
+    _calls.report({'event': 'video-offer-sent', 'call': id, 'n': _number});
+    await _sendDescription(await _pc!.createOffer(), SignalType.offer);
+  }
 }
 
 /// Video stopped or started, on this phone ([local]) or the other.

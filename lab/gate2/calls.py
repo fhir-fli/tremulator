@@ -108,6 +108,11 @@ opus_args += "".join(f"--audio-drop {x} " for x in opus["audio-drop"])
 opus["separate-streams"] = "--separate-streams" in sys.argv
 if opus["separate-streams"]:
     opus_args += "--separate-streams "
+# `--close-stopped-video`: when video stops the phones agree it is off, with
+# a new offer (Calls.closeStoppedVideo), the alternative to separate streams.
+opus["close-stopped-video"] = "--close-stopped-video" in sys.argv
+if opus["close-stopped-video"]:
+    opus_args += "--close-stopped-video "
 # `--lip-drift`: a box in Alice's test picture flashes every 10 s and both
 # phones grab it off their screens, so lip_drift.py can put the picture's
 # delay beside the voice's (calls_lip_drift_check.sh proves the measure).
@@ -160,7 +165,12 @@ def build():
     os.makedirs(CONTEXT)
     shutil.copytree(BUNDLE, os.path.join(CONTEXT, "bundle"))
     shutil.copy(os.path.join(HERE, "calls_phone.sh"), CONTEXT)
-    build_server()
+    # `--keep-server`: the server image already built is kept. fhirant
+    # c68418b (#92, 2026-10-21 22:37) refuses message/mls files, every call
+    # setup message (calls_test 2026-10-22: 422 "declared message/mls, which
+    # this server does not store"); the image of 19:28 predates it.
+    if "--keep-server" not in sys.argv:
+        build_server()
     sh(["docker", "build", "-t", PHONE_IMG, "-f", os.path.join(HERE, "Dockerfile.calls"), CONTEXT],
        check=True, timeout=1800)
 
@@ -397,7 +407,7 @@ def run_profile(name):
     unblock_direct(alice, bob)
     dx(srv, "chown", "-R", f"{os.getuid()}:{os.getgid()}", "/out", user="0")
 
-    rec = {"profile": name, "alice_video": alice_video, "opus": opus, "speech": speech, "lip_drift": lip, "relay_link": relay_link, "shaped": list(shaped) if shape else [], "alice_wall_s": alice_s, "pattern_raised": raised,
+    rec = {"profile": name, "alice_video": alice_video, "opus": opus, "speech": speech, "lip_drift": lip, "server_kept": "--keep-server" in sys.argv, "relay_link": relay_link, "shaped": list(shaped) if shape else [], "alice_wall_s": alice_s, "pattern_raised": raised,
            "pattern_on_top_at_connect": on_top_at_connect,
            "direct_blocked": block, "clicks_started": clicked, "bob_call_ended_seen": bob_ended,
            "alice_exit": read(alice, f"{d}/alice.exit"), "bob_exit": read(bob, f"{d}/bob.exit"),
