@@ -57,6 +57,7 @@ import time
 from labkit import (PORTS, PROFILES, REPO, build_server, clear_shaping, dx,
                     freeze_spans, ip_of,
                     netem, pin_neighbours, sh, start_duty_loop, start_loop, start_server, stop_server, utc)
+from lip_drift import grab_cmd, picture_filter
 from voice_delay import call_track, measure as voice_delay, record_cmd
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -107,6 +108,10 @@ opus_args += "".join(f"--audio-drop {x} " for x in opus["audio-drop"])
 opus["separate-streams"] = "--separate-streams" in sys.argv
 if opus["separate-streams"]:
     opus_args += "--separate-streams "
+# `--lip-drift`: a box in Alice's test picture flashes every 10 s and both
+# phones grab it off their screens, so lip_drift.py can put the picture's
+# delay beside the voice's (calls_lip_drift_check.sh proves the measure).
+lip = "--lip-drift" in sys.argv
 # `--speech`: real speech between the clicks (voice_delay.call_track), so
 # the call carries a talker's load; the clicks still time the voice.
 speech = "--speech" in sys.argv
@@ -320,6 +325,9 @@ def run_profile(name):
             f"-preset ultrafast -crf 30 -pix_fmt yuv420p {d}/{who}_screen.mp4 > {d}/{who}_record.log 2>&1"])
     for c, who, source in ((bob, "bob_heard", "speaker.monitor"), (alice, "alice_sent", "mic.monitor")):
         sh(["docker", "exec", "-d", c, "sh", "-c", record_cmd(source, f"{d}/{who}", rec_s)])
+    if lip:
+        for c, who in ((bob, "bob"), (alice, "alice")):
+            sh(["docker", "exec", "-d", c, "sh", "-c", grab_cmd(f"{d}/{who}", rec_s)])
     # The test pattern is up and moving before Alice's app starts; once her
     # app's window exists the pattern is raised above it (no window manager:
     # a new window maps on top). calls2 started the pattern 3 s after the
@@ -327,7 +335,7 @@ def run_profile(name):
     # Ubuntu 24.04's xdotool has windowraise but not windowlower (calls3).
     sh(["docker", "exec", "-d", alice, "sh", "-c",
         "ffplay -loglevel error -noborder -left 0 -top 0 -x 1280 -y 720 -an "
-        "-f lavfi 'testsrc2=size=1280x720:rate=30' > /tmp/ffplay.log 2>&1"])
+        f"-f lavfi \"{picture_filter() if lip else 'testsrc2=size=1280x720:rate=30'}\" > /tmp/ffplay.log 2>&1"])
     time.sleep(2)
     if base in SETUP_CUTS:
         seconds, who, event = SETUP_CUTS[base]
@@ -389,7 +397,7 @@ def run_profile(name):
     unblock_direct(alice, bob)
     dx(srv, "chown", "-R", f"{os.getuid()}:{os.getgid()}", "/out", user="0")
 
-    rec = {"profile": name, "alice_video": alice_video, "opus": opus, "speech": speech, "relay_link": relay_link, "shaped": list(shaped) if shape else [], "alice_wall_s": alice_s, "pattern_raised": raised,
+    rec = {"profile": name, "alice_video": alice_video, "opus": opus, "speech": speech, "lip_drift": lip, "relay_link": relay_link, "shaped": list(shaped) if shape else [], "alice_wall_s": alice_s, "pattern_raised": raised,
            "pattern_on_top_at_connect": on_top_at_connect,
            "direct_blocked": block, "clicks_started": clicked, "bob_call_ended_seen": bob_ended,
            "alice_exit": read(alice, f"{d}/alice.exit"), "bob_exit": read(bob, f"{d}/bob.exit"),
