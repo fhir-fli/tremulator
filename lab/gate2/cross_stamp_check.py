@@ -26,7 +26,7 @@ import sys
 import time
 
 from labkit import dx, sh
-from voice_delay import click_track_cmd, onsets, record_cmd, start_time, to_wav
+from voice_delay import click_track_cmd, onsets, record_cmd, scratch, start_time, to_wav
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 PHONE_IMG = "tremulator-g2-calls:latest"
@@ -74,7 +74,8 @@ def main():
             for _, (_, stem) in SIDES.items():
                 mkv = os.path.join(OUT, f"{stem}.mkv")
                 t0 = start_time(mkv)
-                got[stem] = [t0 + x for x in onsets(to_wav(mkv))]
+                with scratch(mkv) as tmp:
+                    got[stem] = [t0 + x for x in onsets(to_wav(mkv, tmp))]
             a, b = got["alice_sent"], got["bob_heard"]
             n = min(len(a), len(b))
             rec = {"trial": i, "onsets_alice": len(a), "onsets_bob": len(b),

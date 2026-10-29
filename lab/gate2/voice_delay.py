@@ -57,13 +57,16 @@ The self-check makes a click track, a copy delayed by a known 0.300 s and a
 copy with every third click removed, and must read back 300 ms and the loss
 count; it is the known condition the instrument is tested under first.
 """
+import contextlib
 import json
 import math
 import os
 import re
+import shutil
 import statistics
 import subprocess
 import sys
+import tempfile
 import wave
 from array import array
 
@@ -185,9 +188,24 @@ def start_time(path):
     return best
 
 
-def to_wav(path, band=None):
-    """`path` as 48 kHz mono 16-bit WAV, band-passed around `band` Hz if set."""
-    wav = os.path.splitext(path)[0] + (f"_band{band}.wav" if band else ".wav")
+@contextlib.contextmanager
+def scratch(near):
+    """A folder beside `near` for the WAVs made from it, removed on leaving.
+    Each WAV is rebuilt from its recording byte for byte (calls312c0 P1,
+    2026-10-28), and kept beside it they were 14 a call, 55 GB of
+    results/ by calls31, which filled the disk mid-run."""
+    d = tempfile.mkdtemp(prefix=".wav-", dir=os.path.dirname(os.path.abspath(near)))
+    try:
+        yield d
+    finally:
+        shutil.rmtree(d, ignore_errors=True)
+
+
+def to_wav(path, into, band=None):
+    """`path` as 48 kHz mono 16-bit WAV in folder `into` (a `scratch`),
+    band-passed around `band` Hz if set."""
+    stem = os.path.splitext(os.path.basename(path))[0]
+    wav = os.path.join(into, stem + (f"_band{band}.wav" if band else ".wav"))
     sh(["ffmpeg", "-y", "-loglevel", "error", "-i", path, "-ac", "1", "-ar", "48000",
         *(["-af", BAND.format(band)] if band else []), "-c:a", "pcm_s16le", wav])
     return wav
@@ -227,23 +245,24 @@ def coded(path, start, sent_peaks=None):
     3600 Hz, read as a full beep). Both sides use the same bar so a beep at
     full level is timed at the same point of its rise on each (one 2 ms
     apart when the sent side kept the detector's half-peak bar)."""
-    full = to_wav(path)
-    bands = [to_wav(path, tone) for tone in CODE_TONES]
-    peaks = [peak(wav) for wav in bands]
-    ref = [max(sent_peaks or peaks)] * len(CODE_TONES)
-    found = []
-    for code, wav in enumerate(bands):
-        # The detector's own bar is half the band's peak in this recording,
-        # so a beep at a third of a louder one in its band was never an
-        # onset (the self-check's click 2).
-        for t in onsets(wav, min(1.0, CLICK_FRACTION * ref[code] / max(peaks[code], 1))):
-            level = level_at(wav, t)
-            if level < max(SILENT_PEAK, CLICK_FRACTION * ref[code]):
-                continue
-            beep = level_at(full, t)
-            around = max(level_at(full, t + a, b - a) for a, b in QUIET_WINDOWS)
-            if around <= QUIET_FRACTION * max(beep, 1):
-                found.append((t, code, level / ref[code]))
+    with scratch(path) as tmp:
+        full = to_wav(path, tmp)
+        bands = [to_wav(path, tmp, tone) for tone in CODE_TONES]
+        peaks = [peak(wav) for wav in bands]
+        ref = [max(sent_peaks or peaks)] * len(CODE_TONES)
+        found = []
+        for code, wav in enumerate(bands):
+            # The detector's own bar is half the band's peak in this recording,
+            # so a beep at a third of a louder one in its band was never an
+            # onset (the self-check's click 2).
+            for t in onsets(wav, min(1.0, CLICK_FRACTION * ref[code] / max(peaks[code], 1))):
+                level = level_at(wav, t)
+                if level < max(SILENT_PEAK, CLICK_FRACTION * ref[code]):
+                    continue
+                beep = level_at(full, t)
+                around = max(level_at(full, t + a, b - a) for a, b in QUIET_WINDOWS)
+                if around <= QUIET_FRACTION * max(beep, 1):
+                    found.append((t, code, level / ref[code]))
     kept = [(t, code) for t, code, f in found
             if not any(abs(t2 - t) <= BEEP_S and f2 > f for t2, _, f2 in found)]
     return sorted((start + t, code) for t, code in kept), peaks
@@ -272,7 +291,8 @@ def measure(sent_path, heard_path, out_path, speech=False):
     for path, t in ((sent_path, t_sent), (heard_path, t_heard)):
         if t < 1e9:
             raise RuntimeError(f"{os.path.basename(path)} starts at {t}: no wall-clock stamp")
-    heard_peak = peak(to_wav(heard_path))
+    with scratch(heard_path) as tmp:
+        heard_peak = peak(to_wav(heard_path, tmp))
     sent_on, sent_peaks = coded(sent_path, t_sent)
     want = [c % len(CODE_TONES) for c in range(len(sent_on))]
     if [c for _, c in sent_on] != want:

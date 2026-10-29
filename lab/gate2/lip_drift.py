@@ -106,7 +106,8 @@ def check(d, shift_ms):
     flashes = onsets(os.path.join(d, "check_flash.log"))
     path = os.path.join(d, "check_sound.mkv")
     start = voice_delay.start_time(path)
-    beeps = [start + t for t in voice_delay.onsets(voice_delay.to_wav(path, 1500))]
+    with voice_delay.scratch(path) as tmp:
+        beeps = [start + t for t in voice_delay.onsets(voice_delay.to_wav(path, tmp, 1500))]
     offsets = []
     for f in flashes:
         near = min(beeps, key=lambda b: abs(b - f), default=None)

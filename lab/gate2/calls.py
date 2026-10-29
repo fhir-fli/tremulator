@@ -406,6 +406,12 @@ def run_profile(name):
     clear_shaping(nodes)
     unblock_direct(alice, bob)
     dx(srv, "chown", "-R", f"{os.getuid()}:{os.getgid()}", "/out", user="0")
+    # The track Alice's microphone played is made afresh each call by
+    # call_track and read by nothing after it: kept, it was 138 copies of
+    # 4 files, 3.8 GB, by calls31.
+    for track in ("speech_track.wav", "click_track.wav"):
+        if os.path.exists(os.path.join(host_d, track)):
+            os.remove(os.path.join(host_d, track))
 
     rec = {"profile": name, "alice_video": alice_video, "opus": opus, "speech": speech, "lip_drift": lip, "server_kept": "--keep-server" in sys.argv, "relay_link": relay_link, "shaped": list(shaped) if shape else [], "alice_wall_s": alice_s, "pattern_raised": raised,
            "pattern_on_top_at_connect": on_top_at_connect,

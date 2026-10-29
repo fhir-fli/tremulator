@@ -44,18 +44,19 @@ with open(sys.argv[1], "w") as out:
         rows = [json.loads(l) for l in open(f"{d}/voice_delay.jsonl")]
         heard_at = [x["sent"] + x["delay_ms"] / 1000 for x in rows if x["delay_ms"] is not None]
         th = vd.start_time(f"{d}/bob_heard.mkv")
-        sent_peaks = [vd.peak(f"{d}/alice_sent_band{t}.wav") for t in vd.CODE_TONES]
-        rate, full = load(vd.to_wav(f"{d}/bob_heard.mkv"))
-        for code, tone in enumerate(vd.CODE_TONES):
-            wav = f"{d}/bob_heard_band{tone}.wav"
-            for t in vd.onsets(wav):
-                beep = peak(rate, full, t, t + vd.BEEP_S + 0.02)
-                around = {k: max(peak(rate, full, t + b[0], t + b[1]), peak(rate, full, t + a[0], t + a[1]))
-                          for k, (b, a) in WINDOWS.items()}
-                paired = any(abs(th + t - h) < 0.002 for h in heard_at)
-                out.write(json.dumps({
-                    "run": run, "code": code, "t": round(t, 3), "paired": paired,
-                    "band_fraction": round(vd.level_at(wav, t) / sent_peaks[code], 2),
-                    **{k: round(v / max(beep, 1), 3) for k, v in around.items()}}) + "\n")
-                out.flush()
+        with vd.scratch(f"{d}/bob_heard.mkv") as tmp:
+            sent_peaks = [vd.peak(vd.to_wav(f"{d}/alice_sent.mkv", tmp, t)) for t in vd.CODE_TONES]
+            rate, full = load(vd.to_wav(f"{d}/bob_heard.mkv", tmp))
+            for code, tone in enumerate(vd.CODE_TONES):
+                wav = vd.to_wav(f"{d}/bob_heard.mkv", tmp, tone)
+                for t in vd.onsets(wav):
+                    beep = peak(rate, full, t, t + vd.BEEP_S + 0.02)
+                    around = {k: max(peak(rate, full, t + b[0], t + b[1]), peak(rate, full, t + a[0], t + a[1]))
+                              for k, (b, a) in WINDOWS.items()}
+                    paired = any(abs(th + t - h) < 0.002 for h in heard_at)
+                    out.write(json.dumps({
+                        "run": run, "code": code, "t": round(t, 3), "paired": paired,
+                        "band_fraction": round(vd.level_at(wav, t) / sent_peaks[code], 2),
+                        **{k: round(v / max(beep, 1), 3) for k, v in around.items()}}) + "\n")
+                    out.flush()
         print(run, "done", flush=True)
