@@ -1,6 +1,7 @@
 """Run from lab/gate2. How long the phones take to agree that video is off or
 on again (E7 calls31, Calls.closeStoppedVideo). One line per call; one entry
-per video start or stop on Alice, timed from her video-sending event:
+per video start or stop on Alice, timed from her video-sending event (the offer's
+from its video-offer-sent):
 bob_saw_s, Bob's remote-video from the control channel (both arms); and with
 the fix, the new offer by its number n (video-offer-sent): offer_sent_s and
 bob_answer_s when each phone's upload returned (Calls._deliver reports after
@@ -45,13 +46,17 @@ with open(sys.argv[1], "a") as out:
             alice = list(events(os.path.join(d, "alice.jsonl")))
             bob = list(events(os.path.join(d, "bob.jsonl")))
             changes = []
+            offer = None
             for e in alice:
+                # _sendVideo reports video-offer-sent, then video-sending once
+                # the offer is gathered (up to Calls.gatherTimeout, 5 s:
+                # calls313c1 P1 stop, 5.1 s), so the change's offer is the
+                # last one since the change before
+                if e["event"] == "video-offer-sent":
+                    offer = e
                 if e["event"] != "video-sending":
                     continue
                 t0 = e["at"]
-                # _sendVideo reports video-offer-sent, then video-sending
-                offer = next((o for o in reversed(alice) if o["event"] == "video-offer-sent"
-                              and 0 <= (t0 - o["at"]).total_seconds() < 1), None)
                 c = {"t": e["t"][11:19], "sending": e["sending"], "by": e["by"],
                      "bob_saw_s": after(bob, t0, "remote-video", sending=e["sending"])}
                 if offer:
@@ -62,6 +67,7 @@ with open(sys.argv[1], "a") as out:
                               "applied_s": after(alice, offer["at"], "answer-applied", n=n),
                               "ignored": after(alice, offer["at"], "answer-ignored", n=n) is not None})
                 changes.append(c)
+                offer = None
             out.write(json.dumps({
                 "run": label, "profile": r["profile"],
                 "close": (r.get("opus") or {}).get("close-stopped-video"),
