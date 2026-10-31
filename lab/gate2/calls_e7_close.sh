@@ -13,10 +13,16 @@
 # call messages).
 #
 #     bash lab/gate2/calls_e7_close.sh calls31
+#
+# A second argument starts at that round and reuses the phone image the
+# first round built, so every round runs the same app (calls31 2, after the
+# disk filled in round 2 on 2026-10-22).
 set -euo pipefail
 HERE=$(cd "$(dirname "$0")" && pwd)
 L=$1
+FIRST=${2:-1}
 BUILD=()
+[ "$FIRST" -gt 1 ] && BUILD=(--skip-build)
 run() {
   local label=$1; shift
   python3 "$HERE/calls.py" --label "$label" --call-s 300 --profiles P1,P1-blocked \
@@ -26,7 +32,7 @@ run() {
   echo "$label exit 0" >> "$HERE/results/$label.out"
   BUILD=(--skip-build)
 }
-for n in 1 2 3; do
+for n in $(seq "$FIRST" 3); do
   run "${L}${n}c0"
   run "${L}${n}c1" --close-stopped-video
 done

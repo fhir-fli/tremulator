@@ -136,3 +136,8 @@
 - **calls251fc** (2026-10-18 19:57): the same fault as calls241fc, the run
   whose stop step records showed it (above). Stopped by pid after its first
   call; kept unsummarised.
+- **calls312c0** (2026-10-22 01:18): the disk filled at 01:27 during its
+  P1-blocked call (55 GB of WAVs nothing removed, fixed `8c0da95`). P1-blocked
+  files stopped on 4 KiB boundaries and the traceback was cut mid-line.
+  Deleted 2026-10-30 with its empty sweep log and disk check; rounds 2 and 3
+  of calls31 rerun on the same phone image (`calls_e7_close.sh calls31 2`).
