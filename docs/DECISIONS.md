@@ -396,9 +396,21 @@ What the standards say.
   speech.
 - ITU-R BT.1359-1 is for broadcast, not calls: sound ahead of picture is
   noticed from about 45 ms and unacceptable past about 90 ms.
-- Telehealth: no association standard on this found in one search; RACGP's
-  video-consult guide suggests moving sound to a telephone on a poor link,
-  which is sound and picture unsynchronized.
+- American Telemedicine Association (ATA): 9 documents read, none gives a
+  lip-sync or delay number. Videoconferencing-Based Telemental Health (2009):
+  "High-quality audio is essential", and "The ITU standards that shall be used
+  comprise the H (video), G (audio) and T (data) series" (G.114, G.1010 are
+  G series). Telestroke (2017, PMC5802246): "real time, two-way audiovisual
+  solutions with minimal latency". Core Operational Guidelines, Online Mental
+  Health (2013): 384 kbps each way, software "should be able to adapt to
+  changing bandwidth". Also read: APA/ATA telemental health best practices
+  2018 and 2022, ocular telehealth 2020, telepathology 2014,
+  telerehabilitation 2026; nothing on sync or delay. NOT read, members-only
+  or paywalled: primary and urgent care (2015), teledermatology (2016), child
+  telemental health (2017), TeleICU (2016), home telehealth, teleburn, the
+  essentials guide.
+- RACGP's video-consult guide suggests moving sound to a telephone on a poor
+  link, which is sound and picture unsynchronized.
 
 Why separate. With video stopped there is no picture to line up with, so the
 hold breaks G.114's 400 ms limit for nothing. Separate streams ended it in
