@@ -364,3 +364,56 @@ measured on. Rebuilding it would leave the real app unmeasured.
 - The one library at real risk of replacement is `openmls` (one maintainer,
   9 stars). Everything that touches it stays in one folder so a swap is
   contained.
+
+## D17. Sound and video travel as separate streams. 2026-11-01
+
+Chosen from the standards and our measurements (E7), not by preference.
+
+What happens with one stream. The phone holds sound back so it lines up with
+the picture (RFC 8830 Appendix A: one MediaStream imposes synchronization).
+libwebrtc updates that hold once a second and skips the update whenever no new
+video has arrived (`video/rtp_streams_synchronizer2.cc`, `UpdateDelay`, read
+2026-11-01 at main). Removing the video stream does not reset it either
+(`call/call.cc`, `ConfigureSync`, only re-checks video streams). So once video
+stops, the last hold stays for the rest of the call. The app cannot lower it:
+NetEq plays at the larger of the sync hold and the app's own setting
+(`modules/audio_coding/neteq/delay_constraints.cc`,
+`UpdateEffectiveMinimumDelay`). Measured on P1 after video stopped: sound held
+558-1,154 ms (calls29) and 466-1,375 ms (calls31) where the network needed
+40-100 ms. Closing the stopped video properly (calls31) did not end it: held
+in 3 of 6 calls, against 4 of 6 without.
+
+What the standards say.
+- ITU-T G.114 (05/2003) §4: one-way delay should not exceed 400 ms; under
+  150 ms most uses are unaffected.
+- ITU-T G.1010 (11/2001) Table I.1, videophone: under 150 ms preferred,
+  400 ms limit, and sound and picture within 80 ms. Note 4 calls these
+  long-term targets that current technology may not meet.
+- 3GPP TS 26.114 V19.3.0 §6.2.6: tight sync "is not necessary for all types of
+  MTSI sessions"; its example is sharing a camera view during a voice call,
+  where the sender may relax sync. The default is to sync. §8.3: the video
+  buffer should "maintain synchronization with speech", i.e. video follows
+  speech.
+- ITU-R BT.1359-1 is for broadcast, not calls: sound ahead of picture is
+  noticed from about 45 ms and unacceptable past about 90 ms.
+- Telehealth: no association standard on this found in one search; RACGP's
+  video-consult guide suggests moving sound to a telephone on a poor link,
+  which is sound and picture unsynchronized.
+
+Why separate. With video stopped there is no picture to line up with, so the
+hold breaks G.114's 400 ms limit for nothing. Separate streams ended it in
+6 of 6 calls (calls29) and 12 of 12 (calls30), and cut voice delay while video
+plays by 67-174 ms on P2/P3, same round and profile paired (calls30: 284-851 ms
+against 385-1,012 ms).
+
+What we give up. While video plays the picture trails the sound by 93-199 ms
+on P2/P3 (calls30, 12 of 12 calls), past G.1010's 80 ms and BT.1359's 90 ms.
+One stream kept it within -81 to +25 ms. This fits 3GPP's own example of when
+to relax sync, and Gate 4: "Audio must survive when video cannot."
+
+What would meet both while video plays and after: libwebrtc resetting the hold
+when video stops. That is an upstream defect. Fixing it ourselves means
+building our own WebRTC for every platform instead of flutter_webrtc's
+prebuilt one; a separate work item, and even then sync would still add the
+67-174 ms above while video plays.
+`Calls.closeStoppedVideo` (734ccbe) failed its test and comes out.
