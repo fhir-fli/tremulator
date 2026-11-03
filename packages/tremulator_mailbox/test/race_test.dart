@@ -31,10 +31,8 @@ void main() {
           to: [phones[(i + 1) % 20].device],
           conversation: conversation,
           epoch: BigInt.from(7),
-          commit: bytes('commit $i'),
-          groupInfo: bytes('info $i'),
-          ratchetTree: bytes('tree $i'),
-          confirmationTag: bytes('tag $i'),
+          commit: Uint8List.fromList([0, 1, 0, 2, ...'commit $i'.codeUnits]),
+          groupInfo: Uint8List.fromList([0, 1, 0, 4, ...'info $i'.codeUnits]),
         ),
     ]);
     final accepted = results.where((r) => r).length;

@@ -172,7 +172,8 @@ class Mailbox {
   );
 
   /// Offers a commit that would move [conversation] to [epoch], with the
-  /// snapshot (GroupInfo and key tree) beside it, addressed to every member
+  /// snapshot (the GroupInfo, which holds the key tree and the epoch's
+  /// confirmation tag) beside it, addressed to every member
   /// in [to]. Returns true if the server took it, false if another phone's
   /// commit for that epoch was there first (the server keeps the first:
   /// conditional create on the commit identifier, R4 http.html "cond-create",
@@ -183,8 +184,6 @@ class Mailbox {
     required BigInt epoch,
     required Uint8List commit,
     required Uint8List groupInfo,
-    required Uint8List ratchetTree,
-    required Uint8List confirmationTag,
   }) async {
     final key = '${conversationKey(conversation)}:$epoch';
     final c = _communication(
@@ -193,8 +192,6 @@ class Mailbox {
       payloads: [
         (mlsMediaType, commit),
         (mlsMediaType, groupInfo),
-        (octetStream, ratchetTree),
-        (octetStream, confirmationTag),
       ],
       identifier: Identifier(
         system: FhirUri(commitSystem),

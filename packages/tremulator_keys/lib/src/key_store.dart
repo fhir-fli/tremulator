@@ -5,6 +5,7 @@ import 'package:openmls/openmls.dart';
 import 'package:tremulator_keys/src/conversation.dart';
 import 'package:tremulator_keys/src/errors.dart';
 import 'package:tremulator_keys/src/identity.dart';
+import 'package:tremulator_keys/src/mls_message.dart';
 
 /// How long a key package is good for. RFC 9420 section 10.1 leaves the
 /// value to the application; 90 days is a derived choice, not a measured one,
@@ -74,8 +75,9 @@ class KeyStore {
   /// background; [open] again on unlock.
   Future<void> close() => guarded(_engine.close);
 
-  /// A fresh key package to publish. Single use, unless [lastResort], which
-  /// the server hands out only when the stock is empty.
+  /// A fresh key package to publish, as an MLSMessage of kind
+  /// mls_key_package (RFC 9420 section 6). Single use, unless [lastResort],
+  /// which the server hands out only when the stock is empty.
   Future<Uint8List> makeKeyPackage({bool lastResort = false}) =>
       guarded(() async {
         final r = await _engine.createKeyPackageWithOptions(
@@ -89,7 +91,7 @@ class KeyStore {
             capabilities: ourCapabilities,
           ),
         );
-        return r.keyPackageBytes;
+        return wrapKeyPackage(r.keyPackageBytes);
       });
 
   /// Starts a conversation with only this phone in it. Add others with
@@ -124,7 +126,6 @@ class KeyStore {
     final r = await _engine.joinGroupExternalCommit(
       config: _config(),
       groupInfoBytes: snapshot.groupInfo,
-      ratchetTreeBytes: snapshot.ratchetTree,
       signerBytes: identity.secret,
       credentialIdentity: identity.credentialIdentity,
       signerPublicKey: identity.publicKey,

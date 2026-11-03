@@ -214,6 +214,12 @@ Two more findings while building it:
   9420 section 6.1: "confirms that the members of the group have arrived at
   the same state"), and on every collect a phone compares its own tag with
   the server's commit for its epoch. A mismatch means rejoin.
+  (2026-11-02: the tag and the key tree are no longer separate payloads.
+  Both are inside the GroupInfo beside each commit, under the committer's
+  signature: RFC 9420 section 12.4.3 `confirmation_tag`, and the
+  ratchet_tree extension, 12.4.3.3, which openmls writes. fhirant since #92
+  refuses `application/octet-stream`, and every payload is now an
+  MLSMessage under `message/mls`, key packages included; fhirant #105.)
 - The rejoin walk first read the commit's header epoch as "the epoch it
   produces" and looped on the same commit until fhirant's rate limit (600
   requests a minute) answered 429. Fixed by counting epochs; the 429 was the

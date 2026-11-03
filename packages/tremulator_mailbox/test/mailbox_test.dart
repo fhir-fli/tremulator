@@ -10,6 +10,16 @@ import 'package:tremulator_test_server/tremulator_test_server.dart';
 
 Uint8List bytes(String s) => Uint8List.fromList(s.codeUnits);
 
+/// [s] behind an MLSMessage header (RFC 9420 section 6: mls10, then the
+/// wire format: 2 private message, 3 welcome, 4 group info, 5 key
+/// package), the first bytes the server checks a `message/mls` file by.
+/// The mailbox never reads past them.
+Uint8List mls(int kind, String s) =>
+    Uint8List.fromList([0, 1, 0, kind, ...s.codeUnits]);
+
+/// What [mls] wrapped.
+String body(Uint8List b) => String.fromCharCodes(b.sublist(4));
+
 void main() {
   late TestServer server;
   late Mailbox alice;
@@ -52,12 +62,16 @@ void main() {
   test(
     'key packages are taken one at a time until the stock is empty',
     () async {
-      await bob.publishKeyPackages([bytes('kp1'), bytes('kp2'), bytes('kp3')]);
+      await bob.publishKeyPackages([
+        mls(5, 'kp1'),
+        mls(5, 'kp2'),
+        mls(5, 'kp3'),
+      ]);
       final taken = <String>{};
       for (var i = 0; i < 3; i++) {
         final kp = await alice.takeKeyPackage(bob.device);
         expect(kp, isNotNull);
-        taken.add(String.fromCharCodes(kp!));
+        taken.add(body(kp!));
       }
       expect(taken, {'kp1', 'kp2', 'kp3'});
       expect(await alice.takeKeyPackage(bob.device), isNull);
@@ -70,16 +84,16 @@ void main() {
       await alice.send(
         to: bob.device,
         label: Label.message,
-        bytes: bytes('hello bob'),
+        bytes: mls(2, 'hello bob'),
       );
       await alice.send(
         to: bob.device,
         label: Label.welcome,
-        bytes: bytes('welcome'),
+        bytes: mls(3, 'welcome'),
       );
       final got = await bob.collect();
       expect(got.map((e) => e.label), [Label.message, Label.welcome]);
-      expect(String.fromCharCodes(got.first.bytes), 'hello bob');
+      expect(body(got.first.bytes), 'hello bob');
       expect(got.first.from, alice.device);
       expect(await alice.collect(), isEmpty, reason: 'addressed to bob only');
       for (final e in got) {
@@ -98,31 +112,23 @@ void main() {
         to: [bob.device],
         conversation: conversation,
         epoch: BigInt.two,
-        commit: bytes('alice commit'),
-        groupInfo: bytes('alice info'),
-        ratchetTree: bytes('alice tree'),
-        confirmationTag: bytes('alice tag'),
+        commit: mls(2, 'alice commit'),
+        groupInfo: mls(4, 'alice info'),
       );
       expect(accepted, isTrue);
       final rejected = await bob.sendCommit(
         to: [alice.device],
         conversation: conversation,
         epoch: BigInt.two,
-        commit: bytes('bob commit'),
-        groupInfo: bytes('bob info'),
-        ratchetTree: bytes('bob tree'),
-        confirmationTag: bytes('bob tag'),
+        commit: mls(2, 'bob commit'),
+        groupInfo: mls(4, 'bob info'),
       );
       expect(rejected, isFalse);
 
       final next = await bob.commitAfter(conversation, BigInt.one);
       expect(next, isNotNull);
-      expect(String.fromCharCodes(next!.bytes), 'alice commit');
-      expect(next.extra.map(String.fromCharCodes), [
-        'alice info',
-        'alice tree',
-        'alice tag',
-      ]);
+      expect(body(next!.bytes), 'alice commit');
+      expect(next.extra.map(body), ['alice info']);
       expect(next.from, alice.device);
       expect(await bob.commitAfter(conversation, BigInt.two), isNull);
       expect(await bob.collect(), isEmpty, reason: 'commits are not collected');
@@ -156,7 +162,7 @@ void main() {
     await alice.send(
       to: bob.device,
       label: Label.message,
-      bytes: bytes('ring'),
+      bytes: mls(2, 'ring'),
     );
     await ping;
     expect((await bob.collect()).length, 1);

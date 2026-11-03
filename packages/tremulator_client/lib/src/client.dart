@@ -349,16 +349,27 @@ class Client {
     final current = await c.epoch();
     if (current > BigInt.zero) {
       final mine = await mailbox.commitAfter(c.id, current - BigInt.one);
-      if (mine != null &&
-          mine.extra.length > 2 &&
-          !_sameBytes(mine.extra[2], await c.confirmationTag())) {
-        report({
-          'event': 'out-of-step',
-          'conversation': conversationKey(c.id),
-          'epoch': current.toString(),
-          'error': "confirmation tag differs from the server's commit",
-        });
-        return _rejoin(c, mine, current);
+      if (mine != null && mine.extra.isNotEmpty) {
+        // The tag is the one in the GroupInfo beside the commit, under its
+        // committer's signature. One that cannot be read is no match either.
+        String? differs;
+        try {
+          final theirs = Snapshot(groupInfo: mine.extra[0]).confirmationTag;
+          if (!_sameBytes(theirs, await c.confirmationTag())) {
+            differs = "confirmation tag differs from the server's commit";
+          }
+        } on KeysError catch (err) {
+          differs = err.message;
+        }
+        if (differs != null) {
+          report({
+            'event': 'out-of-step',
+            'conversation': conversationKey(c.id),
+            'epoch': current.toString(),
+            'error': differs,
+          });
+          return _rejoin(c, mine, current);
+        }
       }
     }
     var applied = 0;
@@ -405,11 +416,7 @@ class Client {
     }
     await stale.destroy();
     final rejoined = await keys.rejoin(
-      Snapshot(
-        groupInfo: newest.extra[0],
-        ratchetTree: newest.extra[1],
-        confirmationTag: newest.extra[2],
-      ),
+      Snapshot(groupInfo: newest.extra[0]),
     );
     final c = rejoined.conversation;
     _conversations[conversationKey(c.id)] = c;
@@ -434,8 +441,6 @@ class Client {
         epoch: await c.epoch(),
         commit: change.commit,
         groupInfo: change.snapshot.groupInfo,
-        ratchetTree: change.snapshot.ratchetTree,
-        confirmationTag: change.snapshot.confirmationTag,
       );
 
   Future<List<String>> _others(Conversation c) async {

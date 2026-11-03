@@ -4,6 +4,7 @@ import 'package:openmls/openmls.dart';
 
 import 'package:tremulator_keys/src/errors.dart';
 import 'package:tremulator_keys/src/identity.dart';
+import 'package:tremulator_keys/src/mls_message.dart';
 
 /// One member of a conversation, as the key tree sees them.
 class Member {
@@ -51,32 +52,30 @@ class Change {
 }
 
 /// What a member needs to rejoin a conversation it has fallen out of step
-/// with: the signed group description for the current epoch and the key tree.
+/// with: the signed group description for the current epoch, which holds
+/// the key tree.
 ///
 /// RFC 9420 section 12.4.3.2, read verbatim from rfc9420.txt
 /// (rfc-editor.org, 2026-10-06): "a member of the group can enable new
 /// clients to join by making a GroupInfo object available to them ... each
 /// GroupInfo object can be used for one external join".
 class Snapshot {
-  /// Bundles the parts.
-  const Snapshot({
-    required this.groupInfo,
-    required this.ratchetTree,
-    required this.confirmationTag,
-  });
+  /// Wraps a GroupInfo.
+  const Snapshot({required this.groupInfo});
 
-  /// The signed group description, with the external public key.
+  /// The signed group description, an MLSMessage of kind mls_group_info. It
+  /// carries the external public key, the full key tree (the ratchet_tree
+  /// extension, RFC 9420 section 12.4.3.3, which the library writes) and the
+  /// confirmation tag, all under the committer's signature.
   final Uint8List groupInfo;
 
-  /// The full key tree, so the joiner need not fetch it separately.
-  final Uint8List ratchetTree;
-
-  /// The epoch's confirmation tag. A phone whose own tag for the same epoch
-  /// differs has applied a different commit and is out of step. RFC 9420
-  /// section 6.1, read verbatim from rfc9420.txt (rfc-editor.org,
-  /// 2026-10-06): "The confirmation tag value confirms that the members of
-  /// the group have arrived at the same state of the group."
-  final Uint8List confirmationTag;
+  /// The epoch's confirmation tag, read from [groupInfo]. A phone whose own
+  /// tag for the same epoch differs has applied a different commit and is
+  /// out of step. RFC 9420 section 6.1, read verbatim from rfc9420.txt
+  /// (rfc-editor.org, 2026-10-06): "The confirmation tag value confirms
+  /// that the members of the group have arrived at the same state of the
+  /// group." Throws [KeysError] if [groupInfo] is not well formed.
+  Uint8List get confirmationTag => confirmationTagOf(groupInfo);
 }
 
 /// What came out of [Conversation.receive].
@@ -180,13 +179,14 @@ class Conversation {
   Future<int> ownIndex() =>
       guarded(() => _engine.groupOwnIndex(groupIdBytes: id));
 
-  /// Adds the phones whose [keyPackages] these are. Returns the commit for
-  /// everyone and one welcome for the newcomers.
+  /// Adds the phones whose [keyPackages] these are (each an MLSMessage, as
+  /// [KeyStore.makeKeyPackage] makes them). Returns the commit for everyone
+  /// and one welcome for the newcomers.
   Future<Change> add(List<Uint8List> keyPackages) => guarded(() async {
     final r = await _engine.addMembers(
       groupIdBytes: id,
       signerBytes: _identity.secret,
-      keyPackagesBytes: keyPackages,
+      keyPackagesBytes: [for (final k in keyPackages) unwrapKeyPackage(k)],
     );
     return Change(
       commit: r.commit,
@@ -222,15 +222,14 @@ class Conversation {
         groupIdBytes: id,
         signerBytes: _identity.secret,
       ),
-      ratchetTree: await _engine.exportRatchetTree(groupIdBytes: id),
-      confirmationTag: await confirmationTag(),
     ),
   );
 
   /// This phone's confirmation tag for the current epoch (see
   /// [Snapshot.confirmationTag]).
-  Future<Uint8List> confirmationTag() =>
-      guarded(() => _engine.groupConfirmationTag(groupIdBytes: id));
+  Future<Uint8List> confirmationTag() => guarded(
+    () async => macValue(await _engine.groupConfirmationTag(groupIdBytes: id)),
+  );
 
   /// Encrypts [plaintext] for every current member.
   Future<Uint8List> encrypt(Uint8List plaintext) => guarded(() async {

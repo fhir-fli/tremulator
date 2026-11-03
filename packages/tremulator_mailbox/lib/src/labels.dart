@@ -51,6 +51,3 @@ const commitSystem = 'https://tremulator.fhirfli.dev/commit';
 /// Media type of an MLS message, RFC 9420 section 17.10 (read from the
 /// rfc-editor.org page 2026-10-06: type "message", subtype "mls").
 const mlsMediaType = 'message/mls';
-
-/// Media type for the raw key tree beside a commit.
-const octetStream = 'application/octet-stream';
