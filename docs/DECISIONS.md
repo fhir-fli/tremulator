@@ -438,6 +438,26 @@ when video stops. That is an upstream defect. Fixing it ourselves means
 building our own WebRTC for every platform instead of flutter_webrtc's
 prebuilt one; a separate work item, and even then sync would still add the
 67-174 ms above while video plays.
+
+Already reported upstream (searched 2026-11-02, `lab/tool/webrtc_issue_search.py`
+and `webrtc_issue_read.py`: 28 queries on issues.webrtc.org, which also
+returns Chromium and Android issues, 863 issues read by title; WebRTC Gerrit
+by file and bug; discuss-webrtc; GitHub). Issue 489157997, "A/V sync delays
+become permanently frozen when either audio or video stream stops receiving
+packets", filed 2026-03-03 by a Zoom engineer (Chrome 145), names the same
+early return in `UpdateDelay` and the same symptom, both directions; no
+assignee shown, last change 2026-03-27. A fix, Gerrit change 460381 "Fix
+frozen A/V sync delays on stream starvation" by Johannes Kron (WebRTC team),
+2026-03-26: after 5 s with no packets on one stream it sets the other's sync
+minimum to zero. It passed its dry run but has no reviewer, no vote and no
+bug link, and has not moved in seven months. Change 499321 (merged
+2026-10-30, sync moved to the network thread) keeps the early returns. Older
+relatives, not the same defect: 42230254 (Chrome 46, no incoming video ->
+no audio rendered), 42222014 (Chrome 84, audio pause -> sync drifts > 30 s),
+42224217 (Chrome 100, local pause/play drift). Earlier public notes that one
+stream costs latency and separate streams avoid it: discuss-webrtc
+"Chromium audio/video sync leads to unexpected latency" (2022) and "How to
+disable audio and video sync in chrome recive side" (2021-2025), neko #339.
 `Calls.closeStoppedVideo` (734ccbe) failed its test and comes out.
 
 Confirmed 2026-11-02, calls32 (12 calls, P1 and P1-blocked, the lab tapping
