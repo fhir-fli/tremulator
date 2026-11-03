@@ -396,19 +396,29 @@ What the standards say.
   speech.
 - ITU-R BT.1359-1 is for broadcast, not calls: sound ahead of picture is
   noticed from about 45 ms and unacceptable past about 90 ms.
-- American Telemedicine Association (ATA): 9 documents read, none gives a
-  lip-sync or delay number. Videoconferencing-Based Telemental Health (2009):
-  "High-quality audio is essential", and "The ITU standards that shall be used
-  comprise the H (video), G (audio) and T (data) series" (G.114, G.1010 are
-  G series). Telestroke (2017, PMC5802246): "real time, two-way audiovisual
-  solutions with minimal latency". Core Operational Guidelines, Online Mental
-  Health (2013): 384 kbps each way, software "should be able to adapt to
-  changing bandwidth". Also read: APA/ATA telemental health best practices
-  2018 and 2022, ocular telehealth 2020, telepathology 2014,
-  telerehabilitation 2026; nothing on sync or delay. NOT read, members-only
-  or paywalled: primary and urgent care (2015), teledermatology (2016), child
-  telemental health (2017), TeleICU (2016), home telehealth, teleburn, the
-  essentials guide.
+- American Telemedicine Association (ATA): all 14 listed practice guidelines
+  plus the core guidelines and the 2018 and 2022 APA/ATA telemental health
+  papers read (the 7 member-only ones from copies Grey supplied, kept out of
+  git). None gives a lip-sync or delay number. What they say:
+  - Child and adolescent telemental health (2017): "Sufficient bandwidth is
+    needed to minimize the time delay in verbal transmission so that the
+    provider can readily assess any anomalies of the child's language use,
+    speech and prosody."
+  - Videoconferencing-based telemental health (2009): "High-quality audio is
+    essential"; "The ITU standards that shall be used comprise the H (video),
+    G (audio) and T (data) series". Teledermatology (2016): H.323, G.711.
+  - Teleburn: "uninterrupted two-way audio during live video consultations";
+    "Freeze-frame capture should be used when connection speed is low".
+  - Primary and urgent care (2014): the backup plan may include "completing
+    the encounter by voice only". TeleICU (2016) accepts "one-way visual
+    surveillance with audio support via traditional phone access", i.e.
+    sound and picture on separate, unsynchronized paths.
+  - Telestroke (2017): "real time, two-way audiovisual solutions with minimal
+    latency". Core, online mental health, urgent care, teleburn: 384-512 kbps
+    and software that adapts to changing bandwidth.
+  - Nothing on sync or delay: home telehealth, essentials guide (2023),
+    ocular telehealth (2020), telepathology (2014), telerehabilitation (2026),
+    telemental health best practices (2018, 2022).
 - RACGP's video-consult guide suggests moving sound to a telephone on a poor
   link, which is sound and picture unsynchronized.
 
