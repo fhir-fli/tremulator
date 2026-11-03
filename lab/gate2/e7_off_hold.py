@@ -56,56 +56,57 @@ def playout(stats):
             for a, b in zip(pts, pts[1:]) if b[3] > a[3]]
 
 
-with open(sys.argv[1], "a") as out:
-    for label in sys.argv[2:]:
-        for line in open(os.path.join("results", f"{label}.jsonl")):
-            r = json.loads(line)
-            if "profile" not in r:
-                continue
-            d = os.path.join("results", label, r["profile"])
-            alice = list(events(os.path.join(d, "alice.jsonl")))
-            bob = list(events(os.path.join(d, "bob.jsonl")))
-            stats = [e for e in bob if e["event"] == "stats"]
-            pl = playout(stats)
-            end = stats[-1]["at"] if stats else None
-            sends = [e for e in alice if e["event"] == "video-sending"]
-            stretches = []
-            for i, e in enumerate(sends):
-                if e["sending"]:
+if __name__ == "__main__":
+    with open(sys.argv[1], "a") as out:
+        for label in sys.argv[2:]:
+            for line in open(os.path.join("results", f"{label}.jsonl")):
+                r = json.loads(line)
+                if "profile" not in r:
                     continue
-                stop = e["at"]
-                back = next((s["at"] for s in sends[i + 1:] if s["sending"]), end)
-                if back is None or back - stop < MIN_OFF_S:
-                    continue
-                half = [(t, m) for at, t, m in pl if stop + (back - stop) / 2 <= at <= back]
-                if not half:
-                    continue
-                target = statistics.median(t for t, _ in half)
-                minimum = statistics.median(m for _, m in half)
-                stretches.append({"stop": e["t"][11:19], "off_s": round(back - stop),
-                                  "target_ms": round(target), "minimum_ms": round(minimum),
-                                  "held": target - minimum > HELD_MS})
-            taps = []
-            for e in alice:
-                if e["event"] != "video-retry-tapped":
-                    continue
-                before = None
-                for s in stats:
-                    v = inbound(s, "video")
-                    n = (v or {}).get("framesDecoded") or 0
-                    if s["at"] < e["at"]:
-                        before = n
-                    elif before is not None and n > before:
-                        taps.append(round(s["at"] - e["at"], 1))
-                        break
-                else:
-                    taps.append(None)
-            out.write(json.dumps({
-                "run": label, "profile": r["profile"],
-                "separate": (r.get("opus") or {}).get("separate-streams"),
-                "exits": [r.get("alice_exit"), r.get("bob_exit")],
-                "stretches": stretches,
-                "held": sum(s["held"] for s in stretches),
-                "tap_to_picture_s": taps,
-            }) + "\n")
-            out.flush()
+                d = os.path.join("results", label, r["profile"])
+                alice = list(events(os.path.join(d, "alice.jsonl")))
+                bob = list(events(os.path.join(d, "bob.jsonl")))
+                stats = [e for e in bob if e["event"] == "stats"]
+                pl = playout(stats)
+                end = stats[-1]["at"] if stats else None
+                sends = [e for e in alice if e["event"] == "video-sending"]
+                stretches = []
+                for i, e in enumerate(sends):
+                    if e["sending"]:
+                        continue
+                    stop = e["at"]
+                    back = next((s["at"] for s in sends[i + 1:] if s["sending"]), end)
+                    if back is None or back - stop < MIN_OFF_S:
+                        continue
+                    half = [(t, m) for at, t, m in pl if stop + (back - stop) / 2 <= at <= back]
+                    if not half:
+                        continue
+                    target = statistics.median(t for t, _ in half)
+                    minimum = statistics.median(m for _, m in half)
+                    stretches.append({"stop": e["t"][11:19], "off_s": round(back - stop),
+                                      "target_ms": round(target), "minimum_ms": round(minimum),
+                                      "held": target - minimum > HELD_MS})
+                taps = []
+                for e in alice:
+                    if e["event"] != "video-retry-tapped":
+                        continue
+                    before = None
+                    for s in stats:
+                        v = inbound(s, "video")
+                        n = (v or {}).get("framesDecoded") or 0
+                        if s["at"] < e["at"]:
+                            before = n
+                        elif before is not None and n > before:
+                            taps.append(round(s["at"] - e["at"], 1))
+                            break
+                    else:
+                        taps.append(None)
+                out.write(json.dumps({
+                    "run": label, "profile": r["profile"],
+                    "separate": (r.get("opus") or {}).get("separate-streams"),
+                    "exits": [r.get("alice_exit"), r.get("bob_exit")],
+                    "stretches": stretches,
+                    "held": sum(s["held"] for s in stretches),
+                    "tap_to_picture_s": taps,
+                }) + "\n")
+                out.flush()
