@@ -439,3 +439,13 @@ building our own WebRTC for every platform instead of flutter_webrtc's
 prebuilt one; a separate work item, and even then sync would still add the
 67-174 ms above while video plays.
 `Calls.closeStoppedVideo` (734ccbe) failed its test and comes out.
+
+Confirmed 2026-11-02, calls32 (12 calls, P1 and P1-blocked, the lab tapping
+"try video again" 60 s after each stop; `results/calls32-off-hold.jsonl`):
+sound held more than 100 ms above the network's need in the second half of
+a video-off minute in 0 of 22 such minutes with separate streams, 15 of 23
+with one stream. Voice delay median (clicks) on P1: 696-811 ms against
+1,588-2,592. Tap to picture back: median 1.7 s (0.7-10.4) and 1.4 s
+(0.7-27.4). Not settled by it: each video burst on a weak relayed link
+leaves the network itself needing 1.0-1.6 s of buffer for 1-2 minutes
+(calls31, no taps), in both arms, so a tap on such a link costs late voice.
