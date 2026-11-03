@@ -458,6 +458,8 @@ no audio rendered), 42222014 (Chrome 84, audio pause -> sync drifts > 30 s),
 stream costs latency and separate streams avoid it: discuss-webrtc
 "Chromium audio/video sync leads to unexpected latency" (2022) and "How to
 disable audio and video sync in chrome recive side" (2021-2025), neko #339.
+Our measurements were posted on 489157997 on 2026-11-03, asking for 460381
+to be reviewed (text in git at `58d3bf1`, `WEBRTC-COMMENT.md`).
 `Calls.closeStoppedVideo` (734ccbe) failed its test and comes out.
 
 Confirmed 2026-11-02, calls32 (12 calls, P1 and P1-blocked, the lab tapping
