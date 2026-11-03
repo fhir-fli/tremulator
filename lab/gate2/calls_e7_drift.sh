@@ -8,6 +8,7 @@
 # measure: lip_drift.py, proved by calls_lip_drift_check.sh (7b84f29).
 # Prediction: without the option drift stays within about 100 ms (the
 # phones sync); with it, drift = voice delay - video delay, unsynced.
+# Since D17 separate streams are the default: s0 passes --one-stream.
 #
 #     bash lab/gate2/calls_e7_drift.sh calls30
 set -euo pipefail
@@ -22,6 +23,6 @@ run() {
   echo "$label exit 0" >> "$HERE/results/$label.out"
 }
 for n in 1 2 3; do
-  run "${L}${n}s0"
-  run "${L}${n}s1" --separate-streams
+  run "${L}${n}s0" --one-stream
+  run "${L}${n}s1"
 done

@@ -102,17 +102,19 @@ if opus["opus-dtx"]:
 # section of what they send (RFC 8285; AudioExtensions in the app).
 opus["audio-drop"] = [x for x in argval("--audio-drop", "").split(",") if x]
 opus_args += "".join(f"--audio-drop {x} " for x in opus["audio-drop"])
-# `--separate-streams`: Alice's video goes in a stream of its own, so Bob's
-# phone does not hold her sound back to match the picture (Calls.
-# separateStreams). Both phones pass it; only the sender's matters.
-opus["separate-streams"] = "--separate-streams" in sys.argv
-if opus["separate-streams"]:
-    opus_args += "--separate-streams "
-# `--close-stopped-video`: when video stops the phones agree it is off, with
-# a new offer (Calls.closeStoppedVideo), the alternative to separate streams.
-opus["close-stopped-video"] = "--close-stopped-video" in sys.argv
-if opus["close-stopped-video"]:
-    opus_args += "--close-stopped-video "
+# Alice's video goes in a stream of its own by default, so Bob's phone does
+# not hold her sound back to match the picture (Calls.separateStreams, D17).
+# `--one-stream` puts it in the sound's stream, for comparison. Both phones
+# pass it; only the sender's matters.
+opus["separate-streams"] = "--one-stream" not in sys.argv
+if not opus["separate-streams"]:
+    opus_args += "--no-separate-streams "
+# `--tap-video-after S`: S seconds after a phone's own video stops, the lab
+# presses its "try video again", as a person would (Grey 2026-10-18: video
+# comes back only on a tap). Recorded with the run's settings.
+opus["tap-video-after"] = argval("--tap-video-after", None)
+if opus["tap-video-after"] is not None:
+    opus_args += f"--tap-video-after {opus['tap-video-after']} "
 # `--lip-drift`: a box in Alice's test picture flashes every 10 s and both
 # phones grab it off their screens, so lip_drift.py can put the picture's
 # delay beside the voice's (calls_lip_drift_check.sh proves the measure).

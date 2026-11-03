@@ -1,5 +1,5 @@
 """Run from lab/gate2. How long the phones take to agree that video is off or
-on again (E7 calls31, Calls.closeStoppedVideo). One line per call; one entry
+on again (E7 calls31, Calls.closeStoppedVideo, since removed: D17). One line per call; one entry
 per video start or stop on Alice, timed from her video-sending event (the offer's
 from its video-offer-sent):
 bob_saw_s, Bob's remote-video from the control channel (both arms); and with

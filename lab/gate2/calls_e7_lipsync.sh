@@ -10,6 +10,7 @@
 # (<L><n>s1), P1 direct and relayed on the field link, so the build is not a
 # second variable. Video, speech, Opus 12 kbit/s, 60 ms, DTX, 300 s calls.
 # The first run builds the app. Stops at the first run that fails.
+# Since D17 separate streams are the default: s0 passes --one-stream.
 #
 #     bash lab/gate2/calls_e7_lipsync.sh calls29
 set -euo pipefail
@@ -26,6 +27,6 @@ run() {
   BUILD=(--skip-build)
 }
 for n in 1 2 3; do
-  run "${L}${n}s0"
-  run "${L}${n}s1" --separate-streams
+  run "${L}${n}s0" --one-stream
+  run "${L}${n}s1"
 done

@@ -43,11 +43,16 @@ class LabOptions {
       )
       ..addFlag(
         'separate-streams',
-        help: 'send the video in a stream of its own (no lip sync, RFC 8830)',
+        defaultsTo: true,
+        help:
+            'send the video in a stream of its own (no lip sync, RFC 8830; '
+            'D17); --no-separate-streams puts it in the sound stream',
       )
-      ..addFlag(
-        'close-stopped-video',
-        help: 'when video stops, the phones agree it is off (a new offer)',
+      ..addOption(
+        'tap-video-after',
+        help:
+            "seconds after this phone's video stops to press its "
+            "'try video again' (the lab's tap; once per stop)",
       )
       ..addOption(
         'until-file',
@@ -124,8 +129,12 @@ class LabOptions {
   /// Whether the video goes in a stream of its own.
   bool get separateStreams => _a['separate-streams'] as bool;
 
-  /// Whether stopped video is closed on both phones.
-  bool get closeStoppedVideo => _a['close-stopped-video'] as bool;
+  /// How long after this phone's video stops the lab presses its "try
+  /// video again", or null for never.
+  Duration? get tapVideoAfter {
+    final v = _a['tap-video-after'] as String?;
+    return v == null ? null : Duration(seconds: int.parse(v));
+  }
 
   /// The stop sign.
   String? get untilFile => _a['until-file'] as String?;
@@ -230,7 +239,6 @@ Future<void> _run(
     'usedtx': o.opus.dtx,
     'audio-drop': o.audioExtensions.drop.toList(),
     'separate-streams': o.separateStreams,
-    'close-stopped-video': o.closeStoppedVideo,
   });
   final keys = await openLabKeys(
     Directory(o.state)..createSync(recursive: true),
@@ -248,7 +256,6 @@ Future<void> _run(
     opus: o.opus,
     audioExtensions: o.audioExtensions,
     separateStreams: o.separateStreams,
-    closeStoppedVideo: o.closeStoppedVideo,
     report: log.call,
   );
   final media = await _media(o, log);
@@ -259,7 +266,7 @@ Future<void> _run(
     final ringing = calls.ringing.first;
     log({'event': 'waiting-for-call'});
     call = await ringing;
-    _show(call, remote, notice, log);
+    _show(call, remote, notice, log, o.tapVideoAfter);
     await call.answer(media: media);
   } else {
     final c = await openWithRetry(client, peer);
@@ -267,7 +274,7 @@ Future<void> _run(
       throw MailboxError('could not open a conversation with $peer');
     }
     call = await calls.start(c, media: media);
-    _show(call, remote, notice, log);
+    _show(call, remote, notice, log, o.tapVideoAfter);
   }
   // No timeout of its own: the call's setup deadline (90 s) bounds this.
   // A 60 s one here cut setup short of it (calls11 P4-blocked).
@@ -321,9 +328,10 @@ void _show(
   RTCVideoRenderer remote,
   ValueNotifier<_Notice?> notice,
   LabLog log,
+  Duration? tapAfter,
 ) {
   call.video.listen((c) {
-    notice.value = c.sending
+    final shown = c.sending
         ? null
         : c.local
         ? _Notice(
@@ -336,6 +344,17 @@ void _show(
         : const _Notice(
             'Their video is off: weak connection. Sound continues.',
           );
+    notice.value = shown;
+    final retry = shown?.retry;
+    if (retry != null && tapAfter != null) {
+      // The lab's tap: the same press a person would make, if the notice is
+      // still up by then.
+      Timer(tapAfter, () {
+        if (identical(notice.value, shown)) {
+          retry();
+        }
+      });
+    }
   });
   var sized = false;
   remote.onResize = () {
@@ -355,8 +374,9 @@ void _show(
       'stream': s.id,
       'tracks': [for (final t in s.getTracks()) t.kind],
     });
-    // With --separate-streams the sound and the picture arrive as two
-    // streams; the picture's is the one to show (the sound plays either way).
+    // With separate streams (the default) the sound and the picture arrive
+    // as two streams; the picture's is the one to show (the sound plays
+    // either way).
     if (remote.srcObject == null ||
         s.getTracks().any((t) => t.kind == 'video')) {
       remote.srcObject = s;
