@@ -78,6 +78,7 @@ with open(sys.argv[1], "a") as out:
                 "voice_max_ms": (r.get("voice") or {}).get("delay_max_ms"),
                 "frames_encoded": last.get("framesEncoded"),
                 "payload_bytes": last.get("bytesSent"),
+                "bob_frames_decoded": (r.get("bob") or {}).get("video-frames-decoded"),
             }) + "\n")
             out.flush()
             print(label, "done", flush=True)
