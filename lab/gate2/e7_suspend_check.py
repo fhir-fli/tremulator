@@ -59,6 +59,9 @@ with open(sys.argv[1], "a") as out:
                   if start is not None and at >= start]
             on = [k for _, k, s in video_rates(alice) if s]
             opus = r.get("opus") or {}
+            last = next((x for e in reversed(alice) if e["event"] == "stats"
+                         for x in e["reports"]
+                         if x["type"] == "outbound-rtp" and x.get("kind") == "video"), {})
             out.write(json.dumps({
                 "check": "suspend", "run": label, "profile": r["profile"],
                 "suspend": opus.get("suspend-video"),
@@ -72,6 +75,9 @@ with open(sys.argv[1], "a") as out:
                 "target_over_1s": round(sum(t > SLOW_MS for _, t, _ in pl) / len(pl), 2) if pl else None,
                 "voice_median_ms": (r.get("voice") or {}).get("delay_median_ms"),
                 "clicks_heard": (r.get("voice") or {}).get("clicks_heard"),
+                "voice_max_ms": (r.get("voice") or {}).get("delay_max_ms"),
+                "frames_encoded": last.get("framesEncoded"),
+                "payload_bytes": last.get("bytesSent"),
             }) + "\n")
             out.flush()
             print(label, "done", flush=True)

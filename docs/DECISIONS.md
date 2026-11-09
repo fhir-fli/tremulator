@@ -484,3 +484,17 @@ every pair) held in all three. Share of intervals with the target over 1 s:
 20/27/20. Taps per call 3-4. So on a weak relayed link each tap costs
 seconds of late voice for the following minute or more; the first video
 start (automatic, before any tap) already costs it in pair 1.
+
+Suspending video below its lowest rate, 2026-11-09, calls34 (one pair,
+P1-blocked, field relay, tap 60 s after each stop;
+`Calls.suspendVideoBelowMinimum`, libwebrtc `googSuspendBelowMinBitrate`;
+`results/calls34-suspend.jsonl`). With it / without: Bob's sound playout
+target from the first video start 160 / 1,140 ms (over 1 s 0% / 73% of
+the time); voice delay median 702 / 2,001 ms, max 1,039 / 19,458; clicks
+heard 26 / 22 of 29. With it, Alice's phone encoded 0 video frames all call
+(the link estimate sat at its 5 kbit/s floor), so Bob never saw a picture
+and no stop or tap happened. The fixed prediction had two parts: target
+over 300 ms lower held; "suspended share over 0.5" failed (0.01), because
+that measure counted padding bytes as video. Not yet known: whether video
+still comes on with the option over P2/P3, and what the screen should say
+while video is held back.
