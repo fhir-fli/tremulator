@@ -498,3 +498,10 @@ over 300 ms lower held; "suspended share over 0.5" failed (0.01), because
 that measure counted padding bytes as video. Not yet known: whether video
 still comes on with the option over P2/P3, and what the screen should say
 while video is held back.
+Over the faster links, calls35 (2026-11-09, one call per cell, P2 and P3
+direct, same settings), with / without the option: frames Alice encoded
+P2 8,133 / 7,972, P3 7,892 / 7,513; Bob decoded P2 8,092 / 7,959, P3
+7,839 / 7,487; voice median P2 321 / 324 ms, P3 516 / 552; voice max P2
+379 / 358, P3 610 / 636; clicks heard 29/29 except P2 without (27). No
+stops, no taps. The fixed prediction (with the option video is encoded and
+decoded on both) held. On these links the option changed nothing measured.
