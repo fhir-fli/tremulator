@@ -79,6 +79,11 @@ with open(sys.argv[1], "a") as out:
                 "frames_encoded": last.get("framesEncoded"),
                 "payload_bytes": last.get("bytesSent"),
                 "bob_frames_decoded": (r.get("bob") or {}).get("video-frames-decoded"),
+                "alice_held_s": next((round(e["at"] - start, 1) for e in alice
+                                      if e["event"] == "video-held" and e["held"]
+                                      and start is not None), None),
+                "bob_told_held": any(e["event"] == "remote-video-held" and e["held"]
+                                     for e in bob),
             }) + "\n")
             out.flush()
             print(label, "done", flush=True)
