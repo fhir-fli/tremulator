@@ -602,6 +602,70 @@ void main() {
     );
   }
 
+  for (final suspend in [true, false]) {
+    testWidgets(
+      suspend
+          ? 'with suspendVideoBelowMinimum on, video stops when the link '
+                'allows less than its lowest rate, and sound flows on'
+          : 'with suspendVideoBelowMinimum off, video is sent at its lowest '
+                'rate whatever the link allows',
+      (_) async {
+        // Bob's answer limits what Alice may send to 20 kbit/s for video
+        // ("b=AS", RFC 8866 section 5.8), below libwebrtc's lowest video
+        // rate of 30 kbit/s (kDefaultMinVideoBitrateBps).
+        final aliceCalls = Calls(
+          alice,
+          suspendVideoBelowMinimum: suspend,
+          videoGuard: null,
+          alterRemoteSdp: _limitVideo,
+        );
+        final bobCalls = Calls(bob, videoGuard: null);
+        final media = await navigator.mediaDevices.getUserMedia({
+          'audio': true,
+          'video': false,
+        });
+        final screen = await navigator.mediaDevices.getDisplayMedia({
+          'video': {
+            'deviceId': {'exact': '0'},
+            'mandatory': {'frameRate': 30.0},
+          },
+          'audio': false,
+        });
+        for (final t in screen.getVideoTracks()) {
+          await media.addTrack(t);
+        }
+        final bobsCall = Completer<Call>();
+        bobCalls.ringing.listen((c) async {
+          await c.answer();
+          bobsCall.complete(c);
+        });
+        final call = await aliceCalls.start(conversation, media: media);
+        final answered = await bobsCall.future;
+        await answered.connected.timeout(const Duration(seconds: 30));
+
+        // Let the estimate settle, then watch three seconds.
+        await Future<void>.delayed(const Duration(seconds: 5));
+        final frames = await _videoFrames(answered);
+        final sound = await _audioPackets(answered);
+        await Future<void>.delayed(const Duration(seconds: 3));
+        final framesGrew = await _videoFrames(answered) - frames;
+        expect(await _audioPackets(answered), greaterThan(sound));
+        if (suspend) {
+          expect(framesGrew, 0, reason: 'video suspended');
+        } else {
+          expect(framesGrew, greaterThan(0), reason: 'video at its floor');
+        }
+
+        await call.hangUp();
+        await aliceCalls.close();
+        await bobCalls.close();
+        for (final t in [...media.getTracks(), ...screen.getTracks()]) {
+          await t.stop();
+        }
+      },
+    );
+  }
+
   testWidgets(
     'stopped video stays open on the other phone, sound flows on, '
     'and a tap brings the picture back',
@@ -704,6 +768,21 @@ Future<int> _inbound(Call call, String kind, String key) async {
     }
   }
   return 0;
+}
+
+/// Adds "b=AS:20" to the video section of [sdp]: at most 20 kbit/s.
+/// RFC 8866 section 5: b= comes after c= and before a= lines.
+String _limitVideo(String sdp) {
+  final lines = sdp.split('\r\n');
+  final out = <String>[];
+  var inVideo = false;
+  for (final l in lines) {
+    if (l.startsWith('m=')) inVideo = l.startsWith('m=video');
+    if (inVideo && l.startsWith('b=')) continue;
+    out.add(l);
+    if (inVideo && l.startsWith('c=')) out.add('b=AS:20');
+  }
+  return out.join('\r\n');
 }
 
 Future<int> _audioPackets(Call call) =>

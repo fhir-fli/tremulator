@@ -48,6 +48,12 @@ class LabOptions {
             'send the video in a stream of its own (no lip sync, RFC 8830; '
             'D17); --no-separate-streams puts it in the sound stream',
       )
+      ..addFlag(
+        'suspend-video',
+        help:
+            'let the video engine stop sending video while the link allows '
+            'less than its lowest rate (Calls.suspendVideoBelowMinimum)',
+      )
       ..addOption(
         'tap-video-after',
         help:
@@ -128,6 +134,9 @@ class LabOptions {
 
   /// Whether the video goes in a stream of its own.
   bool get separateStreams => _a['separate-streams'] as bool;
+
+  /// Whether video stops while the link allows less than its lowest rate.
+  bool get suspendVideo => _a['suspend-video'] as bool;
 
   /// How long after this phone's video stops the lab presses its "try
   /// video again", or null for never.
@@ -239,6 +248,7 @@ Future<void> _run(
     'usedtx': o.opus.dtx,
     'audio-drop': o.audioExtensions.drop.toList(),
     'separate-streams': o.separateStreams,
+    'suspend-video': o.suspendVideo,
   });
   final keys = await openLabKeys(
     Directory(o.state)..createSync(recursive: true),
@@ -256,6 +266,7 @@ Future<void> _run(
     opus: o.opus,
     audioExtensions: o.audioExtensions,
     separateStreams: o.separateStreams,
+    suspendVideoBelowMinimum: o.suspendVideo,
     report: log.call,
   );
   final media = await _media(o, log);

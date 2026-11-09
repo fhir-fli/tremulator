@@ -113,6 +113,12 @@ if not opus["separate-streams"]:
 # presses its "try video again", as a person would (Grey 2026-10-18: video
 # comes back only on a tap). Recorded with the run's settings.
 opus["tap-video-after"] = argval("--tap-video-after", None)
+# `--suspend-video`: the video engine stops sending video while the link
+# allows less than video's lowest rate (Calls.suspendVideoBelowMinimum).
+# Both phones pass it; only the sender's matters.
+opus["suspend-video"] = "--suspend-video" in sys.argv
+if opus["suspend-video"]:
+    opus_args += "--suspend-video "
 if opus["tap-video-after"] is not None:
     opus_args += f"--tap-video-after {opus['tap-video-after']} "
 # `--lip-drift`: a box in Alice's test picture flashes every 10 s and both

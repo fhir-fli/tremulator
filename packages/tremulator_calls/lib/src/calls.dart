@@ -47,6 +47,7 @@ class Calls {
     this.opus = const OpusReceive(),
     this.audioExtensions = const AudioExtensions(),
     this.separateStreams = true,
+    this.suspendVideoBelowMinimum = false,
     this.videoGuard = VideoGuard.new,
     this.guardEvery = const Duration(seconds: 1),
     Report? report,
@@ -123,6 +124,22 @@ class Calls {
   /// while video plays (calls30). Off: one stream, kept for the lab's
   /// comparison.
   final bool separateStreams;
+
+  /// Lets the video engine stop sending video while the link's estimated
+  /// rate is below the video's lowest rate, and resume it when the estimate
+  /// rises, so voice keeps the link. Without it libwebrtc sends video at its
+  /// lowest rate (30 kbit/s) whatever the estimate: calls33 on P1 (50
+  /// kbit/s), video at 30 plus voice at about 20 filled the link after
+  /// every tap. 3GPP TS 26.114 V19.3.0 clause 10.3.5: raising the rate must
+  /// add no delay and no loss. The switch is libwebrtc's
+  /// `googSuspendBelowMinBitrate` peer-connection constraint, copied into
+  /// RTCConfiguration.media_config.video.suspend_below_min_bitrate by
+  /// CopyConstraintsIntoRtcConfiguration on Linux (flutter-webrtc
+  /// libwebrtc rtc_peerconnection_impl.cc), Android (sdk jni
+  /// peer_connection_factory.cc) and iOS/macOS (RTCPeerConnection.mm).
+  /// libwebrtc marks the switch for removal (media_config.h, crbug
+  /// 1315564); the integration test fails if it stops working.
+  final bool suspendVideoBelowMinimum;
 
   /// Makes the guard that stops this phone's video when the link cannot
   /// carry it (one per call); null sends video whatever the link.
@@ -392,10 +409,16 @@ class Call {
   Future<void> hangUp() => _end('hangup', tell: true);
 
   Future<void> _open(MediaStream? media) async {
-    final pc = await createPeerConnection({
-      'iceServers': _calls.iceServers,
-      'sdpSemantics': 'unified-plan',
-    });
+    final pc = await createPeerConnection(
+      {
+        'iceServers': _calls.iceServers,
+        'sdpSemantics': 'unified-plan',
+      },
+      {
+        if (_calls.suspendVideoBelowMinimum)
+          'mandatory': {'googSuspendBelowMinBitrate': 'true'},
+      },
+    );
     _pc = pc;
     pc
       ..onConnectionState = _onState
