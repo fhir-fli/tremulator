@@ -141,3 +141,8 @@
   files stopped on 4 KiB boundaries and the traceback was cut mid-line.
   Deleted 2026-10-30 with its empty sweep log and disk check; rounds 2 and 3
   of calls31 rerun on the same phone image (`calls_e7_close.sh calls31 2`).
+- calls36 (2026-11-09): never ran. The app build failed: the shared pub
+  cache had lost `objective_c` 9.3.0, which app/pubspec.lock pins
+  (another session pruned the cache around 16:44; flutter_webrtc and clock
+  had gone too). `flutter pub get` restored it, lock unchanged. Its build
+  log and empty files deleted; the run is calls37.
