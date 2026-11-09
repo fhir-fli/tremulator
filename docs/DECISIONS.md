@@ -471,3 +471,16 @@ with one stream. Voice delay median (clicks) on P1: 696-811 ms against
 (0.7-27.4). Not settled by it: each video burst on a weak relayed link
 leaves the network itself needing 1.0-1.6 s of buffer for 1-2 minutes
 (calls31, no taps), in both arms, so a tap on such a link costs late voice.
+
+Tap cost measured 2026-11-03, calls33 (6 calls, P1-blocked, field relay,
+separate streams; three pairs, the lab tapping 60 s after each video stop
+against nobody tapping; method and prediction fixed before the run in
+`lab/gate2/e7_tap_cost.py`; `results/calls33-tap-cost.jsonl`). Bob's sound
+playout target after the first stop, tap against no tap: 1,552 vs 1,220 ms,
+1,020 vs 100, 1,502 vs 100. The prediction (tap arm over 300 ms higher in
+every pair) held in all three. Share of intervals with the target over 1 s:
+1.0/0.53/0.97 vs 0.56/0.27/0.0. Voice delay median (clicks, whole call):
+6,160/1,869/2,776 ms vs 1,604/672/621. Clicks heard of 29: 16/20/22 vs
+20/27/20. Taps per call 3-4. So on a weak relayed link each tap costs
+seconds of late voice for the following minute or more; the first video
+start (automatic, before any tap) already costs it in pair 1.
