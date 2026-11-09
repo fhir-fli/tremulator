@@ -505,3 +505,15 @@ P2 8,133 / 7,972, P3 7,892 / 7,513; Bob decoded P2 8,092 / 7,959, P3
 379 / 358, P3 610 / 636; clicks heard 29/29 except P2 without (27). No
 stops, no taps. The fixed prediction (with the option video is encoded and
 decoded on both) held. On these links the option changed nothing measured.
+
+The default build (suspend on, held notice) on the weak link, calls37
+(2026-11-09, one pair, P1-blocked, same settings as calls34), default /
+`--no-suspend-video`: Alice's phone reported her video held 4.0 s after
+it started and Bob's phone was told; video stayed held all call (0
+frames) and never came back on its own. Playout target 140 / 1,240 ms
+(over 1 s 0% / 94% of the time); voice median 664 / 3,301 ms, max 1,218 /
+20,218; clicks heard 27 / 25 of 29; without, 4 stops and 4 taps, Bob
+decoded 512 frames. The fixed prediction (held reported within 10 s, Bob
+told, target over 300 ms lower) held. Open: libwebrtc may resume held
+video by itself when its estimate rises, which differs from "video comes
+back only on a tap" (2026-10-18); not seen in any run so far.
