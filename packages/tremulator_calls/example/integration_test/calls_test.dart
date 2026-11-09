@@ -666,6 +666,80 @@ void main() {
     );
   }
 
+  for (final suspend in [true, false]) {
+    testWidgets(
+      suspend
+          ? 'video held back below its lowest rate is reported on both phones'
+          : 'video sent at its lowest rate is never reported held',
+      (_) async {
+        final aliceCalls = Calls(
+          alice,
+          suspendVideoBelowMinimum: suspend,
+          videoGuard: () => VideoGuard(startSending: true),
+          guardEvery: const Duration(milliseconds: 200),
+          roundTrip: (_) async => 0.4,
+          heldAfter: const Duration(seconds: 2),
+          alterRemoteSdp: _limitVideo,
+        );
+        final bobCalls = Calls(bob, videoGuard: null);
+        // Sound as well as video, as in the suspend test above: with video
+        // alone under the same limit the engine sent it (183 frames in
+        // about 8 s, 2026-11-09), so the test needs both.
+        final media = await navigator.mediaDevices.getUserMedia({
+          'audio': true,
+          'video': false,
+        });
+        final screen = await navigator.mediaDevices.getDisplayMedia({
+          'video': {
+            'deviceId': {'exact': '0'},
+            'mandatory': {'frameRate': 30.0},
+          },
+          'audio': false,
+        });
+        for (final t in screen.getVideoTracks()) {
+          await media.addTrack(t);
+        }
+        final bobsCall = Completer<Call>();
+        final bobSays = <VideoChange>[];
+        bobCalls.ringing.listen((c) async {
+          c.video.listen(bobSays.add);
+          await c.answer();
+          bobsCall.complete(c);
+        });
+        final call = await aliceCalls.start(conversation, media: media);
+        final aliceSays = <VideoChange>[];
+        call.video.listen(aliceSays.add);
+        final answered = await bobsCall.future;
+        await answered.connected.timeout(const Duration(seconds: 30));
+
+        await Future<void>.delayed(const Duration(seconds: 8));
+        final aliceHeld = aliceSays.where((c) => c.held).toList();
+        final bobHeld = bobSays.where((c) => c.held).toList();
+        if (suspend) {
+          expect(aliceHeld, isNotEmpty, reason: 'Alice told she is held');
+          expect(aliceHeld.first.local, isTrue);
+          expect(aliceHeld.first.sending, isTrue);
+          expect(bobHeld, isNotEmpty, reason: 'Bob told Alice is held');
+          expect(bobHeld.first.local, isFalse);
+          expect(
+            aliceLog.where((e) => e['event'] == 'video-held'),
+            isNotEmpty,
+          );
+        } else {
+          expect(aliceHeld, isEmpty);
+          expect(bobHeld, isEmpty);
+        }
+
+        await call.hangUp();
+        await aliceCalls.close();
+        await bobCalls.close();
+        for (final t in [...media.getTracks(), ...screen.getTracks()]) {
+          await t.stop();
+        }
+      },
+    );
+  }
+
   testWidgets(
     'stopped video stays open on the other phone, sound flows on, '
     'and a tap brings the picture back',

@@ -23,6 +23,6 @@ run() {
   BUILD=(--skip-build --keep-server)
 }
 run "${L}s1" --suspend-video
-run "${L}s0"
+run "${L}s0" --no-suspend-video
 cd "$HERE" && python3 e7_tap_cost.py "results/${L}-tap-cost.jsonl" "${L}s1" "${L}s0"
 python3 e7_suspend_check.py "results/${L}-suspend.jsonl" "${L}s1" "${L}s0"

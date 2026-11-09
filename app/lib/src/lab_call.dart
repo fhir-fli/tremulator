@@ -50,9 +50,11 @@ class LabOptions {
       )
       ..addFlag(
         'suspend-video',
+        defaultsTo: true,
         help:
             'let the video engine stop sending video while the link allows '
-            'less than its lowest rate (Calls.suspendVideoBelowMinimum)',
+            'less than its lowest rate (Calls.suspendVideoBelowMinimum); '
+            '--no-suspend-video sends it at its lowest rate whatever the link',
       )
       ..addOption(
         'tap-video-after',
@@ -342,7 +344,15 @@ void _show(
   Duration? tapAfter,
 ) {
   call.video.listen((c) {
-    final shown = c.sending
+    final shown = c.held
+        ? _Notice(
+            c.local
+                ? 'Your video is paused: the connection is too slow for it. '
+                      'Sound continues.'
+                : 'Their video is paused: the connection is too slow for it. '
+                      'Sound continues.',
+          )
+        : c.sending
         ? null
         : c.local
         ? _Notice(

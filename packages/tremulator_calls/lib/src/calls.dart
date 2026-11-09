@@ -47,9 +47,10 @@ class Calls {
     this.opus = const OpusReceive(),
     this.audioExtensions = const AudioExtensions(),
     this.separateStreams = true,
-    this.suspendVideoBelowMinimum = false,
+    this.suspendVideoBelowMinimum = true,
     this.videoGuard = VideoGuard.new,
     this.guardEvery = const Duration(seconds: 1),
+    this.heldAfter = const Duration(seconds: 3),
     Report? report,
     @visibleForTesting this.alterRemoteSdp,
     @visibleForTesting this.roundTrip,
@@ -139,6 +140,13 @@ class Calls {
   /// peer_connection_factory.cc) and iOS/macOS (RTCPeerConnection.mm).
   /// libwebrtc marks the switch for removal (media_config.h, crbug
   /// 1315564); the integration test fails if it stops working.
+  ///
+  /// On by default (Grey, 2026-11-09), from calls34 and calls35
+  /// (docs/DECISIONS.md D17): on P1 relayed, voice median 702 ms against
+  /// 2,001 and no video at all; on P2 and P3 video flowed and nothing
+  /// measured changed. While the engine holds video back, [Call.video]
+  /// says so ([VideoChange.held]). Off: video at its lowest rate whatever
+  /// the link, kept for the lab's comparison.
   final bool suspendVideoBelowMinimum;
 
   /// Makes the guard that stops this phone's video when the link cannot
@@ -148,6 +156,12 @@ class Calls {
   /// How often a connected call sending video reads its round trip for the
   /// guard.
   final Duration guardEvery;
+
+  /// How long this phone's video, while meant to be sent, may encode no new
+  /// frame before the call reports it held back ([VideoChange.held]). A
+  /// choice, unmeasured: calls34 encoded no frame all call; a sending
+  /// camera makes frames many times a second.
+  final Duration heldAfter;
 
   /// Where events go.
   final Report report;
@@ -307,6 +321,13 @@ class Call {
   VideoGuard? _guard;
   Timer? _guardTimer;
 
+  /// Whether this phone's video is held back by the video engine now, the
+  /// frames it had encoded at the last look, and since when that count has
+  /// not grown while video is meant to be sent.
+  bool _held = false;
+  int? _framesSeen;
+  DateTime? _flatSince;
+
   /// This phone's video senders and the track each sends while video is on.
   final Map<RTCRtpSender, MediaStreamTrack> _videoSenders = {};
   bool _guardBusy = false;
@@ -461,6 +482,16 @@ class Call {
       switch (m.text) {
         case 'hangup':
           unawaited(_end('remote-hangup', tell: false));
+        case 'video-held' || 'video-flowing':
+          final held = m.text == 'video-held';
+          _calls.report({
+            'event': 'remote-video-held',
+            'call': id,
+            'held': held,
+          });
+          if (!_video.isClosed) {
+            _video.add(VideoChange(local: false, sending: true, held: held));
+          }
         case 'video-off' || 'video-on':
           final sending = m.text == 'video-on';
           _calls.report({
@@ -938,10 +969,12 @@ class Call {
         if (rtt == null || _ended.isCompleted) {
           return;
         }
-        final change = guard.sample(DateTime.now(), rtt);
+        final now = DateTime.now();
+        final change = guard.sample(now, rtt);
         if (change != null) {
           await _sendVideo(change, rtt, 'guard');
         }
+        await _checkHeld(now, sending: guard.sending);
       } on Object catch (e) {
         _calls.report({
           'event': 'video-guard-failed',
@@ -952,6 +985,57 @@ class Call {
         _guardBusy = false;
       }
     });
+  }
+
+  /// Reports this phone's video held back when, while meant to be sent, the
+  /// video engine has encoded no new frame for [Calls.heldAfter]
+  /// (outbound-rtp framesEncoded, W3C webrtc-stats), and flowing again when
+  /// the count grows. Tells the other phone over the control channel.
+  Future<void> _checkHeld(DateTime now, {required bool sending}) async {
+    if (!sending) {
+      // Stopped by the guard: what the screen shows is "video off".
+      _framesSeen = null;
+      _flatSince = null;
+      _held = false;
+      return;
+    }
+    var frames = 0;
+    for (final r in await stats()) {
+      if (r.type == 'outbound-rtp' && r.values['kind'] == 'video') {
+        frames += (r.values['framesEncoded'] as num?)?.toInt() ?? 0;
+      }
+    }
+    final seen = _framesSeen;
+    _framesSeen = frames;
+    if (seen == null) {
+      _flatSince = now;
+      return;
+    }
+    if (frames > seen) {
+      _flatSince = null;
+      if (_held) {
+        await _setHeld(false);
+      }
+      return;
+    }
+    final flat = _flatSince ??= now;
+    if (!_held && now.difference(flat) >= _calls.heldAfter) {
+      await _setHeld(true);
+    }
+  }
+
+  Future<void> _setHeld(bool held) async {
+    _held = held;
+    _calls.report({'event': 'video-held', 'call': id, 'held': held});
+    if (!_video.isClosed) {
+      _video.add(VideoChange(local: true, sending: true, held: held));
+    }
+    final control = _control;
+    if (control?.state == RTCDataChannelState.RTCDataChannelOpen) {
+      await control!.send(
+        RTCDataChannelMessage(held ? 'video-held' : 'video-flowing'),
+      );
+    }
   }
 
   /// Tells the guard which route the connection is on now.
@@ -1024,14 +1108,24 @@ class Call {
       });
 }
 
-/// Video stopped or started, on this phone ([local]) or the other.
+/// Video stopped or started, on this phone ([local]) or the other, or held
+/// back by the video engine while it is meant to be sent ([held]).
 class VideoChange {
   /// A change.
-  const VideoChange({required this.local, required this.sending});
+  const VideoChange({
+    required this.local,
+    required this.sending,
+    this.held = false,
+  });
 
   /// True for this phone's own video, false for the other phone's.
   final bool local;
 
   /// Whether that video is being sent now.
   final bool sending;
+
+  /// True while that video is meant to be sent but the video engine makes
+  /// no frames, because the link allows less than video's lowest rate
+  /// ([Calls.suspendVideoBelowMinimum]); false when frames flow again.
+  final bool held;
 }

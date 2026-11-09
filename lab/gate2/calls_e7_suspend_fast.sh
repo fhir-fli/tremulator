@@ -23,5 +23,5 @@ run() {
   echo "$label exit 0" >> "$HERE/results/$label.out"
 }
 run "${L}s1" --suspend-video
-run "${L}s0"
+run "${L}s0" --no-suspend-video
 cd "$HERE" && python3 e7_suspend_check.py "results/${L}-suspend.jsonl" "${L}s1" "${L}s0"
