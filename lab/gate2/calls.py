@@ -10,6 +10,7 @@ screen and speaker are recorded.
                                [--opus-max-bitrate N] [--opus-ptime MS] [--opus-dtx]
                                [--audio-drop abs-send-time,transport-cc]
                                [--speech] [--relay-link field|decent]
+                               [--improve-to P2 --improve-after S]
     python3 lab/gate2/calls.py --label calls8 --reanalyse   (files on disk only)
 
 Profiles: `none` (no shaping), P1-P5 and P0 from labkit.PROFILES, and
@@ -24,7 +25,12 @@ on both phones (E8 in docs/GATE2-CALLS-PLAN.md). `offercut60` and
 call setup, the moment Alice places the call (her offer must go out in the
 outage) or the moment Bob receives her offer (his answer must), so the
 setup must be retried and the call connect after the link returns, within
-the 90 s setup deadline (calls11 P4: never connected). Any profile with `-blocked` appended (`P2-blocked`) also
+the 90 s setup deadline (calls11 P4: never connected).
+`--improve-to P --improve-after S`: S seconds after Alice's call connects,
+every shaped container's link changes to profile P's (rate, delay, loss)
+for the rest of the call; the direct-route block stays, so a `-blocked`
+call stays relayed. Each container writes when it switched
+(`<container>_improve.at`). Any profile with `-blocked` appended (`P2-blocked`) also
 blocks the two phones' direct route to each other, so the call must go
 through the relay. P5 runs on a second network created with `--internal`
 (no route out), as run.py does.
@@ -137,6 +143,14 @@ speech = "--speech" in sys.argv
 relay_link = argval("--relay-link", "field")
 if relay_link not in ("field", "decent"):
     raise SystemExit(f"--relay-link {relay_link}: field or decent")
+# `--improve-to P --improve-after S`: the link gets better mid-call (E7:
+# does video the engine held back come back by itself, and at what cost to
+# the voice; TS 26.114 V19.3.0 §10.3.5).
+improve_to = argval("--improve-to", None)
+improve_after = int(argval("--improve-after", "0"))
+if improve_to is not None and (improve_to not in PROFILES or improve_after <= 0):
+    raise SystemExit(f"--improve-to {improve_to} --improve-after {improve_after}: "
+                     f"a profile of {sorted(PROFILES)} and seconds > 0")
 outroot = os.path.join(HERE, "results", label)
 os.makedirs(outroot, exist_ok=True)
 summary = open(os.path.join(HERE, "results", f"{label}.jsonl"), "a")
@@ -284,6 +298,8 @@ def stop_relay(turn, d, host_d):
 
 def run_profile(name):
     base, shape, internal, blocked = parse(name)
+    if improve_to is not None and (shape is None or base == "P4"):
+        raise SystemExit(f"--improve-to needs a steady shaped profile, not {name}")
     srv, turn, alice, bob = NODES[internal]
     nodes = (srv, turn, alice, bob)
     port = PORTS[base]
@@ -380,6 +396,8 @@ def run_profile(name):
         raise_pattern(alice, 8)
     if clicked and base in CUTS:
         cut_links((alice, bob), d, CUTS[base])
+    if clicked and improve_to is not None:
+        improve_links(shaped, d, improve_to, improve_after)
     if clicked:
         track = "speech_track.wav" if speech else "click_track.wav"
         call_track(os.path.join(host_d, track), clicks, speech)
@@ -438,6 +456,9 @@ def run_profile(name):
     rec["voice"] = voice_facts(host_d, speech)
     if base in CUTS:
         rec["cut"] = cut_facts(host_d, CUTS[base])
+    if improve_to is not None:
+        rec["improve"] = {"to": improve_to, "after_s": improve_after,
+                          "at": improve_facts(host_d, shaped if shape else ())}
     if base in SETUP_CUTS:
         rec["cut"] = cut_facts(host_d, SETUP_CUTS[base][0])
     rec["qdisc"] = qdisc_facts(nodes, host_d)
@@ -518,6 +539,27 @@ def cut_links(phones, d, seconds):
                       f"tc qdisc replace dev eth0 root netem loss 100%; sleep {seconds}; "
                       f"tc qdisc del dev eth0 root; date +%s.%N > {d}/{who}_cut.end.tmp && "
                       f"mv {d}/{who}_cut.end.tmp {d}/{who}_cut.end")
+
+
+def improve_links(cs, d, profile, after_s):
+    """`after_s` from now, each container's link becomes `profile`'s, for
+    the rest of the call; the time is written beside the logs. A loop, its
+    pid recorded, so clear_shaping kills it if the call ends first."""
+    rate, rtt, loss, _internal = PROFILES[profile]
+    for c in cs:
+        start_loop(c, f"sleep {after_s}; tc qdisc replace dev eth0 root netem "
+                      f"delay {rtt / 2}ms loss {loss}% rate {rate}kbit && "
+                      f"date +%s.%N > {d}/{c}_improve.at.tmp && "
+                      f"mv {d}/{c}_improve.at.tmp {d}/{c}_improve.at")
+
+
+def improve_facts(host_d, cs):
+    """When each container's link changed, or None where it never did."""
+    out = {}
+    for c in cs:
+        p = os.path.join(host_d, f"{c}_improve.at")
+        out[c] = float(open(p).read()) if os.path.exists(p) else None
+    return out
 
 
 def cut_links_on(phones, d, seconds, log_path, event):
