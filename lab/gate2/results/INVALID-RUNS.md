@@ -146,3 +146,9 @@
   (another session pruned the cache around 16:44; flutter_webrtc and clock
   had gone too). `flutter pub get` restored it, lock unchanged. Its build
   log and empty files deleted; the run is calls37.
+- calls38 (2026-11-19): never ran. The app build failed: the laptop's GTK
+  headers are gone (libgtk-3-dev removed 2026-11-17 19:10, then a package
+  cleanup of 525 removals 2026-11-19 11:24-11:28, per /var/log/dpkg.log).
+  The phone image built 2026-11-09 17:38, after the last app or package
+  change (`3287983`, 17:35) and used by calls37, is reused unchanged
+  (`--skip-build`); the run is calls39.
