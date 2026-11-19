@@ -23,7 +23,7 @@ on), <L>s0 --no-suspend-video (taps 60 s after each stop), <L>nv sound only
   target median more than 300 ms above (calls34's bar). The 100 ms is our
   bar, chosen before the run. One call per arm: a single pair.
 
-One line per call. usage: python3 e7_improve_check.py OUT.jsonl L"""
+One line per call. usage: python3 e7_improve_check.py OUT.jsonl L [arm=label ...]"""
 import glob
 import json
 import os
@@ -75,7 +75,10 @@ def window(r, alice, bob, clicks, lo, hi):
 
 
 L = sys.argv[2]
-calls = {arm: load(f"{L}{arm}") for arm in ("s1", "s0", "nv")}
+# Arms default to <L>s1, <L>s0, <L>nv; `arm=label` after L names them
+# (calls40: s1=calls40s1 nv=calls39nv, one new call against a kept one).
+labels = dict(a.split("=", 1) for a in sys.argv[3:]) or {arm: f"{L}{arm}" for arm in ("s1", "s0", "nv")}
+calls = {arm: load(label) for arm, label in labels.items()}
 r1, a1, _, t1, _ = calls["s1"]
 notice1, grew1 = resume(a1, t1) if t1 else (None, None)
 w = notice1 if notice1 is not None else NO_RESUME_W
@@ -84,7 +87,7 @@ with open(sys.argv[1], "a") as out:
     for arm, (r, alice, bob, t, clicks) in calls.items():
         notice, grew = resume(alice, t) if t else (None, None)
         end = max(e["at"] for e in alice if e["event"] == "stats")
-        row = {"check": "improve", "run": f"{L}{arm}", "profile": r["profile"],
+        row = {"check": "improve", "run": labels[arm], "profile": r["profile"],
                "improve": r.get("improve"), "exits": [r.get("alice_exit"), r.get("bob_exit")],
                "switched": t is not None,
                "resume_notice_s": None if notice is None else round(notice, 1),
