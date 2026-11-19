@@ -529,3 +529,22 @@ after the switch brought video back (Bob decoded 3,950 frames); voice in
 the window from 30 s after the switch: median 431 ms, max 1,209, target
 100 ms, against the sound-only call's 312, 330 and 40. Default build in
 the same window: 332, 380, 40. One call per arm.
+With the sound's header fields kept, calls40 (2026-11-19, calls39's
+default call with that one change; the shipped app keeps them, every lab
+call since calls26 had dropped them): held video came back by itself
+16.9 s after the switch, no tap; Bob decoded 4,271 frames. The prediction
+fixed before the run held. Alice's link estimate (availableOutgoingBitrate)
+in the 30 s before the switch: at most 24 kbit/s here against 5 in
+calls39s1; 10-17 s after it: 72 against 11; 17-60 s after: up to 304
+against 8. Why the dropped fields hold the estimate down is a hypothesis
+(the sender then hears back only about video packets, and held video sends
+none), not measured. Voice from the resume on: median 388 ms, max 455,
+target 80 ms, against calls39nv's sound-only 311, 330, 40 (calls39nv
+dropped the fields: a second difference, one call each). Within the rule
+fixed first (100 ms median, 300 ms target), so video coming back by itself
+when the engine's estimate allows does not cost the voice. Consequences:
+the header drop (calls26: lower voice delay over the field relay) cannot
+become the default, since with it held video stayed off for the call; lab
+calls from now on keep the fields, as shipped. Video the guard stopped
+still comes back only on a tap. A tap does nothing on held video
+(`retryVideo`); with the fields kept, held video came back by itself.
