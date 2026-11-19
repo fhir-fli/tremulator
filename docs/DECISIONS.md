@@ -514,6 +514,18 @@ frames) and never came back on its own. Playout target 140 / 1,240 ms
 (over 1 s 0% / 94% of the time); voice median 664 / 3,301 ms, max 1,218 /
 20,218; clicks heard 27 / 25 of 29; without, 4 stops and 4 taps, Bob
 decoded 512 frames. The fixed prediction (held reported within 10 s, Bob
-told, target over 300 ms lower) held. Open: libwebrtc may resume held
-video by itself when its estimate rises, which differs from "video comes
-back only on a tap" (2026-10-18); not seen in any run so far.
+told, target over 300 ms lower) held.
+When the link gets better, calls39 (2026-11-19, P1-blocked improving to P2
+120 s after connect, 300 s, same settings; `--improve-to`,
+`calls_e7_improve.sh`, rule fixed first in `e7_improve_check.py`): held
+video did NOT come back. Default build: Alice encoded 0 frames for the
+180 s on P2; her link estimate stayed 5-10 kbit/s on a 300 kbit/s link
+(round trip fell 0.92 to 0.41 s at the switch). A tap cannot help:
+`retryVideo` acts only on video the guard stopped, and held video counts
+as sent. So once held, video is gone for the call, even on a good link.
+The cost rule ("video coming back by itself costs the voice") could not
+be tested, since nothing came back. With `--no-suspend-video` one tap 35 s
+after the switch brought video back (Bob decoded 3,950 frames); voice in
+the window from 30 s after the switch: median 431 ms, max 1,209, target
+100 ms, against the sound-only call's 312, 330 and 40. Default build in
+the same window: 332, 380, 40. One call per arm.
