@@ -72,6 +72,17 @@ Uint8List macValue(Uint8List serialized) {
   return value;
 }
 
+/// The length a variable-size vector header gives (section 2.1.2). The
+/// header must be the whole of [header]. The official test vectors
+/// (mlswg/mls-implementations `deserialization.json`) give headers for
+/// lengths up to 2^30 - 1, with no body, so the length is read on its own.
+int vectorLengthOf(Uint8List header) {
+  final r = _Reader(header);
+  final n = r.length();
+  r.end();
+  return n;
+}
+
 class _Reader {
   _Reader(this.b);
 
@@ -96,7 +107,10 @@ class _Reader {
   /// An `opaque x<V>`: the length as a variable-size integer (section
   /// 2.1.2: the top two bits of the first byte give 1, 2 or 4 bytes, 11 is
   /// invalid, and the shortest encoding is required), then the bytes.
-  Uint8List vector() {
+  Uint8List vector() => fixed(length());
+
+  /// The length of an `opaque x<V>`, see [vector].
+  int length() {
     _need(1);
     final prefix = b[at] >> 6;
     if (prefix == 3) {
@@ -112,7 +126,7 @@ class _Reader {
       throw const KeysError('malformed MLS message: length not minimal');
     }
     at += size;
-    return fixed(n);
+    return n;
   }
 
   void end() {
