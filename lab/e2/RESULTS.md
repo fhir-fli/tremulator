@@ -44,23 +44,38 @@ tree-validation 42/98, treekem 33/77, passive welcome 24/56, passive
 handling-commit 39/91, passive random 1/1, tree-operations 5/5 (all suite
 1). The app uses suite 1, which every file covers.
 
-Checks `test-vectors.md` asks for that openmls's tests do not make (read
-in the source at commit 3a3e35de; the first three confirmed by hand):
+Checks `test-vectors.md` asks for that openmls's vector tests do not make.
+Each re-read by hand in the 0.9.0 source on 2026-11-20 (Grey asked for a
+recheck), and in openmls `main` at ba267737 (2026-11-18): all still there.
 
-1. message-protection: "protecting [the application message] as a
-   PublicMessage fails" is never tried.
-2. messages: 3 of 14 fields (`re_init_proposal`, `external_init_proposal`,
-   `group_context_extensions_proposal`) are loaded but never decoded or
-   re-encoded ("Re-Init, External Init and App-Ack Proposals go here...",
-   messages.rs:488).
-3. passive-client: the three private keys are not checked against the key
-   package (`_signature_priv` unused, passive_client.rs:243); they are
-   only used, so a mismatch would show as a failed join.
-4. treekem: the leaf's own encryption and signature private keys are not
-   checked against the tree; the fresh UpdatePath round trip runs against
-   a group context whose tree hash is not updated (TODO #1279, lines 188,
-   250, 265).
-5. tree-math: the root's empty parent and sibling are not asserted.
+1. messages: 3 of the 14 fields (`re_init_proposal`,
+   `external_init_proposal`, `group_context_extensions_proposal`) are
+   loaded and never decoded or re-encoded ("Re-Init, External Init and
+   App-Ack Proposals go here...", messages.rs:488; main:495). The other 11
+   fields are read and compared. No open issue found (searched the
+   repository's issues for the field names and for "test vectors"; that
+   search does return older test-vector issues, e.g. #326, #490).
+2. passive-client: the given private keys are not checked against the key
+   package's public keys, the vector's first check
+   (`_signature_priv` unused, passive_client.rs:243; `init_priv` and
+   `encryption_priv` stored without comparison). A wrong `init_priv` would
+   still show, as a failed join; a wrong `signature_priv` would not, since
+   the passive client never signs.
+3. message-protection: the vector test does not try protecting the
+   application message as a PublicMessage. openmls does refuse it
+   (`ValidationError::UnencryptedApplicationMessage`, framing/validation.rs:237)
+   and tests that elsewhere (group/tests_and_kats/tests/framing_validation.rs:417),
+   so this is a gap in the vector test only.
+4. treekem: the leaf's own private keys are paired with the tree's public
+   keys without a check, and the second half runs on a group context whose
+   tree hash is not updated. Already tracked by openmls: issue #1279
+   ("Tracking missing interop features", open since 2023-02-16, item
+   "Resolve TODOs in TreeKEM").
+5. tree-math: the root's empty parent and sibling are skipped, not
+   asserted. Trivial: every official tree has them empty.
+
+openmls's own copies of 6 of the 16 files differ from the working group's
+current ones; with the current ones in place all 15 tests pass.
 
 The leaf-node lifetime check is switched off for the passive-client
 files (the vectors' key packages have expired).
