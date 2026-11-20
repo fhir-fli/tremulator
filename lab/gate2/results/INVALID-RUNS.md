@@ -160,3 +160,19 @@
   screen had no text direction; fixed in lab_call.dart); calls44 Chrome
   could not capture the screen (Xvfb's RandR; the browser phone runs Xvfb
   without it). Kept as the record of those defects; not E1 results.
+- calls47bb, calls47ba P2-blocked (2026-11-19): never connected. The
+  direct-route block was a blackhole route. Chrome's log in calls47bb shows
+  "UDP send of 96 bytes to host ... failed with error 103" to Alice, then
+  "Failed to send TURN message, error: 103" on the relay port, and the relay
+  log shows no permission from Chrome's allocation. With the block changed
+  to a silent drop on arrival (calls.py block_direct), both connected
+  through the relay (calls48bb, calls48ba P2-blocked, relay→host). A lab
+  defect, not a Chrome result.
+- calls48ba P2 (2026-11-19): Chrome as Alice logged its first line 146 s
+  after start (others: 2-7 s); Chrome's log shows nothing between the
+  Flutter bootstrap (01:35:22) and that line (01:37:45), and her capture
+  shows 208 UDP 443 packets to Google 01:35:21-01:36:38. The call connected
+  after the 150 s click wait, so no clicks were sent. Every Chrome phone in
+  calls47/48 sent 199-233 such packets; native phones none. The web build
+  now carries Flutter's renderer (--no-web-resources-cdn) and every run
+  records `outside_pkts`.

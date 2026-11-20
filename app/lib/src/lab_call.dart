@@ -469,6 +469,7 @@ Future<MediaStream?> _media(LabOptions o, LabSink log) async {
               'audio': false,
             },
     );
+    screen.getVideoTracks().forEach(markAsCamera);
     if (stream == null) {
       stream = screen;
     } else {

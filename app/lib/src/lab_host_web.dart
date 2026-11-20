@@ -3,6 +3,8 @@ import 'dart:convert';
 import 'dart:math';
 import 'dart:typed_data';
 
+import 'package:dart_webrtc/dart_webrtc.dart' show MediaStreamTrackWeb;
+import 'package:flutter_webrtc/flutter_webrtc.dart' show MediaStreamTrack;
 import 'package:http/http.dart' as http;
 import 'package:tremulator_client/tremulator_client.dart';
 import 'package:tremulator_keys/tremulator_keys.dart';
@@ -79,4 +81,13 @@ class _PostSink implements LabSink {
 
   @override
   Future<void> close() => _last;
+}
+
+/// Marks the lab's picture as moving video (W3C MediaStreamTrack Content
+/// Hints, WD 2025-09-19, section 4.3: "motion" makes the sender keep the
+/// frame rate). The lab's screen stands in for a camera. Chrome otherwise
+/// kept full resolution at 1-2 frames a second on P2 (calls47ba: 148 frames
+/// decoded in 120 s, "bandwidth" limited at 1280 wide).
+void markAsCamera(MediaStreamTrack track) {
+  (track as MediaStreamTrackWeb).jsTrack.contentHint = 'motion';
 }

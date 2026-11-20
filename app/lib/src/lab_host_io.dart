@@ -1,5 +1,7 @@
 import 'dart:io';
 
+import 'package:flutter_webrtc/flutter_webrtc.dart' show MediaStreamTrack;
+
 import 'package:tremulator_client/tremulator_client.dart';
 import 'package:tremulator_keys/tremulator_keys.dart';
 
@@ -40,3 +42,7 @@ class _FileSink implements LabSink {
   @override
   Future<void> close() async => _log.close();
 }
+
+/// Nothing to do: the Linux plugin sends the screen as it would a camera
+/// (calls47nat: 2,897 frames decoded in 120 s on P2).
+void markAsCamera(MediaStreamTrack track) {}

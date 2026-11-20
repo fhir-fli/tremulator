@@ -247,7 +247,13 @@ def chrome_zip():
 def build_browser():
     """The web build and the browser phone image, on top of the phone
     image just built."""
-    sh(["flutter", "build", "web", "--release"], cwd=APP, check=True, timeout=1800)
+    # --no-web-resources-cdn: the page loads Flutter's renderer from the
+    # build, not from www.gstatic.com. With the default, every Chrome phone
+    # sent 199-233 UDP 443 packets to Google per call (calls47/48 media
+    # captures), over the shaped link, and in calls48ba P2 the renderer took
+    # 143 s to arrive, so Alice's call connected past the click wait.
+    sh(["flutter", "build", "web", "--release", "--no-web-resources-cdn"], cwd=APP,
+       check=True, timeout=1800)
     if not os.path.exists(os.path.join(WEB, "pkg", "openmls_frb_bg.wasm")):
         raise RuntimeError("web build has no pkg/openmls_frb_bg.wasm (openmls build hook)")
     shutil.rmtree(BROWSER_CONTEXT, ignore_errors=True)
@@ -319,12 +325,26 @@ def tcp_probe(c, ip):
 
 
 def block_direct(alice, bob):
-    """Blackhole each phone's route to the other; prove it with a TCP probe
-    before and after (known positive: refused before)."""
+    """Each phone silently drops what arrives from the other (an ingress
+    filter on its own interface), as a firewall or a NAT between them
+    would; prove it with a TCP probe before and after (known positive:
+    refused before; after, no answer).
+
+    Until 2026-11-19 each phone had a blackhole route to the other, so a
+    send to the other failed at once on the sender. Chrome then closed the
+    UDP socket it shares with its relay connection ("Error when sending
+    data in UDP socket: -4", then "Failed to send TURN message, error:
+    103") and never reached the relay: calls47bb and calls47ba P2-blocked
+    never connected. libwebrtc in the Linux app kept its socket."""
     a_ip, b_ip = ip_of(alice), ip_of(bob)
     before = tcp_probe(alice, b_ip)
-    dx(alice, "ip", "route", "add", "blackhole", f"{b_ip}/32", user="0")
-    dx(bob, "ip", "route", "add", "blackhole", f"{a_ip}/32", user="0")
+    for c, other in ((alice, b_ip), (bob, a_ip)):
+        for cmd in (["tc", "qdisc", "add", "dev", "eth0", "handle", "ffff:", "ingress"],
+                    ["tc", "filter", "add", "dev", "eth0", "parent", "ffff:", "protocol", "ip",
+                     "prio", "1", "u32", "match", "ip", "src", f"{other}/32", "action", "drop"]):
+            r = dx(c, *cmd, user="0")
+            if r.returncode:
+                raise RuntimeError(f"{' '.join(cmd)} on {c}: {r.stderr.strip()}")
     after = tcp_probe(alice, b_ip)
     refused = lambda lines: any("refused" in l.lower() for l in lines)
     if not refused(before) or refused(after):
@@ -333,8 +353,10 @@ def block_direct(alice, bob):
 
 
 def unblock_direct(alice, bob):
+    """Removes the ingress filter (and any blackhole route of the old block)."""
     for c in (alice, bob):
-        dx(c, "sh", "-c", "ip route show type blackhole | while read -r _ dst _; do "
+        dx(c, "sh", "-c", "tc qdisc del dev eth0 ingress 2>/dev/null; "
+                          "ip route show type blackhole | while read -r _ dst _; do "
                           "ip route del blackhole \"$dst\"; done; true", user="0")
 
 
@@ -535,7 +557,25 @@ def run_profile(name):
         rec["cut"] = cut_facts(host_d, SETUP_CUTS[base][0])
     rec["qdisc"] = qdisc_facts(nodes, host_d)
     rec.update(fingerprint_hunt(host_d))
+    rec["outside_pkts"] = outside_packets(host_d, (alice, bob))
     log(rec)
+
+
+def outside_packets(host_d, phones):
+    """UDP packets each phone sent off the lab network, from its media
+    capture (UDP only, so TCP is not seen). A lab call should send none;
+    the Chrome phone sent 199-233 per call to Google before the web build
+    stopped using the CDN (calls47/48)."""
+    out = {}
+    for c in phones:
+        p = os.path.join(host_d, f"{c}_media.pcap")
+        if not os.path.exists(p):
+            out[c] = None
+            continue
+        r = sh(["tcpdump", "-nr", p, "udp and not dst net 172.16.0.0/12 and not dst net 224.0.0.0/4 "
+                                    "and not ip6"])
+        out[c] = len([l for l in r.stdout.splitlines() if l.strip()])
+    return out
 
 
 QDISC = re.compile(r"Sent (\d+) bytes (\d+) pkt \(dropped (\d+), overlimits (\d+) requeues (\d+)\)\s+backlog (\d+)b (\d+)p")
