@@ -97,7 +97,14 @@ print(urllib.parse.urlencode(q))
 ' "${args[@]}" --server http://localhost:8099/fhir --out "$out" ${until:+--until-file "$until"})
 # --test-type and --kiosk: no warning bars over the page (calls42: two bars
 # covered the top 113 px of Bob's screen).
+# The background-service flags: Chrome's own updates, reporting and safety
+# lookups stay off the lab link. With the renderer already local, Chrome as
+# Bob still sent 197 UDP packets to five Google addresses in calls50bb none
+# (calls.py outside_pkts).
 /opt/chrome/chrome --no-sandbox --test-type --kiosk --no-first-run --no-default-browser-check \
+  --disable-background-networking --disable-component-update --disable-domain-reliability \
+  --disable-sync --disable-client-side-phishing-detection --disable-default-apps \
+  --metrics-recording-only --no-pings \
   --user-data-dir=/tmp/state/chrome --password-store=basic \
   --use-fake-ui-for-media-stream --auto-select-desktop-capture-source="Entire screen" \
   --autoplay-policy=no-user-gesture-required --enable-unsafe-swiftshader \
