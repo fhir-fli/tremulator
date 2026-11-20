@@ -37,7 +37,7 @@ a suite-1 entry per file): every one of the 14 tests failed
 (`results/damaged-*`).
 
 Cipher suites: the crypto backend the app uses supports suites 1, 2 and 3;
-every test skips suites 4-7 without saying so. Checked entries / all:
+the tests skip suites 4-7 without saying so (tree-operations has no such check; all its entries are suite 1). Checked entries / all:
 crypto-basics 3/7, key-schedule 3/7, message-protection 3/7,
 transcript-hashes 3/7, welcome 3/7, secret-tree 9/21, psk_secret 33/77,
 tree-validation 42/98, treekem 33/77, passive welcome 24/56, passive
