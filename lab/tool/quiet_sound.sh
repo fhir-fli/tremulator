@@ -9,6 +9,9 @@
 # command. The dummies are removed afterwards.
 #
 #     bash lab/tool/quiet_sound.sh LOG -- flutter test integration_test/calls_test.dart -d linux
+#
+# Run the call tests through lab/tool/call_tests.sh, which also keeps the
+# test window off the desktop.
 set -uo pipefail
 LOG=$1; shift 2
 # Without pactl there are no dummy devices and no watch, and the command
