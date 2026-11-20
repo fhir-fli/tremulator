@@ -1,0 +1,29 @@
+# The browser phone (E1): the lab phone image plus Chrome for Testing, nginx
+# and the app's web build, so Chrome's own WebRTC makes the call. Same
+# virtual screen and sound card as the Linux phone (calls_phone.sh).
+# Build context: a staging directory calls.py fills (web/, the Chrome zip,
+# lab_helper.py, calls_browser.sh). Chrome's runtime needs are its zip's
+# deb.deps, by their Ubuntu 24.04 names.
+FROM tremulator-g2-calls:latest
+USER root
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+      nginx python3 unzip fonts-liberation libnss3 libnspr4 libatk1.0-0t64 \
+      libatk-bridge2.0-0t64 libatspi2.0-0t64 libcups2t64 libdbus-1-3 libexpat1 \
+      libxkbcommon0 libvulkan1 libcurl4t64 libpango-1.0-0 libcairo2 libudev1 \
+      libx11-6 libxcb1 libxext6 xdg-utils wget \
+ && rm -rf /var/lib/apt/lists/*
+COPY chrome-linux64.zip /tmp/chrome-linux64.zip
+RUN unzip -q /tmp/chrome-linux64.zip -d /opt && mv /opt/chrome-linux64 /opt/chrome \
+ && rm /tmp/chrome-linux64.zip
+COPY web /web
+COPY lab_helper.py calls_browser.sh /usr/local/bin/
+RUN chmod 755 /usr/local/bin/lab_helper.py /usr/local/bin/calls_browser.sh
+# Xvfb without RandR. With it, Chrome asked libwebrtc's X11 screen capturer
+# for "screen:0:0" and the capturer refused the id (Chrome's log:
+# "DesktopCaptureDevice::Create fails because ... SelectSource(source.id) is
+# false"; Xvfb's one monitor is named "screen"), so getDisplayMedia failed
+# with "NotReadableError: Could not start video source" (calls44; the same
+# in a bare page, 2026-11-19). Without RandR the same page captured the
+# whole 1280x720 screen.
+ENV XVFB_EXTRA="-extension RANDR"
+USER ubuntu

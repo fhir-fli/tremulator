@@ -152,3 +152,11 @@
   The phone image built 2026-11-09 17:38, after the last app or package
   change (`3287983`, 17:35) and used by calls37, is reused unchanged
   (`--skip-build`); the run is calls39.
+- calls41, calls42, calls44 (2026-11-19): E1 browser-phone smoke runs, each
+  stopped by a defect in the new browser phone, fixed before the next:
+  calls41 Chrome found no microphone (it lists no PulseAudio monitor source;
+  the browser phone now copies mic.monitor to a plain source); calls42 the
+  call connected and Chrome decoded 1,333 frames but showed none (the lab
+  screen had no text direction; fixed in lab_call.dart); calls44 Chrome
+  could not capture the screen (Xvfb's RandR; the browser phone runs Xvfb
+  without it). Kept as the record of those defects; not E1 results.

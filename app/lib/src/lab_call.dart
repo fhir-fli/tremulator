@@ -1,10 +1,11 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:args/args.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/widgets.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
+import 'package:tremulator/src/lab_host.dart';
 import 'package:tremulator_calls/tremulator_calls.dart';
 import 'package:tremulator_client/tremulator_client.dart';
 import 'package:tremulator_mailbox/tremulator_mailbox.dart';
@@ -61,6 +62,13 @@ class LabOptions {
         help:
             "seconds after this phone's video stops to press its "
             "'try video again' (the lab's tap; once per stop)",
+      )
+      ..addFlag(
+        'plant-changed-fingerprint',
+        help:
+            "planted defect (E1, E3a): read the other phone's session "
+            'description with one hex digit of its certificate fingerprint '
+            'changed; the call must fail at the handshake',
       )
       ..addOption(
         'until-file',
@@ -149,6 +157,9 @@ class LabOptions {
 
   /// The stop sign.
   String? get untilFile => _a['until-file'] as String?;
+
+  /// Whether this phone reads the other's fingerprint with a digit changed.
+  bool get plantChangedFingerprint => _a['plant-changed-fingerprint'] as bool;
 }
 
 /// Runs one lab call and shows the other side's picture full window, so a
@@ -166,6 +177,13 @@ class LabCallApp extends StatefulWidget {
 
 class _LabCallAppState extends State<LabCallApp> {
   final RTCVideoRenderer _remote = RTCVideoRenderer();
+
+  /// In a browser, sound plays only from a page element, which a renderer
+  /// makes for the stream it is given (flutter_webrtc web
+  /// rtc_video_renderer_impl.dart). With separate streams the sound has its
+  /// own stream, so it gets its own renderer, never shown. Unused elsewhere:
+  /// the Linux and phone builds play every incoming sound by themselves.
+  final RTCVideoRenderer _sound = RTCVideoRenderer();
   bool _ready = false;
 
   /// What the screen says about video, or null: Gate 5's "says so". With
@@ -180,67 +198,78 @@ class _LabCallAppState extends State<LabCallApp> {
 
   Future<void> _start() async {
     await _remote.initialize();
+    if (kIsWeb) {
+      await _sound.initialize();
+    }
     setState(() => _ready = true);
-    final log = LabLog(widget.options.out);
+    final log = openLabSink(widget.options.out);
     try {
-      await _run(widget.options, log, _remote, _notice);
+      await _run(widget.options, log, _remote, _sound, _notice);
       log({'event': 'done'});
-      log.close();
-      exit(0);
+      await log.close();
+      finishLab(0);
     } catch (e, st) {
       log({'event': 'run-failed', 'error': '$e', 'stack': '$st'});
-      log.close();
-      exit(2);
+      await log.close();
+      finishLab(2);
     }
   }
 
   @override
   // Dark grey, not black: a screenshot then tells this window from the bare
   // screen behind it, which is black.
-  Widget build(BuildContext context) => ColoredBox(
-    color: const Color(0xFF303030),
-    // RTCVideoView chooses texture or placeholder when it is built, so it is
-    // rebuilt whenever the renderer changes (a stream set, a first frame).
-    // Built once, it kept the placeholder for the whole call (calls1).
-    child: _ready
-        ? Stack(
-            fit: StackFit.expand,
-            children: [
-              ValueListenableBuilder<RTCVideoValue>(
-                valueListenable: _remote,
-                builder: (_, _, _) => RTCVideoView(_remote),
-              ),
-              ValueListenableBuilder<_Notice?>(
-                valueListenable: _notice,
-                builder: (_, notice, _) => notice == null
-                    ? const SizedBox.shrink()
-                    : Center(
-                        child: GestureDetector(
-                          onTap: notice.retry,
-                          child: Text(
-                            notice.retry == null
-                                ? notice.text
-                                : '${notice.text}\nTap to try video again.',
-                            textDirection: TextDirection.ltr,
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(
-                              color: Color(0xFFFFFFFF),
-                              fontSize: 32,
+  // The Stack below resolves its alignment against a text direction, and
+  // with no app widget above there is none: on the web build the first
+  // frame threw "Null check operator used on a null value" in
+  // AlignmentDirectional.resolve and the picture was never shown (calls42).
+  Widget build(BuildContext context) => Directionality(
+    textDirection: TextDirection.ltr,
+    child: ColoredBox(
+      color: const Color(0xFF303030),
+      // RTCVideoView chooses texture or placeholder when it is built, so it is
+      // rebuilt whenever the renderer changes (a stream set, a first frame).
+      // Built once, it kept the placeholder for the whole call (calls1).
+      child: _ready
+          ? Stack(
+              fit: StackFit.expand,
+              children: [
+                ValueListenableBuilder<RTCVideoValue>(
+                  valueListenable: _remote,
+                  builder: (_, _, _) => RTCVideoView(_remote),
+                ),
+                ValueListenableBuilder<_Notice?>(
+                  valueListenable: _notice,
+                  builder: (_, notice, _) => notice == null
+                      ? const SizedBox.shrink()
+                      : Center(
+                          child: GestureDetector(
+                            onTap: notice.retry,
+                            child: Text(
+                              notice.retry == null
+                                  ? notice.text
+                                  : '${notice.text}\nTap to try video again.',
+                              textDirection: TextDirection.ltr,
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                color: Color(0xFFFFFFFF),
+                                fontSize: 32,
+                              ),
                             ),
                           ),
                         ),
-                      ),
-              ),
-            ],
-          )
-        : const SizedBox.expand(),
+                ),
+              ],
+            )
+          : const SizedBox.expand(),
+    ),
   );
 }
 
 Future<void> _run(
   LabOptions o,
-  LabLog log,
+  LabSink log,
   RTCVideoRenderer remote,
+  RTCVideoRenderer sound,
   ValueNotifier<_Notice?> notice,
 ) async {
   log({
@@ -251,11 +280,10 @@ Future<void> _run(
     'audio-drop': o.audioExtensions.drop.toList(),
     'separate-streams': o.separateStreams,
     'suspend-video': o.suspendVideo,
+    'plant-changed-fingerprint': o.plantChangedFingerprint,
   });
-  final keys = await openLabKeys(
-    Directory(o.state)..createSync(recursive: true),
-    o.name,
-  );
+  log({'event': 'platform', 'web': kIsWeb});
+  final keys = await openLabKeyStore(o.state, o.name);
   final client = await Client.start(
     keys: keys,
     mailbox: Mailbox(base: o.server),
@@ -269,6 +297,8 @@ Future<void> _run(
     audioExtensions: o.audioExtensions,
     separateStreams: o.separateStreams,
     suspendVideoBelowMinimum: o.suspendVideo,
+    // ignore: invalid_use_of_visible_for_testing_member, the lab's planted defect is a test; the hook exists for it.
+    alterRemoteSdp: o.plantChangedFingerprint ? _changeFingerprint : null,
     report: log.call,
   );
   final media = await _media(o, log);
@@ -279,7 +309,7 @@ Future<void> _run(
     final ringing = calls.ringing.first;
     log({'event': 'waiting-for-call'});
     call = await ringing;
-    _show(call, remote, notice, log, o.tapVideoAfter);
+    _show(call, remote, sound, notice, log, o.tapVideoAfter);
     await call.answer(media: media);
   } else {
     final c = await openWithRetry(client, peer);
@@ -287,7 +317,7 @@ Future<void> _run(
       throw MailboxError('could not open a conversation with $peer');
     }
     call = await calls.start(c, media: media);
-    _show(call, remote, notice, log, o.tapVideoAfter);
+    _show(call, remote, sound, notice, log, o.tapVideoAfter);
   }
   // No timeout of its own: the call's setup deadline (90 s) bounds this.
   // A 60 s one here cut setup short of it (calls11 P4-blocked).
@@ -326,7 +356,7 @@ Future<void> _run(
   statsTimer.cancel();
   final untilFile = o.untilFile;
   if (peer == null && untilFile != null) {
-    await waitForFile(untilFile, log.call);
+    await waitForStop(untilFile, log.call);
   }
   await guardedCollect(client);
   for (final t in media?.getTracks() ?? <MediaStreamTrack>[]) {
@@ -339,8 +369,9 @@ Future<void> _run(
 void _show(
   Call call,
   RTCVideoRenderer remote,
+  RTCVideoRenderer sound,
   ValueNotifier<_Notice?> notice,
-  LabLog log,
+  LabSink log,
   Duration? tapAfter,
 ) {
   call.video.listen((c) {
@@ -398,16 +429,21 @@ void _show(
     // With separate streams (the default) the sound and the picture arrive
     // as two streams; the picture's is the one to show (the sound plays
     // either way).
-    if (remote.srcObject == null ||
-        s.getTracks().any((t) => t.kind == 'video')) {
+    final hasVideo = s.getTracks().any((t) => t.kind == 'video');
+    if (remote.srcObject == null || hasVideo) {
       remote.srcObject = s;
+    }
+    // In a browser a sound-only stream gets the sound renderer; a stream
+    // with video already plays its sound through the picture's renderer.
+    if (kIsWeb && !hasVideo) {
+      sound.srcObject = s;
     }
   });
 }
 
 /// The media this phone sends: the default microphone, and this whole
 /// screen as the picture (the lab has no camera; see GATE2-CALLS-PLAN).
-Future<MediaStream?> _media(LabOptions o, LabLog log) async {
+Future<MediaStream?> _media(LabOptions o, LabSink log) async {
   MediaStream? stream;
   if (o.audio) {
     stream = await navigator.mediaDevices.getUserMedia({
@@ -416,13 +452,23 @@ Future<MediaStream?> _media(LabOptions o, LabLog log) async {
     });
   }
   if (o.video) {
-    final screen = await navigator.mediaDevices.getDisplayMedia({
-      'video': {
-        'deviceId': {'exact': '0'},
-        'mandatory': {'frameRate': 30.0},
-      },
-      'audio': false,
-    });
+    // A browser picks the screen itself (the lab starts Chrome with
+    // --auto-select-desktop-capture-source) and takes standard constraints
+    // (W3C Screen Capture); the Linux plugin wants the screen's id.
+    final screen = await navigator.mediaDevices.getDisplayMedia(
+      kIsWeb
+          ? {
+              'video': {'frameRate': 30},
+              'audio': false,
+            }
+          : {
+              'video': {
+                'deviceId': {'exact': '0'},
+                'mandatory': {'frameRate': 30.0},
+              },
+              'audio': false,
+            },
+    );
     if (stream == null) {
       stream = screen;
     } else {
@@ -470,6 +516,22 @@ class _Notice {
 
   final String text;
   final VoidCallback? retry;
+}
+
+/// One hex digit of the first certificate fingerprint changed, as a
+/// different phone's would be (the same change as calls_test's).
+String _changeFingerprint(String sdp) {
+  final line = RegExp(
+    r'^a=fingerprint:(\S+) ([0-9A-F]{2})',
+    multiLine: true,
+    caseSensitive: false,
+  ).firstMatch(sdp);
+  if (line == null) {
+    throw StateError('no fingerprint in the session description');
+  }
+  final byte = line.group(2)!;
+  final changed = byte[0] + (byte[1].toUpperCase() == 'A' ? 'B' : 'A');
+  return sdp.replaceRange(line.end - 2, line.end, changed);
 }
 
 /// The lab's names for the header extensions it can leave out.

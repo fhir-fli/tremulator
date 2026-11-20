@@ -11,6 +11,8 @@ screen and speaker are recorded.
                                [--audio-drop abs-send-time,transport-cc]
                                [--speech] [--relay-link field|decent]
                                [--improve-to P2 --improve-after S]
+                               [--browser alice|bob]
+                               [--plant-changed-fingerprint alice|bob]
     python3 lab/gate2/calls.py --label calls8 --reanalyse   (files on disk only)
 
 Profiles: `none` (no shaping), P1-P5 and P0 from labkit.PROFILES, and
@@ -30,7 +32,10 @@ the 90 s setup deadline (calls11 P4: never connected).
 every shaped container's link changes to profile P's (rate, delay, loss)
 for the rest of the call; the direct-route block stays, so a `-blocked`
 call stays relayed. Each container writes when it switched
-(`<container>_improve.at`). Any profile with `-blocked` appended (`P2-blocked`) also
+(`<container>_improve.at`). `--browser alice|bob`: that phone is the
+app's web build in Chrome (Dockerfile.browser, browser/calls_browser.sh)
+instead of the Linux app, so Chrome's own WebRTC makes its side of the call
+(E1). Any profile with `-blocked` appended (`P2-blocked`) also
 blocks the two phones' direct route to each other, so the call must go
 through the relay. P5 runs on a second network created with `--internal`
 (no route out), as run.py does.
@@ -74,6 +79,16 @@ SCANNER = os.path.join(REPO, "lab", "adversary", "canary_scan.py")
 SUMMARY = os.path.join(HERE, "calls_summary.py")
 SRV_IMG = "tremulator-g2-server:latest"
 PHONE_IMG = "tremulator-g2-calls:latest"
+BROWSER_IMG = "tremulator-g2-browser:latest"
+BROWSER_CONTEXT = os.path.join(HERE, "build", "browser-context")
+WEB = os.path.join(APP, "build", "web")
+# Chrome for Testing, Stable channel on 2026-11-19 (googlechromelabs
+# last-known-good-versions.json); the zip's sha256 as downloaded that day.
+CHROME_VERSION = "158.0.8127.36"
+CHROME_URL = ("https://storage.googleapis.com/chrome-for-testing-public/"
+              f"{CHROME_VERSION}/linux64/chrome-linux64.zip")
+CHROME_SHA256 = "dba9cc838e1ce269c33ea68170881127bd15d078fc3ca5891c90802819a4d7c7"
+CHROME_ZIP = os.path.join(HERE, "build", f"chrome-{CHROME_VERSION}-linux64.zip")
 NETS = {False: "tremulator-g2c-ext", True: "tremulator-g2c-int"}
 NODES = {  # internal network?: (server, relay, alice, bob)
     False: ("g2c-srv", "g2c-turn", "g2c-alice", "g2c-bob"),
@@ -151,6 +166,17 @@ improve_after = int(argval("--improve-after", "0"))
 if improve_to is not None and (improve_to not in PROFILES or improve_after <= 0):
     raise SystemExit(f"--improve-to {improve_to} --improve-after {improve_after}: "
                      f"a profile of {sorted(PROFILES)} and seconds > 0")
+# `--browser alice|bob`: that phone runs the web build in Chrome (E1).
+browser = argval("--browser", None)
+if browser not in (None, "alice", "bob"):
+    raise SystemExit(f"--browser {browser}: alice or bob")
+# `--plant-changed-fingerprint alice|bob`: a planted defect (E1, E3a). That
+# phone reads the other's session description with one hex digit of its
+# certificate fingerprint changed, so its WebRTC must refuse the handshake
+# and the call never connects.
+planted = argval("--plant-changed-fingerprint", None)
+if planted not in (None, "alice", "bob"):
+    raise SystemExit(f"--plant-changed-fingerprint {planted}: alice or bob")
 outroot = os.path.join(HERE, "results", label)
 os.makedirs(outroot, exist_ok=True)
 summary = open(os.path.join(HERE, "results", f"{label}.jsonl"), "a")
@@ -197,6 +223,51 @@ def build():
         build_server()
     sh(["docker", "build", "-t", PHONE_IMG, "-f", os.path.join(HERE, "Dockerfile.calls"), CONTEXT],
        check=True, timeout=1800)
+    if browser:
+        build_browser()
+
+
+def chrome_zip():
+    """The pinned Chrome for Testing zip, downloaded once and checked
+    against its recorded sha256 every time it is used."""
+    import hashlib
+    if not os.path.exists(CHROME_ZIP):
+        os.makedirs(os.path.dirname(CHROME_ZIP), exist_ok=True)
+        sh(["curl", "-fsS", "-o", CHROME_ZIP + ".part", CHROME_URL], check=True, timeout=1800)
+        os.replace(CHROME_ZIP + ".part", CHROME_ZIP)
+    h = hashlib.sha256()
+    with open(CHROME_ZIP, "rb") as f:
+        for block in iter(lambda: f.read(1 << 20), b""):
+            h.update(block)
+    if h.hexdigest() != CHROME_SHA256:
+        raise RuntimeError(f"{CHROME_ZIP}: sha256 {h.hexdigest()}, expected {CHROME_SHA256}")
+    return CHROME_ZIP
+
+
+def build_browser():
+    """The web build and the browser phone image, on top of the phone
+    image just built."""
+    sh(["flutter", "build", "web", "--release"], cwd=APP, check=True, timeout=1800)
+    if not os.path.exists(os.path.join(WEB, "pkg", "openmls_frb_bg.wasm")):
+        raise RuntimeError("web build has no pkg/openmls_frb_bg.wasm (openmls build hook)")
+    shutil.rmtree(BROWSER_CONTEXT, ignore_errors=True)
+    os.makedirs(BROWSER_CONTEXT)
+    shutil.copytree(WEB, os.path.join(BROWSER_CONTEXT, "web"))
+    os.link(chrome_zip(), os.path.join(BROWSER_CONTEXT, "chrome-linux64.zip"))
+    for f in ("lab_helper.py", "calls_browser.sh"):
+        shutil.copy(os.path.join(HERE, "browser", f), BROWSER_CONTEXT)
+    sh(["docker", "build", "-t", BROWSER_IMG, "-f", os.path.join(HERE, "Dockerfile.browser"),
+        BROWSER_CONTEXT], check=True, timeout=1800)
+
+
+def app_cmd(who, d):
+    """How a phone starts the app: the Linux build, or the web build in
+    Chrome for the `--browser` phone (same arguments, same exit code); with
+    the planted defect for the `--plant-changed-fingerprint` phone."""
+    plant = " --plant-changed-fingerprint" if planted == who else ""
+    if browser == who:
+        return f"/usr/local/bin/calls_browser.sh {who} {d}{plant}"
+    return f"/app/tremulator{plant}"
 
 
 def setup(internals):
@@ -210,9 +281,9 @@ def setup(internals):
         # The relay is the phone image (it carries coturn) with no screen.
         sh(["docker", "run", "-d", "--rm", "--name", turn, "--network", net, "--cap-add", "NET_ADMIN",
             "-v", f"{outroot}:/out", PHONE_IMG, "sleep", "infinity"], check=True)
-        for c in (alice, bob):
+        for c, who in ((alice, "alice"), (bob, "bob")):
             sh(["docker", "run", "-d", "--rm", "--name", c, "--network", net, "--cap-add", "NET_ADMIN",
-                "-v", f"{outroot}:/out", PHONE_IMG], check=True)
+                "-v", f"{outroot}:/out", BROWSER_IMG if browser == who else PHONE_IMG], check=True)
         for c in (alice, bob):
             for _ in range(60):
                 if dx(c, "test", "-e", "/tmp/phone-ready", timeout=10).returncode == 0:
@@ -326,7 +397,7 @@ def run_profile(name):
     dx(bob, "rm", "-f", f"{d}/bob.exit", stop)
 
     sh(["docker", "exec", "-d", bob, "sh", "-c",
-        f"/app/tremulator --lab --server {url} --name bob --state /tmp/state --out {d}/bob.jsonl "
+        f"{app_cmd('bob', d)} --lab --server {url} --name bob --state /tmp/state --out {d}/bob.jsonl "
         f"--audio {opus_args}--turn '{relay}' --until-file {stop} > {d}/bob.stdout 2>&1; echo $? > {d}/bob.exit"])
     if not wait_for(bob, f"{d}/bob.jsonl", "waiting-for-call", 90):
         # P0 is the known negative: Bob cannot reach the server, so no call
@@ -378,7 +449,7 @@ def run_profile(name):
         cut_links_on((alice, bob), d, seconds, f"{d}/{who}.jsonl", event)
     t0 = time.time()
     sh(["docker", "exec", "-d", alice, "sh", "-c",
-        f"/app/tremulator --lab --server {url} --name alice --state /tmp/state --out {d}/alice.jsonl "
+        f"{app_cmd('alice', d)} --lab --server {url} --name alice --state /tmp/state --out {d}/alice.jsonl "
         f"--peer bob {'--video ' if alice_video else ''}--audio {opus_args}--turn '{relay}' --call-s {call_s} "
         f"> {d}/alice.stdout 2>&1; echo $? > {d}/alice.exit"])
     # calls6 `none`: the raise ran, yet her app window ended on top and both
@@ -441,7 +512,8 @@ def run_profile(name):
         if os.path.exists(os.path.join(host_d, track)):
             os.remove(os.path.join(host_d, track))
 
-    rec = {"profile": name, "alice_video": alice_video, "opus": opus, "speech": speech, "lip_drift": lip, "server_kept": "--keep-server" in sys.argv, "relay_link": relay_link, "shaped": list(shaped) if shape else [], "alice_wall_s": alice_s, "pattern_raised": raised,
+    rec = {"profile": name, "browser": browser, "planted_changed_fingerprint": planted,
+           "chrome": CHROME_VERSION if browser else None, "alice_video": alice_video, "opus": opus, "speech": speech, "lip_drift": lip, "server_kept": "--keep-server" in sys.argv, "relay_link": relay_link, "shaped": list(shaped) if shape else [], "alice_wall_s": alice_s, "pattern_raised": raised,
            "pattern_on_top_at_connect": on_top_at_connect,
            "direct_blocked": block, "clicks_started": clicked, "bob_call_ended_seen": bob_ended,
            "alice_exit": read(alice, f"{d}/alice.exit"), "bob_exit": read(bob, f"{d}/bob.exit"),

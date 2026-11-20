@@ -3,7 +3,8 @@
 # the app and the media tools in it with docker exec.
 set -u
 mkdir -p "$XDG_RUNTIME_DIR" && chmod 700 "$XDG_RUNTIME_DIR"
-Xvfb :0 -screen 0 1280x720x24 -nolisten tcp > /tmp/xvfb.log 2>&1 &
+# XVFB_EXTRA: more Xvfb arguments, set by Dockerfile.browser (none here).
+Xvfb :0 -screen 0 1280x720x24 -nolisten tcp ${XVFB_EXTRA:-} > /tmp/xvfb.log 2>&1 &
 for _ in $(seq 1 40); do xdpyinfo > /dev/null 2>&1 && break; sleep 0.25; done
 pulseaudio --start --exit-idle-time=-1 > /tmp/pulse.log 2>&1
 for _ in $(seq 1 40); do pactl info > /dev/null 2>&1 && break; sleep 0.25; done

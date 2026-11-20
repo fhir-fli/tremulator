@@ -14,6 +14,14 @@ dependencies:
   flutter:
     sdk: flutter
   flutter_webrtc: 1.6.2+hotfix.4
+  # The browser build's lab log and stop sign (lab_host_web.dart).
+  http: ^1.6.0
+  # Not imported here (tremulator_keys is the only importer). Listed so the
+  # web build gets the encryption library's WASM module: openmls's build
+  # hook (hook/build.dart, _findAppRoot) copies it into web/pkg/ only for an
+  # app whose own pubspec names openmls ("Could not find Flutter app root
+  # for web build" otherwise, 2026-11-19).
+  openmls: ^3.3.0
   tremulator_calls:
     path: ../packages/tremulator_calls
   tremulator_client:
