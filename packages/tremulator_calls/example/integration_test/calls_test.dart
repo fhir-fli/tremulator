@@ -276,7 +276,11 @@ void main() {
       // real certificate then fails the check (RFC 8122 section 6.2).
       final aliceCalls = Calls(alice, alterRemoteSdp: _changeFingerprint);
       final bobCalls = Calls(bob);
-      bobCalls.ringing.listen((c) => c.answer());
+      final answered = Completer<Call>();
+      bobCalls.ringing.listen((c) {
+        unawaited(c.answer());
+        answered.complete(c);
+      });
 
       final call = await aliceCalls.start(conversation);
       await expectLater(
@@ -311,6 +315,30 @@ void main() {
       expect(states, contains('RTCPeerConnectionStateConnecting'));
       expect(states.last, 'RTCPeerConnectionStateFailed');
       expect(states, isNot(contains('RTCPeerConnectionStateConnected')));
+      // Bob's side. His handshake can finish before Alice refuses his
+      // certificate, so his connection may show "connected" for a moment
+      // (the lab, calls49: about 30 ms) before it fails. A failed DTLS
+      // transport is not repaired by our restarts: a new DTLS association
+      // needs changed fingerprints, setup roles or tls-id in a new
+      // offer/answer (RFC 8842 section 3.1), and "an ICE restart does not by
+      // default require a new DTLS association" (section 6). So he ends the
+      // call at once as failed too, not 90 s later as lost.
+      final bobCall = await answered.future;
+      expect(
+        await bobCall.ended.timeout(const Duration(seconds: 5)),
+        'failed',
+      );
+      expect(
+        bobLog.where((e) => e['event'] == 'reconnecting'),
+        isEmpty,
+        reason: 'no wait for a link that cannot come back',
+      );
+      final bobWhy = bobLog.singleWhere(
+        (e) =>
+            e['event'] == 'setup-failed' || e['event'] == 'connection-failed',
+      );
+      expect(bobWhy['dtls'], contains('failed'));
+      expect(bobWhy['why'], 'handshake');
       await aliceCalls.close();
       await bobCalls.close();
     },

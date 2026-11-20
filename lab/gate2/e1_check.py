@@ -18,10 +18,20 @@ Chrome capturing the screen and the microphone and sending. The native call
 in the same sweep is the reference for the numbers, not part of the rule.
 
 A planted run (`--plant-changed-fingerprint`, the phone that reads a
-changed fingerprint is the browser) passes when neither phone logged
-`connected`, and the planted phone logged `setup-failed` with why
-`handshake` (its DTLS transport failed: W3C WebRTC 1.0 RTCDtlsTransportState
-"failed", "failure to validate the remote fingerprint").
+changed fingerprint is the browser) passes when no sound or picture got
+through and both phones end the call as refused:
+- neither phone's statistics ever show an encryption cipher on a transport
+  (`srtpCipher`) or a received sound or picture packet (inbound-rtp
+  `packetsReceived` > 0);
+- each phone logged `setup-failed` or `connection-failed` with why
+  `handshake` (its DTLS transport failed: W3C WebRTC 1.0
+  RTCDtlsTransportState "failed", "failure to validate the remote
+  fingerprint"), and ended the call as `failed`.
+Changed 2026-11-19 with Grey's approval, after calls47/48/50: the rule
+fixed first was "neither phone logged `connected`". The phone whose
+certificate is refused can finish its own side of the handshake first and
+show connected for about 30 ms (calls49, two Linux phones, the same), so
+that rule could not be met reliably and did not measure what matters.
 
 One line per run, then one verdict line. usage:
 python3 e1_check.py OUT.jsonl LABEL..."""
@@ -42,6 +52,20 @@ def events(path):
     return out
 
 
+def media_seen(evs):
+    """Whether any stats line shows an encryption cipher or a received
+    sound or picture packet."""
+    for e in evs:
+        if e.get("event") != "stats":
+            continue
+        for r in e.get("reports") or []:
+            if r.get("type") == "transport" and r.get("srtpCipher"):
+                return True
+            if r.get("type") == "inbound-rtp" and (r.get("packetsReceived") or 0) > 0:
+                return True
+    return False
+
+
 rows = []
 with open(sys.argv[1], "a") as out:
     for label in sys.argv[2:]:
@@ -57,10 +81,15 @@ with open(sys.argv[1], "a") as out:
                    "browser": r.get("browser"), "planted": planted,
                    "exits": [r.get("alice_exit"), r.get("bob_exit")], "connected": connected}
             if planted:
-                failed = [e for e in logs[planted] if e.get("event") == "setup-failed"]
-                row["setup_failed"] = failed[:1]
-                row["pass"] = (not any(connected.values())
-                               and any(e.get("why") == "handshake" for e in failed))
+                media = {w: media_seen(logs[w]) for w in logs}
+                refused = {w: any(e.get("event") in ("setup-failed", "connection-failed")
+                                  and e.get("why") == "handshake" for e in logs[w])
+                           for w in logs}
+                ended = {w: [e.get("why") for e in logs[w] if e.get("event") == "call-ended"]
+                         for w in logs}
+                row.update({"media_seen": media, "refused": refused, "ended": ended})
+                row["pass"] = (not any(media.values()) and all(refused.values())
+                               and all(v == ["failed"] for v in ended.values()))
             else:
                 bob = r.get("bob") or {}
                 v = r.get("voice") or {}

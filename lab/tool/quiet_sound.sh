@@ -11,6 +11,15 @@
 #     bash lab/tool/quiet_sound.sh LOG -- flutter test integration_test/calls_test.dart -d linux
 set -uo pipefail
 LOG=$1; shift 2
+# Without pactl there are no dummy devices and no watch, and the command
+# would play through the desktop's speakers: refuse. pulseaudio-utils was
+# removed 2026-11-19 11:25 and the next run here went ahead with "pactl:
+# command not found" on every line (it then failed to build, so nothing
+# played).
+if ! command -v pactl > /dev/null; then
+  echo "quiet_sound.sh: pactl not found (package pulseaudio-utils); not running $*" >&2
+  exit 2
+fi
 rm -f "$LOG.killed"
 OUT_MOD=$(pactl load-module module-null-sink sink_name=tremulator_test_out sink_properties=device.description=tremulator_test_out)
 MIC_MOD=$(pactl load-module module-null-sink sink_name=tremulator_test_mic sink_properties=device.description=tremulator_test_mic)

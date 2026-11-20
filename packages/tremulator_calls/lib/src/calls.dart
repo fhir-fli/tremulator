@@ -803,11 +803,7 @@ class Call {
         _reconnected();
       case RTCPeerConnectionState.RTCPeerConnectionStateFailed:
         _restartTimer?.cancel();
-        if (_connected.isCompleted) {
-          _onLost(s);
-        } else {
-          unawaited(_failedBeforeConnecting(s));
-        }
+        unawaited(_failed(s));
       case RTCPeerConnectionState.RTCPeerConnectionStateDisconnected:
         if (_lostAt == null) {
           _restartTimer?.cancel();
@@ -820,22 +816,35 @@ class Call {
     }
   }
 
-  /// A connection that never connected has failed. W3C WebRTC 1.0 (read
-  /// whole 2026-10-17): a connection is "failed" when "either
-  /// [[IceConnectionState]] is "failed" or any RTCDtlsTransports are in the
-  /// "failed" state" (RTCPeerConnectionState), and a DTLS transport fails
-  /// on "failure to validate the remote fingerprint" (RTCDtlsTransportState).
-  /// So a failed DTLS transport is the other end's certificate (RFC 8122
-  /// section 6.2) and ends the call at once; otherwise the route failed,
-  /// and the call keeps trying until [Calls.setupDeadline].
+  /// The connection has failed. W3C WebRTC 1.0 (read whole 2026-10-17): a
+  /// connection is "failed" when "either [[IceConnectionState]] is "failed"
+  /// or any RTCDtlsTransports are in the "failed" state"
+  /// (RTCPeerConnectionState), and a DTLS transport fails on "failure to
+  /// validate the remote fingerprint" (RTCDtlsTransportState). So a failed
+  /// DTLS transport is the other end's certificate (RFC 8122 section 6.2)
+  /// and ends the call at once; otherwise the route failed, and the call
+  /// keeps trying: until [Calls.setupDeadline] if it never connected, for
+  /// [Calls.reconnectGrace] if it had.
+  ///
+  /// The same holds after "connected": our restarts cannot repair a failed
+  /// DTLS transport. A new DTLS association needs a new offer/answer that
+  /// changes the fingerprints, the setup roles or the tls-id (RFC 8842
+  /// section 3.1, read 2026-11-19), and "an ICE restart does not by default
+  /// require a new DTLS association" (section 6); our restarts keep all
+  /// three. The phone whose certificate the other refuses can finish its
+  /// own side of the handshake first and show "connected" for a moment:
+  /// calls49 and calls50pa, Bob connected about 30 ms, then waited 90 s and
+  /// ended as lost before this.
   ///
   /// The DTLS state is read from the transport's statistics (`dtlsState`,
   /// required in RTCTransportStats, W3C webrtc-stats, read whole
   /// 2026-10-17), not from state events: with a refused certificate the
   /// plugin reported the connection failed while its last ICE event still
-  /// said "checking" (calls_test, 2026-10-17). Unreadable statistics end
-  /// the call as a refused certificate would.
-  Future<void> _failedBeforeConnecting(RTCPeerConnectionState s) async {
+  /// said "checking" (calls_test, 2026-10-17). Before "connected",
+  /// unreadable statistics end the call as a refused certificate would;
+  /// after it, they count as a lost route, as before 2026-11-19. The event
+  /// is `setup-failed` before "connected" and `connection-failed` after.
+  Future<void> _failed(RTCPeerConnectionState s) async {
     List<String>? dtls;
     try {
       dtls = [
@@ -845,19 +854,24 @@ class Call {
     } on Object catch (e) {
       _calls.report({'event': 'stats-failed', 'call': id, 'error': '$e'});
     }
-    final refused = dtls == null || dtls.isEmpty || dtls.contains('failed');
+    final wasConnected = _connected.isCompleted;
+    final refused =
+        (dtls?.contains('failed') ?? false) ||
+        (!wasConnected && (dtls == null || dtls.isEmpty));
     _calls.report({
-      'event': 'setup-failed',
+      'event': wasConnected ? 'connection-failed' : 'setup-failed',
       'call': id,
       'dtls': dtls,
       'ice': _ice?.name,
       'why': refused ? 'handshake' : 'route',
     });
-    if (_ended.isCompleted || _connected.isCompleted) {
+    if (_ended.isCompleted) {
       return;
     }
     if (refused) {
-      _connected.completeError(StateError('connection failed'));
+      if (!wasConnected) {
+        _connected.completeError(StateError('connection failed'));
+      }
       await _end('failed', tell: false);
     } else {
       _onLost(s);
