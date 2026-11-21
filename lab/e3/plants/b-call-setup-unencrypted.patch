@@ -1,0 +1,18 @@
+diff --git a/packages/tremulator_client/lib/src/client.dart b/packages/tremulator_client/lib/src/client.dart
+index 45c49e4..50da547 100644
+--- a/packages/tremulator_client/lib/src/client.dart
++++ b/packages/tremulator_client/lib/src/client.dart
+@@ -152,9 +152,10 @@ class Client {
+     Conversation conversation,
+     String text,
+   ) async {
+-    final blob = await conversation.encrypt(
+-      Uint8List.fromList(utf8.encode(text)),
+-    );
++    // E3 (b) PLANTED: call setup goes out as plain text, not encrypted.
++    final blob = label == Label.call
++        ? Uint8List.fromList(utf8.encode(text))
++        : await conversation.encrypt(Uint8List.fromList(utf8.encode(text)));
+     for (final to in await _others(conversation)) {
+       await mailbox.send(to: to, label: label, bytes: blob);
+     }
