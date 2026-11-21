@@ -318,16 +318,35 @@ class Call {
   /// The ICE username fragment of this phone's last description.
   String? _localUfrag;
 
-  /// True once this phone has gathered its addresses with a relay (TURN)
-  /// server configured and got no relay address from it: the relay could
-  /// not be reached, or refused this phone's credentials (RFC 8656 section
-  /// 7.3: a request with the wrong credentials is answered 401 and no
-  /// allocation is made). The plugin passes on no relay error
-  /// (webrtc_interface 1.5.1 has no icecandidateerror event), so the two
-  /// cannot be told apart here. A call that then fails for want of a route
-  /// can say why: the relay, not the link alone.
+  /// True when this call ended without ever connecting, a relay (TURN)
+  /// server was configured, and no gathering ever got a relay address
+  /// from it: the relay could not be reached, or refused this phone's
+  /// credentials (RFC 8656 section 7.3: a request with the wrong
+  /// credentials is answered 401 and no allocation is made). The plugin
+  /// passes on no relay error (webrtc_interface 1.5.1 has no
+  /// icecandidateerror event), so the two cannot be told apart here.
+  ///
+  /// Only a call that failed is judged. A phone answering on an open
+  /// network can finish gathering with one host address and no relay one
+  /// while the relay works (lab e3-gather, 2026-11-21: the answering phone
+  /// 1 host address, complete at 46 ms; the caller 3 relay addresses from
+  /// the same relay), so no relay address on a call that connects says
+  /// nothing about the relay.
   bool get relayUnavailable => _relayUnavailable;
   bool _relayUnavailable = false;
+
+  /// The most relay addresses any one gathering of this call got.
+  int _relayAddresses = 0;
+
+  /// Settles [relayUnavailable] for a call ending without having
+  /// connected, before its failure is reported.
+  void _judgeRelay() {
+    if (_connected.isCompleted || _relayUnavailable) return;
+    if (_calls._hasRelay && _relayAddresses == 0) {
+      _relayUnavailable = true;
+      _calls.report({'event': 'relay-unavailable', 'call': id});
+    }
+  }
 
   /// Set while a call that had connected has lost its link.
   DateTime? _lostAt;
@@ -537,6 +556,7 @@ class Call {
   void _startSetupClock() {
     _setupTimer = Timer(_calls.setupDeadline, () {
       if (!_connected.isCompleted) {
+        _judgeRelay();
         _calls.report({
           'event': 'setup-deadline',
           'call': id,
@@ -600,7 +620,17 @@ class Call {
         onTimeout: () => timedOut = true,
       );
     }
-    final full = await pc.getLocalDescription();
+    // The call can end while this phone gathers (the caller gave up, the
+    // other phone hung up): its connection is then closed, and asking it
+    // for the description threw out of answer() (calls_test, 2026-11-21).
+    if (_ended.isCompleted) return;
+    final RTCSessionDescription? full;
+    try {
+      full = await pc.getLocalDescription();
+    } on Object {
+      if (_ended.isCompleted) return;
+      rethrow;
+    }
     final relays = _relayCandidates(full!.sdp!);
     _calls.report({
       'event': 'gathered',
@@ -618,10 +648,7 @@ class Call {
           if (l.isNotEmpty) l.split(' ').last,
       }.toList(),
     });
-    if (regather && _calls._hasRelay && relays == 0 && !_relayUnavailable) {
-      _relayUnavailable = true;
-      _calls.report({'event': 'relay-unavailable', 'call': id});
-    }
+    _relayAddresses = max(_relayAddresses, relays);
     unawaited(
       _deliver(
         type,
@@ -922,6 +949,7 @@ class Call {
       _calls.report({'event': 'stats-failed', 'call': id, 'error': '$e'});
     }
     final wasConnected = _connected.isCompleted;
+    _judgeRelay();
     final refused =
         (dtls?.contains('failed') ?? false) ||
         (!wasConnected && (dtls == null || dtls.isEmpty));

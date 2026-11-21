@@ -863,84 +863,100 @@ void main() {
     },
   );
 
-  testWidgets(
-    'a relay that refuses the credentials: each phone says the relay is '
-    'unavailable, and the call still connects directly',
-    (_) async {
-      // E3 (d). The relay answers every allocation with 401, as a TURN
-      // server does when the credentials are wrong (RFC 8656 section 7.3;
-      // RFC 8489 section 9.2.4). Over loopback the direct route works, so
-      // the call connects; what must happen is that each phone notices it
-      // got no relay address. Wrong credentials with no direct route
-      // (no call at all) is the lab's run, with the real relay.
-      final relay = await _RefusingRelay.start();
-      final servers = [
-        {
-          'urls': 'turn:127.0.0.1:${relay.port}?transport=udp',
-          'username': 'lab',
-          'credential': 'not-the-password',
-        },
-      ];
-      final aliceCalls = Calls(alice, iceServers: servers);
-      final bobCalls = Calls(bob, iceServers: servers);
-      final bobsCall = Completer<Call>();
-      bobCalls.ringing.listen((c) async {
-        await c.answer();
-        bobsCall.complete(c);
-      });
-
-      final call = await aliceCalls.start(conversation);
-      await call.connected.timeout(const Duration(seconds: 30));
-      final answered = await bobsCall.future;
-      await answered.connected.timeout(const Duration(seconds: 30));
-
-      // The relay was asked, and asked again with the credentials, and
-      // refused both: the case under test, not a relay never reached.
-      expect(relay.allocations, greaterThan(0));
-      expect(relay.withCredentials, greaterThan(0));
-      expect(call.relayUnavailable, isTrue);
-      expect(answered.relayUnavailable, isTrue);
-      for (final log in [aliceLog, bobLog]) {
-        expect(
-          log.where((e) => e['event'] == 'relay-unavailable'),
-          hasLength(1),
+  // E3 (d). The relay below answers every allocation with 401, as a TURN
+  // server does when the credentials are wrong (RFC 8656 section 7.3; RFC
+  // 8489 section 9.2.4). With the direct route open the call connects and
+  // nothing is said about the relay; with no direct route (every address
+  // taken out of the description each phone reads) the call fails, and
+  // says the relay is why only when a relay was set. Wrong credentials
+  // with the real relay: the lab's e3d-wrong run.
+  for (final (relayed, direct) in [
+    (true, true),
+    (true, false),
+    (false, false),
+  ]) {
+    final given = relayed ? 'a relay that refuses the credentials' : 'no relay';
+    final then = direct
+        ? 'direct route open: the call connects, nothing said of the relay'
+        : relayed
+        ? 'no direct route: the call fails and says the relay was unavailable'
+        : 'no direct route: the call fails, nothing said of a relay';
+    testWidgets(
+      '$given, $then',
+      (_) async {
+        final relay = await _RefusingRelay.start();
+        final servers = [
+          if (relayed)
+            {
+              'urls': 'turn:127.0.0.1:${relay.port}?transport=udp',
+              'username': 'lab',
+              'credential': 'not-the-password',
+            },
+        ];
+        final aliceCalls = Calls(
+          alice,
+          iceServers: servers,
+          setupDeadline: const Duration(seconds: 10),
+          alterRemoteSdp: direct ? null : _withoutAddresses,
         );
-        expect(
-          log.firstWhere((e) => e['event'] == 'gathered')['relay-candidates'],
-          0,
+        final bobCalls = Calls(
+          bob,
+          iceServers: servers,
+          setupDeadline: const Duration(seconds: 10),
+          alterRemoteSdp: direct ? null : _withoutAddresses,
         );
-      }
-      expect((await call.route())!.relayed, isFalse);
+        final bobsCall = Completer<Call>();
+        bobCalls.ringing.listen((c) async {
+          await c.answer();
+          bobsCall.complete(c);
+        });
 
-      await call.hangUp();
-      await aliceCalls.close();
-      await bobCalls.close();
-      relay.close();
-    },
-  );
-
-  testWidgets('no relay configured: nothing is said about one', (_) async {
-    final aliceCalls = Calls(alice);
-    final bobCalls = Calls(bob);
-    final bobsCall = Completer<Call>();
-    bobCalls.ringing.listen((c) async {
-      await c.answer();
-      bobsCall.complete(c);
-    });
-    final call = await aliceCalls.start(conversation);
-    await call.connected.timeout(const Duration(seconds: 30));
-    final answered = await bobsCall.future;
-    await answered.connected.timeout(const Duration(seconds: 30));
-    expect(call.relayUnavailable, isFalse);
-    expect(answered.relayUnavailable, isFalse);
-    expect(
-      [...aliceLog, ...bobLog].where((e) => e['event'] == 'relay-unavailable'),
-      isEmpty,
+        final call = await aliceCalls.start(conversation);
+        if (direct) {
+          await call.connected.timeout(const Duration(seconds: 30));
+          final answered = await bobsCall.future;
+          await answered.connected.timeout(const Duration(seconds: 30));
+          expect(answered.relayUnavailable, isFalse);
+          await call.hangUp();
+        } else {
+          expect(
+            await call.ended.timeout(const Duration(seconds: 30)),
+            'failed',
+          );
+        }
+        expect(call.relayUnavailable, relayed && !direct);
+        expect(
+          aliceLog.where((e) => e['event'] == 'relay-unavailable'),
+          hasLength(relayed && !direct ? 1 : 0),
+        );
+        if (!direct) {
+          final why = aliceLog.lastWhere(
+            (e) =>
+                e['event'] == 'setup-deadline' || e['event'] == 'setup-failed',
+          );
+          expect(why['relay-unavailable'], relayed);
+        }
+        expect(
+          bobLog.where((e) => e['event'] == 'relay-unavailable' && direct),
+          isEmpty,
+        );
+        if (relayed) {
+          // The relay was asked, again with the credentials, and refused
+          // both: the case under test, not a relay never reached.
+          expect(relay.allocations, greaterThan(0));
+          expect(relay.withCredentials, greaterThan(0));
+          for (final log in [aliceLog, bobLog]) {
+            for (final g in log.where((e) => e['event'] == 'gathered')) {
+              expect(g['relay-candidates'], 0);
+            }
+          }
+        }
+        await aliceCalls.close();
+        await bobCalls.close();
+        relay.close();
+      },
     );
-    await call.hangUp();
-    await aliceCalls.close();
-    await bobCalls.close();
-  });
+  }
 }
 
 /// The agreed direction of [call]'s video transceiver.
@@ -1084,6 +1100,13 @@ Future<void> _until(bool Function() done) async {
     }
     await Future<void>.delayed(const Duration(milliseconds: 100));
   }
+}
+
+/// [sdp] with every address (a=candidate line, RFC 8839 section 5.1) taken
+/// out, so the phone reading it has nowhere to send its checks.
+String _withoutAddresses(String sdp) {
+  final nl = sdp.contains('\r\n') ? '\r\n' : '\n';
+  return sdp.split(nl).where((l) => !l.startsWith('a=candidate:')).join(nl);
 }
 
 /// A TURN server that refuses every allocation with 401 Unauthorized, as
