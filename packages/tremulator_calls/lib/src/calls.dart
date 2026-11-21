@@ -561,12 +561,33 @@ class Call {
   ) async {
     final pc = _pc!;
     final gathered = Completer<void>();
-    pc.onIceGatheringState = (s) {
-      if (s == RTCIceGatheringState.RTCIceGatheringStateComplete &&
-          !gathered.isCompleted) {
-        gathered.complete();
+    final asked = DateTime.now();
+    // Each gathering state and each address as it comes, timed from
+    // setLocalDescription: 2026-11-21 the answering phone on an open lab
+    // network finished gathering in 11 ms with no relay address while the
+    // caller got three in 104 ms (lab/e3/RESULTS.md); these say why.
+    pc
+      ..onIceCandidate = (c) {
+        final typ = RegExp(r' typ (\w+)').firstMatch(c.candidate ?? '');
+        _calls.report({
+          'event': 'candidate',
+          'call': id,
+          'ms': DateTime.now().difference(asked).inMilliseconds,
+          'type': typ?.group(1),
+        });
       }
-    };
+      ..onIceGatheringState = (s) {
+        _calls.report({
+          'event': 'gathering-state',
+          'call': id,
+          'ms': DateTime.now().difference(asked).inMilliseconds,
+          'state': s.name,
+        });
+        if (s == RTCIceGatheringState.RTCIceGatheringStateComplete &&
+            !gathered.isCompleted) {
+          gathered.complete();
+        }
+      };
     await pc.setLocalDescription(description);
     final started = DateTime.now();
     final ufrag = _ufrag(description.sdp!);

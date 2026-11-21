@@ -6,3 +6,26 @@ CMake Warning at flutter/ephemeral/.plugin_symlinks/flutter_webrtc/linux/CMakeLi
   the libpulse dev package to enable it.
 
 
+✓ Built build/linux/x64/debug/bundle/tremulator_calls_example
+00:00 +0: a call set up through the mailbox connects, then hangs up
+00:01 +1: the far phone's connection vanishes: the caller tries to reconnect, then ends the call as lost
+01:39 +2: a restart on a working call is answered and the call carries on
+01:40 +3: a restart answer with a different certificate fingerprint ends the call
+01:42 +4: a restart offer with a different certificate fingerprint ends the call
+01:43 +5: a restart offer for a call this phone does not have does not ring
+01:43 +6: a changed certificate fingerprint in the setup is refused
+01:44 +7: an offer sent while the caller's link is down is sent again and the call connects
+01:45 +8: an answer sent while the callee's link is down is sent again and the call connects
+01:46 +9: a hang-up sent while the link is down is sent again and reaches the other phone
+01:47 +10: on a slow link the caller stops its video, the other phone is told and stops receiving it, it stays off when the link recovers, and a tap brings it back
+02:03 +11: by default the sound and the picture go in two streams
+02:04 +12: with separateStreams off the sound and the picture go in one stream
+02:04 +13: with suspendVideoBelowMinimum on, video stops when the link allows less than its lowest rate, and sound flows on
+02:13 +14: with suspendVideoBelowMinimum off, video is sent at its lowest rate whatever the link allows
+02:22 +15: video held back below its lowest rate is reported on both phones
+02:31 +16: video sent at its lowest rate is never reported held
+02:40 +17: stopped video stays open on the other phone, sound flows on, and a tap brings the picture back
+02:48 +18: a relay that refuses the credentials: each phone says the relay is unavailable, and the call still connects directly
+02:53 +19: no relay configured: nothing is said about one
+02:59 +20: (tearDownAll)
+02:59 +20: All tests passed!
