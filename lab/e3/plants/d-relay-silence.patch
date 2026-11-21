@@ -1,14 +1,14 @@
 diff --git a/packages/tremulator_calls/lib/src/calls.dart b/packages/tremulator_calls/lib/src/calls.dart
-index ec4daa0..bb86023 100644
+index 155b5d8..e182070 100644
 --- a/packages/tremulator_calls/lib/src/calls.dart
 +++ b/packages/tremulator_calls/lib/src/calls.dart
-@@ -589,7 +589,8 @@ class Call {
-       'regather': regather,
-       'relay-candidates': relays,
-     });
--    if (regather && _calls._hasRelay && relays == 0 && !_relayUnavailable) {
-+    // E3 (d) PLANTED: a relay that gave no address goes unremarked.
-+    if (false && regather && _calls._hasRelay && relays == 0 && !_relayUnavailable) {
+@@ -342,7 +342,8 @@ class Call {
+   /// connected, before its failure is reported.
+   void _judgeRelay() {
+     if (_connected.isCompleted || _relayUnavailable) return;
+-    if (_calls._hasRelay && _relayAddresses == 0) {
++    // E3 (d) PLANTED: a relay that never gave an address goes unremarked.
++    if (false && _calls._hasRelay && _relayAddresses == 0) {
        _relayUnavailable = true;
        _calls.report({'event': 'relay-unavailable', 'call': id});
      }
