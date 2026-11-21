@@ -82,14 +82,44 @@ only go through the relay.
 - Right password (`e3d-right`, the control): Alice 3 relay addresses, Bob 1,
   no warning, connected through the relay in 0.45 s, held 30 s.
 
-## Open: a false warning on an open network
+## A false warning, measured and fixed
 
 In `e3b-main` (profile `none`, direct route open, right password) Bob, the
-answering phone, reported the relay unavailable: his gathering finished in
-11 ms with no relay address, while Alice got 3 in 104 ms. The call itself
-connected directly and was fine. Earlier runs show the same timing for the
-answering phone on `none` (calls51ba 15 ms, calls51bb 3 ms) against about
-460 ms on `P2-blocked`, where he does get one. Cause not measured. Each
-gathering state and each address are now logged with their times, and a run
-on `none` will say. Until then the warning can be wrong on the answering
-side when the network is open.
+answering phone, reported the relay unavailable on a call that connected
+directly. Measured in `e3-gather` (each address and gathering state logged
+with its time): Bob found one host address at 31 ms and finished gathering
+at 46 ms without asking the relay at all; Alice, from the same relay, got 3
+relay addresses by 92 ms. Why the answering phone stops there is not
+known (it is inside the WebRTC library); with the direct route blocked it
+does get a relay address (`e3d-right`: 1). So a missing relay address on a
+call that connects says nothing about the relay.
+
+Fix (calls.dart `_judgeRelay`): the relay is judged only for a call that
+ends without connecting, with a relay set and no relay address in any
+gathering. Tests, three cases with the refusing relay from before
+(`calls_test.dart`): direct route open, connects, nothing said; no direct
+route (every address taken out of the description each phone reads),
+fails and says the relay was unavailable; no relay and no direct route,
+fails, nothing said of a relay. Planted (`d-relay-silence`, against the
+new check): exactly the second goes red (`d2-planted.log`). The two
+no-route tests also found a real defect before passing: `answer()` threw
+when the call ended while the phone was still gathering (its connection
+already closed). It now stops quietly. Calls suite 21 of 21.
+
+Rerun in the lab with the fix:
+- `e3d-wrong2` (wrong password, no direct route): coturn refused 4 times
+  ("credentials are incorrect"); Alice's call ended at the 90 s deadline,
+  `relay-unavailable` reported, and true on the deadline report. Bob ended
+  on her hang-up and says nothing: only the phone whose call fails judges.
+- `e3-open2` (open network, right password): connected directly, Bob again
+  gathered no relay address (41 ms), and neither phone warned.
+
+## E3 result
+
+Every planted defect turned a test red, and every test was green without
+it. Two defects in our own tools found on the way: the lab's fingerprint
+hunt was blind on a call that never connected (fixed, 97ad443), and the
+first relay warning was wrong on the answering phone (fixed above). One
+defect in the app found: `answer()` throwing when the call ended during
+gathering (fixed). Not covered: the mailbox's reported sender is not
+checked against the encrypted sender (see (c) and (e)).
