@@ -96,3 +96,6 @@ current ones; with the current ones in place all 15 tests pass.
 
 The leaf-node lifetime check is switched off for the passive-client
 files (the vectors' key packages have expired).
+
+Reported upstream 2026-11-21 (Grey approved): openmls/openmls#2341, items 1 and 2
+and the 6 stale copies.
