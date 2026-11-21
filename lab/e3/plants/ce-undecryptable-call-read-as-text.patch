@@ -1,0 +1,23 @@
+diff --git a/packages/tremulator_client/lib/src/client.dart b/packages/tremulator_client/lib/src/client.dart
+index 45c49e4..2abf114 100644
+--- a/packages/tremulator_client/lib/src/client.dart
++++ b/packages/tremulator_client/lib/src/client.dart
+@@ -203,6 +203,18 @@ class Client {
+           await _handle(e);
+           handled++;
+         } on KeysError catch (err) {
++          // E3 (c)/(e) PLANTED: call setup that does not decrypt is read as
++          // plain text and handed to the call code anyway.
++          if (e.label == Label.call) {
++            _incoming.add(
++              Incoming(
++                conversation: Uint8List(0),
++                from: e.from,
++                text: utf8.decode(e.bytes, allowMalformed: true),
++                label: e.label,
++              ),
++            );
++          }
+           report({
+             'event': 'undecryptable',
+             'id': e.id,
