@@ -13,6 +13,7 @@ screen and speaker are recorded.
                                [--improve-to P2 --improve-after S]
                                [--browser alice|bob]
                                [--plant-changed-fingerprint alice|bob]
+                               [--wrong-relay-password]
     python3 lab/gate2/calls.py --label calls8 --reanalyse   (files on disk only)
 
 Profiles: `none` (no shaping), P1-P5 and P0 from labkit.PROFILES, and
@@ -177,6 +178,13 @@ if browser not in (None, "alice", "bob"):
 planted = argval("--plant-changed-fingerprint", None)
 if planted not in (None, "alice", "bob"):
     raise SystemExit(f"--plant-changed-fingerprint {planted}: alice or bob")
+# `--wrong-relay-password`: E3 (d). Both phones are given the relay with a
+# password it does not hold (coturn knows only lab:lab, start_relay), so it
+# must refuse them an allocation (RFC 8656 section 7.3: 401) and each phone
+# must report the relay unavailable; with a `-blocked` profile the call then
+# has no route and must end without connecting.
+wrong_relay_password = "--wrong-relay-password" in sys.argv
+turn_pass = " --turn-pass not-the-password" if wrong_relay_password else ""
 outroot = os.path.join(HERE, "results", label)
 os.makedirs(outroot, exist_ok=True)
 summary = open(os.path.join(HERE, "results", f"{label}.jsonl"), "a")
@@ -420,7 +428,7 @@ def run_profile(name):
 
     sh(["docker", "exec", "-d", bob, "sh", "-c",
         f"{app_cmd('bob', d)} --lab --server {url} --name bob --state /tmp/state --out {d}/bob.jsonl "
-        f"--audio {opus_args}--turn '{relay}' --until-file {stop} > {d}/bob.stdout 2>&1; echo $? > {d}/bob.exit"])
+        f"--audio {opus_args}--turn '{relay}'{turn_pass} --until-file {stop} > {d}/bob.stdout 2>&1; echo $? > {d}/bob.exit"])
     if not wait_for(bob, f"{d}/bob.jsonl", "waiting-for-call", 90):
         # P0 is the known negative: Bob cannot reach the server, so no call
         # can be placed. That is a result, logged; calls8 raised here and
@@ -472,7 +480,7 @@ def run_profile(name):
     t0 = time.time()
     sh(["docker", "exec", "-d", alice, "sh", "-c",
         f"{app_cmd('alice', d)} --lab --server {url} --name alice --state /tmp/state --out {d}/alice.jsonl "
-        f"--peer bob {'--video ' if alice_video else ''}--audio {opus_args}--turn '{relay}' --call-s {call_s} "
+        f"--peer bob {'--video ' if alice_video else ''}--audio {opus_args}--turn '{relay}'{turn_pass} --call-s {call_s} "
         f"> {d}/alice.stdout 2>&1; echo $? > {d}/alice.exit"])
     # calls6 `none`: the raise ran, yet her app window ended on top and both
     # screens were grey all call. The raise is now repeated until the stack
@@ -535,6 +543,7 @@ def run_profile(name):
             os.remove(os.path.join(host_d, track))
 
     rec = {"profile": name, "browser": browser, "planted_changed_fingerprint": planted,
+           "wrong_relay_password": wrong_relay_password,
            "chrome": CHROME_VERSION if browser else None, "alice_video": alice_video, "opus": opus, "speech": speech, "lip_drift": lip, "server_kept": "--keep-server" in sys.argv, "relay_link": relay_link, "shaped": list(shaped) if shape else [], "alice_wall_s": alice_s, "pattern_raised": raised,
            "pattern_on_top_at_connect": on_top_at_connect,
            "direct_blocked": block, "clicks_started": clicked, "bob_call_ended_seen": bob_ended,

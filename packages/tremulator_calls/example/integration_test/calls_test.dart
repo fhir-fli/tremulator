@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
 
@@ -851,6 +852,85 @@ void main() {
       }
     },
   );
+
+  testWidgets(
+    'a relay that refuses the credentials: each phone says the relay is '
+    'unavailable, and the call still connects directly',
+    (_) async {
+      // E3 (d). The relay answers every allocation with 401, as a TURN
+      // server does when the credentials are wrong (RFC 8656 section 7.3;
+      // RFC 8489 section 9.2.4). Over loopback the direct route works, so
+      // the call connects; what must happen is that each phone notices it
+      // got no relay address. Wrong credentials with no direct route
+      // (no call at all) is the lab's run, with the real relay.
+      final relay = await _RefusingRelay.start();
+      final servers = [
+        {
+          'urls': 'turn:127.0.0.1:${relay.port}?transport=udp',
+          'username': 'lab',
+          'credential': 'not-the-password',
+        },
+      ];
+      final aliceCalls = Calls(alice, iceServers: servers);
+      final bobCalls = Calls(bob, iceServers: servers);
+      final bobsCall = Completer<Call>();
+      bobCalls.ringing.listen((c) async {
+        await c.answer();
+        bobsCall.complete(c);
+      });
+
+      final call = await aliceCalls.start(conversation);
+      await call.connected.timeout(const Duration(seconds: 30));
+      final answered = await bobsCall.future;
+      await answered.connected.timeout(const Duration(seconds: 30));
+
+      // The relay was asked, and asked again with the credentials, and
+      // refused both: the case under test, not a relay never reached.
+      expect(relay.allocations, greaterThan(0));
+      expect(relay.withCredentials, greaterThan(0));
+      expect(call.relayUnavailable, isTrue);
+      expect(answered.relayUnavailable, isTrue);
+      for (final log in [aliceLog, bobLog]) {
+        expect(
+          log.where((e) => e['event'] == 'relay-unavailable'),
+          hasLength(1),
+        );
+        expect(
+          log.firstWhere((e) => e['event'] == 'gathered')['relay-candidates'],
+          0,
+        );
+      }
+      expect((await call.route())!.relayed, isFalse);
+
+      await call.hangUp();
+      await aliceCalls.close();
+      await bobCalls.close();
+      relay.close();
+    },
+  );
+
+  testWidgets('no relay configured: nothing is said about one', (_) async {
+    final aliceCalls = Calls(alice);
+    final bobCalls = Calls(bob);
+    final bobsCall = Completer<Call>();
+    bobCalls.ringing.listen((c) async {
+      await c.answer();
+      bobsCall.complete(c);
+    });
+    final call = await aliceCalls.start(conversation);
+    await call.connected.timeout(const Duration(seconds: 30));
+    final answered = await bobsCall.future;
+    await answered.connected.timeout(const Duration(seconds: 30));
+    expect(call.relayUnavailable, isFalse);
+    expect(answered.relayUnavailable, isFalse);
+    expect(
+      [...aliceLog, ...bobLog].where((e) => e['event'] == 'relay-unavailable'),
+      isEmpty,
+    );
+    await call.hangUp();
+    await aliceCalls.close();
+    await bobCalls.close();
+  });
 }
 
 /// The agreed direction of [call]'s video transceiver.
@@ -994,4 +1074,73 @@ Future<void> _until(bool Function() done) async {
     }
     await Future<void>.delayed(const Duration(milliseconds: 100));
   }
+}
+
+/// A TURN server that refuses every allocation with 401 Unauthorized, as
+/// one does to a client whose credentials it cannot verify (RFC 8656
+/// section 7.3, RFC 8489 section 9.2.4: the first request, without
+/// credentials, is answered 401 with a realm and nonce; the retry with
+/// them is answered 401 again when the password is wrong). STUN header
+/// (RFC 8489 section 5): type, length, magic cookie 0x2112A442, 12-byte
+/// transaction id; Allocate request 0x0003, its error response 0x0113.
+class _RefusingRelay {
+  _RefusingRelay._(this._socket) {
+    _socket.listen((event) {
+      if (event != RawSocketEvent.read) return;
+      final d = _socket.receive();
+      if (d == null || d.data.length < 20) return;
+      final m = d.data;
+      if (m[0] != 0x00 || m[1] != 0x03) return; // not an Allocate request
+      allocations++;
+      if (_hasAttribute(m, 0x0006)) withCredentials++; // USERNAME
+      _socket.send(_unauthorized(m.sublist(8, 20)), d.address, d.port);
+    });
+  }
+
+  static Future<_RefusingRelay> start() async => _RefusingRelay._(
+    await RawDatagramSocket.bind(InternetAddress.loopbackIPv4, 0),
+  );
+
+  final RawDatagramSocket _socket;
+
+  /// Allocate requests received.
+  int allocations = 0;
+
+  /// Of those, the ones carrying a USERNAME (the retry with credentials).
+  int withCredentials = 0;
+
+  int get port => _socket.port;
+
+  void close() => _socket.close();
+
+  static bool _hasAttribute(Uint8List m, int type) {
+    for (var at = 20; at + 4 <= m.length;) {
+      final t = (m[at] << 8) | m[at + 1];
+      final len = (m[at + 2] << 8) | m[at + 3];
+      if (t == type) return true;
+      at += 4 + ((len + 3) & ~3);
+    }
+    return false;
+  }
+
+  static Uint8List _unauthorized(Uint8List transaction) {
+    final attrs =
+        (BytesBuilder()
+              ..add(
+                _attribute(0x0009, [0, 0, 4, 1, ...'Unauthorized'.codeUnits]),
+              )
+              ..add(_attribute(0x0014, 'tremulator.test'.codeUnits)) // REALM
+              ..add(_attribute(0x0015, 'nonce-0123456789'.codeUnits))) // NONCE
+            .toBytes();
+    return Uint8List.fromList([
+      0x01, 0x13, attrs.length >> 8, attrs.length & 0xFF, //
+      0x21, 0x12, 0xA4, 0x42, ...transaction, ...attrs,
+    ]);
+  }
+
+  static List<int> _attribute(int type, List<int> value) => [
+    type >> 8, type & 0xFF, value.length >> 8, value.length & 0xFF, //
+    ...value,
+    ...List.filled((4 - value.length % 4) % 4, 0),
+  ];
 }

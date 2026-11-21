@@ -66,6 +66,16 @@ class Calls {
   /// STUN and TURN servers.
   final List<Map<String, Object?>> iceServers;
 
+  /// Whether [iceServers] names a relay: a `turn:` or `turns:` URL (RFC
+  /// 7065 section 3.1), in `urls` as one string or a list.
+  bool get _hasRelay => iceServers.any((s) {
+    final urls = s['urls'];
+    return [
+      if (urls is String) urls,
+      if (urls is List) ...urls.whereType<String>(),
+    ].any((u) => u.startsWith('turn:') || u.startsWith('turns:'));
+  });
+
   /// How long to wait for this phone's own addresses before sending what it
   /// has.
   final Duration gatherTimeout;
@@ -308,6 +318,17 @@ class Call {
   /// The ICE username fragment of this phone's last description.
   String? _localUfrag;
 
+  /// True once this phone has gathered its addresses with a relay (TURN)
+  /// server configured and got no relay address from it: the relay could
+  /// not be reached, or refused this phone's credentials (RFC 8656 section
+  /// 7.3: a request with the wrong credentials is answered 401 and no
+  /// allocation is made). The plugin passes on no relay error
+  /// (webrtc_interface 1.5.1 has no icecandidateerror event), so the two
+  /// cannot be told apart here. A call that then fails for want of a route
+  /// can say why: the relay, not the link alone.
+  bool get relayUnavailable => _relayUnavailable;
+  bool _relayUnavailable = false;
+
   /// Set while a call that had connected has lost its link.
   DateTime? _lostAt;
   Timer? _grace;
@@ -516,7 +537,11 @@ class Call {
   void _startSetupClock() {
     _setupTimer = Timer(_calls.setupDeadline, () {
       if (!_connected.isCompleted) {
-        _calls.report({'event': 'setup-deadline', 'call': id});
+        _calls.report({
+          'event': 'setup-deadline',
+          'call': id,
+          'relay-unavailable': _relayUnavailable,
+        });
         unawaited(_end('failed', tell: true));
       }
     });
@@ -555,17 +580,23 @@ class Call {
       );
     }
     final full = await pc.getLocalDescription();
+    final relays = _relayCandidates(full!.sdp!);
     _calls.report({
       'event': 'gathered',
       'call': id,
       'ms': DateTime.now().difference(started).inMilliseconds,
       'timed-out': timedOut,
       'regather': regather,
+      'relay-candidates': relays,
     });
+    if (regather && _calls._hasRelay && relays == 0 && !_relayUnavailable) {
+      _relayUnavailable = true;
+      _calls.report({'event': 'relay-unavailable', 'call': id});
+    }
     unawaited(
       _deliver(
         type,
-        _calls.audioExtensions.applyTo(_calls.opus.applyTo(full!.sdp!)),
+        _calls.audioExtensions.applyTo(_calls.opus.applyTo(full.sdp!)),
         _number,
       ),
     );
@@ -643,6 +674,13 @@ class Call {
     }
     return null;
   }
+
+  /// The relay addresses in [sdp]: a=candidate lines whose type is relay
+  /// (RFC 8839 section 5.1: `typ relay`).
+  static int _relayCandidates(String sdp) => [
+    for (final l in sdp.split(RegExp(r'\r?\n')))
+      if (l.startsWith('a=candidate:') && l.contains(' typ relay')) l,
+  ].length;
 
   static String _fingerprints(String sdp) {
     final lines = [
@@ -864,6 +902,7 @@ class Call {
       'dtls': dtls,
       'ice': _ice?.name,
       'why': refused ? 'handshake' : 'route',
+      'relay-unavailable': _relayUnavailable,
     });
     if (_ended.isCompleted) {
       return;
