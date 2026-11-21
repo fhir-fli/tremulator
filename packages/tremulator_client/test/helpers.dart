@@ -15,12 +15,13 @@ Future<Client> phone(
   String name,
   Uri base, {
   List<Map<String, Object?>>? log,
+  Mailbox? mailbox,
 }) async => Client.start(
   keys: await KeyStore.open(
     dbPath: ':memory:',
     storageKey: randomKey(),
     identity: await Identity.create(name),
   ),
-  mailbox: Mailbox(base: base),
+  mailbox: mailbox ?? Mailbox(base: base),
   report: log?.add,
 );
