@@ -229,6 +229,32 @@ E1 PASSED 2026-11-19 (calls51, `lab/gate2/calls_e1.sh`, rule in `e1_check.py`): 
 | E2 | Encryption known answers | the MLS working group's published test vectors pass through `tremulator_keys` (as far as the Dart `openmls` package exposes the steps; what it does not expose is listed, not skipped silently) | mlswg/mls-implementations `test-vectors.md` |
 E2 PASSED 2026-11-20 (`lab/e2/RESULTS.md`): the working group's 16 vector files (commit 2034fe72) pass through our own MLS reading code (10 Dart tests, about 3,800 entries) and through openmls 0.9.0's own known-answer tests with the current files swapped in (15 of 15); every check was seen to fail on a damaged copy. Limits: openmls checks suites 1-3 only (the app uses 1); five checks the vector document asks for are not made by openmls's tests (listed in RESULTS.md); joining from a given welcome cannot be tested from Dart, since the library will not load outside private keys.
 | E3 | Planted defects, each must turn a test red | (a) identity check off: a swapped fingerprint connects, test fails; (b) call setup sent unencrypted: the canary scan finds it on the server; (c) a server that swaps the offer: call refused; (d) relay given wrong credentials: no relayed call, and the app says so; (e) Bob answers a call from a device not in the conversation: refused | us, from the threat model; each defect named before it is planted |
+E3 PLAN, 2026-11-21, waiting for Grey's go. Each defect is planted as a patch in a
+throwaway copy of the code (`git worktree`, as E1's before-the-fix run), never as a
+switch in the shipped app. Each test is run on the plant (must go red) and on main
+(must go green). Patches and runs in `lab/e3/`.
+- (a) Our own check that a later setup keeps the same certificate fingerprint
+  (`calls.dart` `_applyRemote`) removed. Red: the two restart-fingerprint tests in
+  `calls_test.dart`. Also recorded: the first-setup fingerprint test should stay
+  green, because WebRTC itself refuses the wrong certificate (RFC 8122 section
+  6.2); that check is not ours to switch off.
+- (b) Call setup sent as plain text instead of encrypted (`client.dart`
+  `sendCall`). Red: the lab's canary scan (`calls.py`) finds the certificate
+  fingerprints on the server, today 0 hits; and `client_test` "call setup arrives
+  labelled as a call".
+- (c) New: a dishonest test server that swaps a call message for (1) an earlier
+  call message replayed, (2) one from another conversation, (3) garbled bytes.
+  Passes when no call rings and the phone reports the message as refused. Red with
+  (b) planted: the swapped plain-text offer rings.
+- (d) New: relay-only call with a wrong relay password. Passes when the call does
+  not connect and the app reports "no route through the relay". Needs new app
+  code: the plugin (webrtc_interface 1.5.1) has no relay-error event, so the app
+  checks that a relay was set but no relay address came back. It cannot tell a
+  wrong password from a relay that cannot be reached. Red: run before the new code.
+- (e) New: Carol, not a member, sends Bob a call message carrying the
+  conversation's id. Passes when Bob does not ring. Plant: a call message that
+  fails to decrypt is read as plain text. Open, to look at: the mailbox's "from"
+  is not compared with the sender inside the encrypted message.
 | E4 | The relay sees only encrypted media | a capture at the relay holds no click-track audio and no fingerprint; positive control: the same scan finds the click in Alice's microphone recording | the adversary harness |
 | E5 | The WhatsApp numbers | connect time, relayed share, voice delay, frozen video, survival across P4's drop, per profile, against `GATE1.md` | Gate 1 measurements |
 | E6 | Completion rate | 50 calls on P1 (Gate 4), completion at or above WhatsApp's on P1 | `SUCCESS.md` Gate 4 |
