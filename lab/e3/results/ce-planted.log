@@ -1,0 +1,82 @@
+planted ce-undecryptable-call-read-as-text:
+ packages/tremulator_client/lib/src/client.dart | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
+Running build hooks...Running build hooks...00:00 +0: loading test/dishonest_server_test.dart
+00:00 +0: E3 (c): a server that swaps the call setup for its own offer in plain text
+00:00 +0 -1: E3 (c): a server that swaps the call setup for its own offer in plain text [E]
+  Expected: empty
+    Actual: WhereIterable<Incoming>:[Instance of 'Incoming']
+  swapped call setup must not reach the call code
+  
+  package:matcher                       expect
+  test/dishonest_server_test.dart 64:5  main.refused
+  ===== asynchronous gap ===========================
+  test/dishonest_server_test.dart 86:7  main.<fn>.<fn>
+  
+00:00 +0 -1: E3 (c): a server that swaps the call setup for one Bob already had (a replay)
+00:01 +0 -2: E3 (c): a server that swaps the call setup for one Bob already had (a replay) [E]
+  Expected: empty
+    Actual: WhereIterable<Incoming>:[Instance of 'Incoming']
+  swapped call setup must not reach the call code
+  
+  package:matcher                        expect
+  test/dishonest_server_test.dart 64:5   main.refused
+  ===== asynchronous gap ===========================
+  test/dishonest_server_test.dart 100:7  main.<fn>.<fn>
+  
+00:01 +0 -2: E3 (c): a server that swaps the call setup for one from a conversation Bob is not in
+00:01 +0 -3: E3 (c): a server that swaps the call setup for one from a conversation Bob is not in [E]
+  Expected: empty
+    Actual: WhereIterable<Incoming>:[Instance of 'Incoming']
+  swapped call setup must not reach the call code
+  
+  package:matcher                        expect
+  test/dishonest_server_test.dart 64:5   main.refused
+  ===== asynchronous gap ===========================
+  test/dishonest_server_test.dart 110:7  main.<fn>.<fn>
+  
+00:01 +0 -3: E3 (c): a server that swaps the call setup for the same message with one byte changed
+00:01 +0 -4: E3 (c): a server that swaps the call setup for the same message with one byte changed [E]
+  Expected: empty
+    Actual: WhereIterable<Incoming>:[Instance of 'Incoming']
+  swapped call setup must not reach the call code
+  
+  package:matcher                        expect
+  test/dishonest_server_test.dart 64:5   main.refused
+  ===== asynchronous gap ===========================
+  test/dishonest_server_test.dart 116:7  main.<fn>.<fn>
+  
+00:01 +0 -4: E3 (e): a phone not in the conversation calls from its own conversation
+00:01 +0 -5: E3 (e): a phone not in the conversation calls from its own conversation [E]
+  Expected: empty
+    Actual: WhereIterable<Incoming>:[Instance of 'Incoming']
+  swapped call setup must not reach the call code
+  
+  package:matcher                        expect
+  test/dishonest_server_test.dart 64:5   main.refused
+  ===== asynchronous gap ===========================
+  test/dishonest_server_test.dart 130:7  main.<fn>.<fn>
+  
+00:01 +0 -5: E3 (e): a phone not in the conversation calls with Alice and Bob's conversation written in the header
+00:02 +0 -6: E3 (e): a phone not in the conversation calls with Alice and Bob's conversation written in the header [E]
+  Expected: empty
+    Actual: WhereIterable<Incoming>:[Instance of 'Incoming']
+  swapped call setup must not reach the call code
+  
+  package:matcher                        expect
+  test/dishonest_server_test.dart 64:5   main.refused
+  ===== asynchronous gap ===========================
+  test/dishonest_server_test.dart 140:7  main.<fn>.<fn>
+  
+00:02 +0 -6: Some tests failed.
+
+Failing tests:
+  test/dishonest_server_test.dart: E3 (c): a server that swaps the call setup for its own offer in plain text
+  test/dishonest_server_test.dart: E3 (c): a server that swaps the call setup for one Bob already had (a replay)
+  test/dishonest_server_test.dart: E3 (c): a server that swaps the call setup for one from a conversation Bob is not in
+  test/dishonest_server_test.dart: E3 (c): a server that swaps the call setup for the same message with one byte changed
+  ... and 2 more
+
+Consider enabling the flag chain-stack-traces to receive more detailed exceptions.
+For example, 'dart test --chain-stack-traces'.
+plant.sh ce-undecryptable-call-read-as-text: exit 1

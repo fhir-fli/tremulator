@@ -1,0 +1,30 @@
+planted b-call-setup-unencrypted:
+ packages/tremulator_client/lib/src/client.dart | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
+Running build hooks...Running build hooks...00:00 +0: loading test/client_test.dart
+00:00 +0: two phones talk through the server and it keeps nothing readable
+00:01 +1: a wake-up ping makes the listener collect on its own
+00:01 +2: a phone whose commit lost the race rejoins and talks again
+00:01 +3: a wake-up during a collect is not lost
+00:01 +4: call setup arrives labelled as a call, chat as a message
+00:02 +4 -1: call setup arrives labelled as a call, chat as a message [E]
+  MailboxError: POST http://127.0.0.1:35413/Communication?_format=json: 422 {"resourceType":"OperationOutcome","issue":[{"severity":"error","code":"business-rule","diagnostics":"The file at Communication.payload.content.data is not message/mls: its bytes do not match the type; it was not stored"}]}
+  package:tremulator_mailbox/src/mailbox.dart 414:7  Mailbox._check
+  package:tremulator_mailbox/src/mailbox.dart 388:5  Mailbox._create
+  ===== asynchronous gap ===========================
+  package:tremulator_client/src/client.dart 160:7    Client._sendAs
+  ===== asynchronous gap ===========================
+  test/client_test.dart 124:5                        main.<fn>
+  
+00:02 +4 -1: lab keys written on first run come back the same
+00:02 +5 -1: sending costs one server request per message per peer
+00:02 +6 -1: a collect that fails while the link is down is retried until what waits is fetched
+00:02 +7 -1: closing while a collect fails reports it and does not throw
+00:02 +8 -1: Some tests failed.
+
+Failing tests:
+  test/client_test.dart: call setup arrives labelled as a call, chat as a message
+
+Consider enabling the flag chain-stack-traces to receive more detailed exceptions.
+For example, 'dart test --chain-stack-traces'.
+plant.sh b-call-setup-unencrypted: exit 1

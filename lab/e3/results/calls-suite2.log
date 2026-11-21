@@ -1,0 +1,67 @@
+00:00 +0: loading /home/grey/dev/fhir/tremulator/packages/tremulator_calls/example/integration_test/calls_test.dart
+Building Linux application...                                   
+CMake Warning at flutter/ephemeral/.plugin_symlinks/flutter_webrtc/linux/CMakeLists.txt:88 (message):
+  flutter_webrtc: libpulse NOT found -- Linux system-audio loopback capture
+  disabled (getDisplayMedia({audio:true}) yields no audio track).  Install
+  the libpulse dev package to enable it.
+
+
+✓ Built build/linux/x64/debug/bundle/tremulator_calls_example
+00:00 +0: a call set up through the mailbox connects, then hangs up
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: [<match '^[0-9A-F]{2}(:[0-9A-F]{2}){31}$'>]
+  Actual: [
+            '55:B9:50:85:BA:34:14:AB:38:E3:28:73:1B:DC:4E:B7:37:84:C2:40:46:4B:40:D0:6C:AD:CC:D9:AD:D6:AA:42',
+            '55:B9:50:85:BA:34:14:AB:38:E3:28:73:1B:DC:4E:B7:37:84:C2:40:46:4B:40:D0:6C:AD:CC:D9:AD:D6:AA:42',
+            '55:B9:50:85:BA:34:14:AB:38:E3:28:73:1B:DC:4E:B7:37:84:C2:40:46:4B:40:D0:6C:AD:CC:D9:AD:D6:AA:42'
+          ]
+   Which: at location [1] is [
+            '55:B9:50:85:BA:34:14:AB:38:E3:28:73:1B:DC:4E:B7:37:84:C2:40:46:4B:40:D0:6C:AD:CC:D9:AD:D6:AA:42',
+            '55:B9:50:85:BA:34:14:AB:38:E3:28:73:1B:DC:4E:B7:37:84:C2:40:46:4B:40:D0:6C:AD:CC:D9:AD:D6:AA:42',
+            '55:B9:50:85:BA:34:14:AB:38:E3:28:73:1B:DC:4E:B7:37:84:C2:40:46:4B:40:D0:6C:AD:CC:D9:AD:D6:AA:42'
+          ] which longer than expected
+
+When the exception was thrown, this was the stack:
+#4      main.<anonymous closure> (file:///home/grey/dev/fhir/tremulator/packages/tremulator_calls/example/integration_test/calls_test.dart:78:7)
+<asynchronous suspension>
+#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file:///home/grey/dev/fhir/tremulator/packages/tremulator_calls/example/integration_test/calls_test.dart line 78
+The test description was:
+  a call set up through the mailbox connects, then hangs up
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:01 +0 -1: a call set up through the mailbox connects, then hangs up [E]
+  Test failed. See exception logs above.
+  The test description was: a call set up through the mailbox connects, then hangs up
+  
+00:01 +0 -1: the far phone's connection vanishes: the caller tries to reconnect, then ends the call as lost
+01:39 +1 -1: a restart on a working call is answered and the call carries on
+01:40 +2 -1: a restart answer with a different certificate fingerprint ends the call
+01:42 +3 -1: a restart offer with a different certificate fingerprint ends the call
+01:43 +4 -1: a restart offer for a call this phone does not have does not ring
+01:43 +5 -1: a changed certificate fingerprint in the setup is refused
+01:44 +6 -1: an offer sent while the caller's link is down is sent again and the call connects
+01:45 +7 -1: an answer sent while the callee's link is down is sent again and the call connects
+01:46 +8 -1: a hang-up sent while the link is down is sent again and reaches the other phone
+01:47 +9 -1: on a slow link the caller stops its video, the other phone is told and stops receiving it, it stays off when the link recovers, and a tap brings it back
+02:02 +10 -1: by default the sound and the picture go in two streams
+02:03 +11 -1: with separateStreams off the sound and the picture go in one stream
+02:04 +12 -1: with suspendVideoBelowMinimum on, video stops when the link allows less than its lowest rate, and sound flows on
+02:13 +13 -1: with suspendVideoBelowMinimum off, video is sent at its lowest rate whatever the link allows
+02:22 +14 -1: video held back below its lowest rate is reported on both phones
+02:31 +15 -1: video sent at its lowest rate is never reported held
+02:40 +16 -1: stopped video stays open on the other phone, sound flows on, and a tap brings the picture back
+02:48 +17 -1: a relay that refuses the credentials: each phone says the relay is unavailable, and the call still connects directly
+02:54 +18 -1: no relay configured: nothing is said about one
+02:59 +19 -1: (tearDownAll)
+03:00 +19 -1: Some tests failed.
+
+Failing tests:
+  /home/grey/dev/fhir/tremulator/packages/tremulator_calls/example/integration_test/calls_test.dart: a call set up through the mailbox connects, then hangs up

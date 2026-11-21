@@ -1,0 +1,24 @@
+Running build hooks...Running build hooks...00:00 +0: loading test/dishonest_server_test.dart
+00:00 +0: test/dishonest_server_test.dart: E3 (c): a server that swaps the call setup for its own offer in plain text
+refused: not an MLS message: Failed to deserialize message: UnknownValue(29817)
+00:01 +1: test/client_test.dart: two phones talk through the server and it keeps nothing readable
+00:01 +1: test/dishonest_server_test.dart: E3 (c): a server that swaps the call setup for one Bob already had (a replay)
+refused: Failed to process message: The requested secret was deleted to preserve forward secrecy.
+00:01 +2: test/client_test.dart: two phones talk through the server and it keeps nothing readable
+00:01 +3: test/dishonest_server_test.dart: E3 (c): a server that swaps the call setup for one from a conversation Bob is not in
+refused: No group found in storage
+00:01 +4: test/client_test.dart: a wake-up ping makes the listener collect on its own
+00:01 +5: test/dishonest_server_test.dart: E3 (c): a server that swaps the call setup for the same message with one byte changed
+refused: Failed to process message: An error occurred during AEAD decryption.
+00:02 +6: test/client_test.dart: a phone whose commit lost the race rejoins and talks again
+00:02 +7: test/dishonest_server_test.dart: E3 (e): a phone not in the conversation calls from its own conversation
+refused: No group found in storage
+00:02 +8: test/client_test.dart: a wake-up during a collect is not lost
+00:02 +9: test/dishonest_server_test.dart: E3 (e): a phone not in the conversation calls with Alice and Bob's conversation written in the header
+refused: Failed to process message: An error occurred during AEAD decryption.
+00:02 +10: test/client_test.dart: call setup arrives labelled as a call, chat as a message
+00:02 +11: test/client_test.dart: lab keys written on first run come back the same
+00:02 +12: test/client_test.dart: sending costs one server request per message per peer
+00:03 +13: test/client_test.dart: a collect that fails while the link is down is retried until what waits is fetched
+00:03 +14: test/client_test.dart: closing while a collect fails reports it and does not throw
+00:03 +15: All tests passed!
