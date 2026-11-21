@@ -266,6 +266,19 @@ E4 PLAN, 2026-11-21, approved by Grey ("yes"); caller swap replaced by clicks on
 - Measured, not a pass/fail: whether the relay can see each phone's certificate itself. In DTLS 1.2 the certificate crosses in the clear (RFC 6347), and its hash is the fingerprint; in DTLS 1.3 it is encrypted (RFC 9147). The scan takes any certificate out of the handshakes and hashes it. If the relay can see them, it can tell which phones are talking, though not what they say. Reported either way.
 - Not covered: the video. It is encrypted the same way, but there is no detector for the test picture inside a capture.
 | E5 | The WhatsApp numbers | connect time, relayed share, voice delay, frozen video, survival across P4's drop, per profile, against `GATE1.md` | Gate 1 measurements |
+E5 PLAN, 2026-11-21, waiting for Grey's go. The rules below are fixed before any run; a result is reported against them, never the rule moved to fit.
+- Calls: the shipped defaults, Linux app both ends in the lab, 3-minute calls with video, click track and test picture as in every lab call. Three calls per profile: P1, P2, P3, P4, P5, P0, and P1, P2, P3 again with the direct route blocked (forced through the relay). 27 calls, about 2.5 hours, one lab run in the background (`lab/e5/run.sh`).
+- WhatsApp's connect time is not in GATE1.md's table. It is derived first, from the Gate 1 files already on disk: the tap time in each `android_p*_call.jsonl` to the first media packet to Meta's relay (UDP 3478) in `p*.pcap`. If a call's pair cannot be read, that profile's WhatsApp connect time is "unknown", not guessed.
+- Pass, per profile, where WhatsApp has a number:
+  - connect time: our median at or under WhatsApp's;
+  - one-way voice delay: our median at or under WhatsApp's (P1 690-696 ms; P2 and P3 have no WhatsApp number, so ours is reported, no pass or fail);
+  - frozen video, seconds per minute on the receiving phone, same freezedetect: our median at or under WhatsApp's (P1 14.2, P2 3.4, P3 6.0);
+  - P4: the call is still up after the 60 s drop and carries sound again after it (WhatsApp dropped 25-28 s after the cut, both tries);
+  - P5 (no internet): the call connects (WhatsApp never rang);
+  - P0 (dead link): the call ends as failed within the 90 s setup deadline, both phones agree, nothing hangs.
+- Relayed share: reported per profile (WhatsApp relayed every call); no pass or fail, since going direct when possible is the design.
+- Every number comes from the run's own files (calls.py summaries); the table is built by a script, not by hand.
+- Limits written down now: WhatsApp ran on two real phones over the laptop's shaped hotspot and the Wi-Fi; ours runs in containers with the same shaping in netem. Same profiles and same detectors, not the same radios. Three calls per profile can show a large difference, not a small one.
 | E6 | Completion rate | 50 calls on P1 (Gate 4), completion at or above WhatsApp's on P1 | `SUCCESS.md` Gate 4 |
 | E7 | Video falls back to audio | on P1 with video on, the call keeps sound and says video is off, rather than freezing | `SUCCESS.md` Gate 5, `DESIGN.md` |
 | E7, decided | Video comes back only on a tap | Grey 2026-10-18: once stopped, video stays off until the person taps "try video again"; a tap on a link still weak stops it again after five weak seconds. Why: each automatic try in calls19-20 refilled the link's queue and slowed the voice for minutes (calls19b P1: the link jammed within 9-10 s of each try; calls20d: clicks took 2.7-2.8 s for two minutes after the second try). The call still starts with sound only and sends video by itself once the link has been steady for 10 s. Video the engine holds back below its lowest rate (not stopped by the guard) comes back by itself when the engine's estimate allows: calls40 (2026-11-19), back 16.9 s after the link improved, voice within the rule Grey agreed (D17). | Grey |
