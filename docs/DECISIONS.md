@@ -548,3 +548,24 @@ become the default, since with it held video stayed off for the call; lab
 calls from now on keep the fields, as shipped. Video the guard stopped
 still comes back only on a tap. A tap does nothing on held video
 (`retryVideo`); with the fields kept, held video came back by itself.
+
+## D18. Post-quantum key agreement: later, not now. 2026-11-21
+
+Grey: build on what we have now, and plan the post-quantum switch for later.
+Today every conversation uses cipher suite 0x0001 (X25519 key agreement,
+`packages/tremulator_keys/lib/src/identity.dart:13`). A message recorded
+now could be read later, once a quantum computer can break X25519.
+Destroying keys (D8) does not prevent that, because the recording plus a
+broken X25519 is enough. The library we ship (openmls_dart 3.2.1) already
+offers the hybrid X-Wing suite (0x004D, ML-KEM-768 plus X25519). It is
+experimental and has a provisional, unregistered code point. Groups made on
+it would need migrating once draft-ietf-mls-pq-ciphersuites is final.
+
+The library will not switch us by itself. The suite is chosen in our code,
+and we pass an explicit list of suites (GATE2-PLAN). So the switch is
+ours to make. It is one setting, plus a migration for existing groups.
+
+When to revisit: when draft-ietf-mls-pq-ciphersuites gets IANA code points,
+or before the first deployment that keeps patient messages. Not yet
+checked: whether Dart's HTTPS (BoringSSL) and the video-call encryption
+(flutter_webrtc's DTLS) already use post-quantum key agreement.
