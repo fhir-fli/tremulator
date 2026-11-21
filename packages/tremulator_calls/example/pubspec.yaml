@@ -11,6 +11,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  # unimported: the plugin under test. Only integration_test/ imports it;
+  # the app must depend on it for its native code to be built and registered.
   tremulator_calls:
     path: ..
 
