@@ -1,0 +1,14 @@
+diff --git a/packages/tremulator_calls/lib/src/calls.dart b/packages/tremulator_calls/lib/src/calls.dart
+index 90e09ad..93e568d 100644
+--- a/packages/tremulator_calls/lib/src/calls.dart
++++ b/packages/tremulator_calls/lib/src/calls.dart
+@@ -623,7 +623,8 @@ class Call {
+     final sdp = alter == null ? description.sdp! : alter(description.sdp!);
+     final fingerprints = _fingerprints(sdp);
+     _remoteFingerprints ??= fingerprints;
+-    if (fingerprints != _remoteFingerprints) {
++    // E3 (a) PLANTED: the check below is switched off.
++    if (false && fingerprints != _remoteFingerprints) {
+       _calls.report({'event': 'fingerprint-changed', 'call': id});
+       await _end('fingerprint-changed', tell: true);
+       return false;
