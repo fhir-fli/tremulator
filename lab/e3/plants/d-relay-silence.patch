@@ -1,0 +1,14 @@
+diff --git a/packages/tremulator_calls/lib/src/calls.dart b/packages/tremulator_calls/lib/src/calls.dart
+index ec4daa0..bb86023 100644
+--- a/packages/tremulator_calls/lib/src/calls.dart
++++ b/packages/tremulator_calls/lib/src/calls.dart
+@@ -589,7 +589,8 @@ class Call {
+       'regather': regather,
+       'relay-candidates': relays,
+     });
+-    if (regather && _calls._hasRelay && relays == 0 && !_relayUnavailable) {
++    // E3 (d) PLANTED: a relay that gave no address goes unremarked.
++    if (false && regather && _calls._hasRelay && relays == 0 && !_relayUnavailable) {
+       _relayUnavailable = true;
+       _calls.report({'event': 'relay-unavailable', 'call': id});
+     }
