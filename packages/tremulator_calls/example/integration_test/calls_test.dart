@@ -68,6 +68,16 @@ void main() {
     expect(route, isNotNull);
     expect(route!.relayed, isFalse, reason: 'loopback, no relay configured');
 
+    // Each phone logs its own certificate fingerprint as gathered: one
+    // SHA-256, as the statistics name it (the lab hunts these on the
+    // server, E3 b).
+    for (final log in [aliceLog, bobLog]) {
+      final fps = log.firstWhere(
+        (e) => e['event'] == 'gathered',
+      )['fingerprints'];
+      expect(fps, [matches(RegExp(r'^[0-9A-F]{2}(:[0-9A-F]{2}){31}$'))]);
+    }
+
     // The offer and the answer each went through the server as a `call`
     // blob, never as chat.
     expect(

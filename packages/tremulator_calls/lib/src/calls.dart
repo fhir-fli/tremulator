@@ -588,6 +588,14 @@ class Call {
       'timed-out': timedOut,
       'regather': regather,
       'relay-candidates': relays,
+      // This phone's own certificate fingerprints, as its description
+      // carries them (RFC 8122 section 5): the lab hunts them on the server
+      // even when a call never connects and its statistics name none. Each
+      // media section repeats the same one, so each is listed once.
+      'fingerprints': {
+        for (final l in _fingerprints(full.sdp!).split('\n'))
+          if (l.isNotEmpty) l.split(' ').last,
+      }.toList(),
     });
     if (regather && _calls._hasRelay && relays == 0 && !_relayUnavailable) {
       _relayUnavailable = true;

@@ -826,6 +826,13 @@ def fingerprint_hunt(host_d):
             continue
         for l in open(p):
             e = json.loads(l)
+            # A phone's own fingerprints from its description (the
+            # `gathered` event), so a call that never connected, whose stats
+            # name no certificate, is still hunted (E3 b, 2026-11-21: the
+            # plain-text setup run found 0 fingerprints and so hunted nothing).
+            for v in e.get("fingerprints", []) if e.get("event") == "gathered" else []:
+                if isinstance(v, str) and v:
+                    fps.add(v)
             for r in e.get("reports", []):
                 for k in ("localCertificateId", "remoteCertificateId"):
                     v = r.get(k)
@@ -846,7 +853,9 @@ def fingerprint_hunt(host_d):
     sh(["python3", "-I", SCANNER, tsv, control, os.path.join(host_d, "alice.jsonl")], timeout=600)
     def count(p):
         return sum(1 for _ in open(p)) if os.path.exists(p) else None
-    return {"fingerprints": len(fps), "fingerprint_scan_exit": scan.returncode,
+    # With no fingerprint to hunt, 0 hits means nothing: say so.
+    return {"fingerprints": len(fps), "fingerprint_scan_blind": not fps,
+            "fingerprint_scan_exit": scan.returncode,
             "fingerprint_hits": count(hits), "fingerprint_control_hits": count(control)}
 
 
