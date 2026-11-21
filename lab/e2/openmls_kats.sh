@@ -6,7 +6,7 @@
 # vectors, and 6 of the 16 differ from the working group's current files,
 # so the current files are put in their place before the tests are built.
 #
-#     bash lab/e2/openmls_kats.sh LABEL [VECTOR_DIR]
+#     [PATCH=name.py] bash lab/e2/openmls_kats.sh LABEL [VECTOR_DIR]
 #
 # VECTOR_DIR defaults to the official files at VEC_COMMIT, fetched once and
 # checked against the sha256 list below; another directory (a damaged copy,
@@ -77,6 +77,10 @@ for f in "$vectors"/*.json; do
     echo "not copied: $f" >&2; exit 1
   fi
 done
+
+# PATCH (optional): a script from patches/ run on the extracted tree, to add
+# a check openmls's own test leaves out.
+if [ -n "${PATCH:-}" ]; then python3 -I "$HERE/patches/$PATCH" "$run"; fi
 
 # Every test that reads a working-group file. read_test_vectors_encryption
 # reads openmls's own kat_encryption_openmls.json and is run too, reported

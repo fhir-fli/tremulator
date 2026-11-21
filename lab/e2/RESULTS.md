@@ -55,6 +55,23 @@ recheck), and in openmls `main` at ba267737 (2026-11-18): all still there.
    fields are read and compared. No open issue found (searched the
    repository's issues for the field names and for "test vectors"; that
    search does return older test-vector issues, e.g. #326, #490).
+   Measured 2026-11-21 (`PATCH=messages-three-fields.py bash
+   openmls_kats.sh fields-official`, outcomes in
+   `results/fields-official.fieldcheck.txt`): ExternalInit 300/300 and
+   GroupContextExtensions 300/300 decode and re-encode exactly; ReInit
+   0/300 decode. Every official ReInit carries one extension, type 2
+   (ratchet_tree; `reinit_extensions.py`, `results/reinit-extensions.txt`:
+   no duplicates in any entry). RFC 9420 section 17.3 registers
+   ratchet_tree for GroupInfo only, and section 11.2 makes ReInit's
+   extensions the new group's GroupContext extensions; openmls allows only
+   required_capabilities, external_senders and unknown types there
+   (`is_valid_in_group_context`, extensions/mod.rs:208; same on main), so
+   it refuses, but reports "Found duplicate extensions" (mod.rs:409; main
+   :442), which is false: its decoder maps every refusal to that message.
+   Whether the sample or openmls is right is not settled here: the
+   registry column says where an extension "may appear", with no MUST.
+   Each added check was seen red on a copy with that field cut by a byte
+   (`cut_field.py`, `results/fields-cut-*`).
 2. passive-client: the given private keys are not checked against the key
    package's public keys, the vector's first check
    (`_signature_priv` unused, passive_client.rs:243; `init_priv` and
