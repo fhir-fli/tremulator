@@ -257,6 +257,13 @@ switch in the shipped app. Each test is run on the plant (must go red) and on ma
   fails to decrypt is read as plain text. Open, to look at: the mailbox's "from"
   is not compared with the sender inside the encrypted message.
 | E4 | The relay sees only encrypted media | a capture at the relay holds no click-track audio and no fingerprint; positive control: the same scan finds the click in Alice's microphone recording | the adversary harness |
+E4 PLAN, 2026-11-21, waiting for Grey's go. Files: `lab/e4/` (new) and one option in `lab/gate2/calls.py`.
+- Calls: direct route blocked (`none-blocked`, so every packet goes through the relay), right password, 60 s, click track on Alice's microphone as in E1. Two calls, Alice calling and Bob calling. The relay container captures every packet whole (new `--relay-capture`; today only the phones capture, and only headers).
+- Sound scan (`lab/e4/relay_scan.py`): take every media packet out of the relay's capture (unwrapping the relay's own framing, RFC 8656 section 12), put the sound stream back together as Opus and decode it with ffmpeg, then look for the clicks with the same detector the voice-delay measure uses (`voice_delay.onsets`). Passes when 0 clicks are found.
+- Positive control, the same scan: the same click track encoded as Opus and sent as plain, unencrypted media packets on the lab network, captured the same way. Must find the clicks (at least 9 in 10). If it cannot, a pass above means nothing. The plan's earlier control (Alice's microphone recording) is a sound file, not a capture, so it would test the detector but not the scan.
+- Fingerprint: both phones' fingerprints hunted in the capture and the relay's log (`canary_scan.py`, as the server hunt). Passes when 0 found, with the phones' logs as the control.
+- Measured, not a pass/fail: whether the relay can see each phone's certificate itself. In DTLS 1.2 the certificate crosses in the clear (RFC 6347), and its hash is the fingerprint; in DTLS 1.3 it is encrypted (RFC 9147). The scan takes any certificate out of the handshakes and hashes it. If the relay can see them, it can tell which phones are talking, though not what they say. Reported either way.
+- Not covered: the video. It is encrypted the same way, but there is no detector for the test picture inside a capture.
 | E5 | The WhatsApp numbers | connect time, relayed share, voice delay, frozen video, survival across P4's drop, per profile, against `GATE1.md` | Gate 1 measurements |
 | E6 | Completion rate | 50 calls on P1 (Gate 4), completion at or above WhatsApp's on P1 | `SUCCESS.md` Gate 4 |
 | E7 | Video falls back to audio | on P1 with video on, the call keeps sound and says video is off, rather than freezing | `SUCCESS.md` Gate 5, `DESIGN.md` |
