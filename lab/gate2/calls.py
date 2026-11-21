@@ -13,7 +13,7 @@ screen and speaker are recorded.
                                [--improve-to P2 --improve-after S]
                                [--browser alice|bob]
                                [--plant-changed-fingerprint alice|bob]
-                               [--wrong-relay-password]
+                               [--wrong-relay-password] [--relay-capture]
     python3 lab/gate2/calls.py --label calls8 --reanalyse   (files on disk only)
 
 Profiles: `none` (no shaping), P1-P5 and P0 from labkit.PROFILES, and
@@ -184,6 +184,13 @@ if planted not in (None, "alice", "bob"):
 # must report the relay unavailable; with a `-blocked` profile the call then
 # has no route and must end without connecting.
 wrong_relay_password = "--wrong-relay-password" in sys.argv
+# `--relay-capture`: E4. The relay records every UDP packet whole
+# (relay.pcap), for lab/e4/relay_scan.py; after the call, the positive
+# control: Alice's container sends the click track as plain Opus RTP to the
+# relay's address, recorded the same way (relay_control.pcap). The click
+# track also plays into Bob's microphone, so both directions carry clicks.
+relay_capture = "--relay-capture" in sys.argv
+CONTROL_PORT = 40000
 turn_pass = " --turn-pass not-the-password" if wrong_relay_password else ""
 outroot = os.path.join(HERE, "results", label)
 os.makedirs(outroot, exist_ok=True)
@@ -421,6 +428,8 @@ def run_profile(name):
     srv_port = start_server(srv, name, port)
     url = f"http://{ip_of(srv)}:{srv_port}"
     relay = start_relay(turn, d, internal)
+    if relay_capture:
+        capture_start(turn, d, "relay", "udp")
     stop = f"{d}/alice.done"
     for c in (alice, bob):
         dx(c, "sh", "-c", f"rm -rf /tmp/state; mkdir -p /tmp/state {d}")
@@ -504,6 +513,9 @@ def run_profile(name):
         call_track(os.path.join(host_d, track), clicks, speech)
         sh(["docker", "exec", "-d", alice, "sh", "-c",
             f"paplay --device=mic {d}/{track} > {d}/click.log 2>&1"])
+        if relay_capture:
+            sh(["docker", "exec", "-d", bob, "sh", "-c",
+                f"paplay --device=mic {d}/{track} > {d}/bob_click.log 2>&1"])
     for _ in range(call_s + 240):
         if dx(alice, "test", "-e", f"{d}/alice.exit", timeout=10).returncode == 0:
             break
@@ -530,6 +542,9 @@ def run_profile(name):
         time.sleep(1)
     stop_server(srv, name, port)
     relay_facts = stop_relay(turn, d, host_d)
+    if relay_capture:
+        capture_stop(turn, d, "relay")
+        relay_facts.update(relay_control(turn, alice, d, host_d))
     qdisc_stop(nodes, d)
     media_stop((alice, bob), d)
     clear_shaping(nodes)
@@ -543,7 +558,7 @@ def run_profile(name):
             os.remove(os.path.join(host_d, track))
 
     rec = {"profile": name, "browser": browser, "planted_changed_fingerprint": planted,
-           "wrong_relay_password": wrong_relay_password,
+           "wrong_relay_password": wrong_relay_password, "relay_capture": relay_capture,
            "chrome": CHROME_VERSION if browser else None, "alice_video": alice_video, "opus": opus, "speech": speech, "lip_drift": lip, "server_kept": "--keep-server" in sys.argv, "relay_link": relay_link, "shaped": list(shaped) if shape else [], "alice_wall_s": alice_s, "pattern_raised": raised,
            "pattern_on_top_at_connect": on_top_at_connect,
            "direct_blocked": block, "clicks_started": clicked, "bob_call_ended_seen": bob_ended,
@@ -614,6 +629,34 @@ def media_capture(phones, d):
         sh(["docker", "exec", "-d", "-u", "0", c, "sh", "-c",
             f"mkdir -p {d}; tcpdump -i eth0 -s 96 -U -w {d}/{c}_media.pcap udp "
             f"2>{d}/{c}_media.err & echo $! > {d}/{c}_media.pid"])
+
+
+def capture_start(c, d, stem, filt):
+    """Every packet on `c`'s eth0 matching `filt`, whole (-s 0), to
+    <stem>.pcap; tcpdump's pid in <stem>.pid."""
+    sh(["docker", "exec", "-d", "-u", "0", c, "sh", "-c",
+        f"mkdir -p {d}; tcpdump -i eth0 -s 0 -U -w {d}/{stem}.pcap {filt} "
+        f"2>{d}/{stem}.err & echo $! > {d}/{stem}.pid"])
+    time.sleep(1)
+
+
+def capture_stop(c, d, stem):
+    dx(c, "sh", "-c", f"kill -INT $(cat {d}/{stem}.pid) 2>/dev/null; sleep 1; true", user="0")
+
+
+def relay_control(turn, alice, d, host_d):
+    """E4's positive control: the click track sent as plain (unencrypted)
+    Opus RTP from Alice's container to the relay's address, recorded at the
+    relay as the call was. The same scan must find the clicks in it."""
+    track = os.path.join(host_d, "control_track.wav")
+    call_track(track, 9)
+    capture_start(turn, d, "relay_control", f"udp port {CONTROL_PORT}")
+    r = dx(alice, "sh", "-c",
+           f"ffmpeg -loglevel error -re -i {d}/control_track.wav -c:a libopus -b:a 32k "
+           f"-f rtp rtp://{ip_of(turn)}:{CONTROL_PORT} > {d}/relay_control_send.log 2>&1; echo $?",
+           timeout=300)
+    capture_stop(turn, d, "relay_control")
+    return {"relay_control_send_exit": r.stdout.strip()}
 
 
 def media_stop(phones, d):

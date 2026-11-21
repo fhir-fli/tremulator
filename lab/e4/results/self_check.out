@@ -1,0 +1,14 @@
+SDP:
+v=0
+o=- 0 0 IN IP4 127.0.0.1
+s=No Name
+c=IN IP4 127.0.0.1
+t=0 0
+a=tool:libavformat 62.3.100
+m=audio 60896 RTP/AVP 111
+b=AS:32
+a=rtpmap:111 opus/48000/2
+
+{"case": "plain", "packets": 4501, "streams": 1, "codes": [0, 1, 2, 3, 4, 5, 0, 1, 2], "want": [0, 1, 2, 3, 4, 5, 0, 1, 2], "ok": true}
+{"case": "channeldata", "packets": 4501, "streams": 1, "codes": [0, 1, 2, 3, 4, 5, 0, 1, 2], "want": [0, 1, 2, 3, 4, 5, 0, 1, 2], "ok": true}
+{"case": "payload-random", "packets": 4501, "streams": 1, "codes": [], "want": [], "ok": true}
