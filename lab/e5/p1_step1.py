@@ -4,7 +4,7 @@ stream? Rule (docs/GATE2-CALLS-PLAN.md, fixed before the runs): the idea
 holds if the round trip stays under 1 s and the voice median is at or
 under WhatsApp's 696 ms, per profile over its three calls.
 
-    python3 lab/e5/p1_step1.py e5nv1 e5nv2 e5nv3
+    python3 lab/e5/p1_step1.py [--out=NAME.jsonl] e5nv1 e5nv2 e5nv3
 
 Writes lab/e5/results/p1_step1.jsonl, one line per call then one per
 profile, flushed. The same numbers for the E5 calls with video are written
@@ -40,14 +40,18 @@ def call_facts(label, rec):
 
 
 def main():
-    out = open(os.path.join(HERE, "results", "p1_step1.jsonl"), "w")
+    args = sys.argv[1:]
+    name = "p1_step1.jsonl"
+    if args and args[0].startswith("--out="):
+        name = args.pop(0)[len("--out="):]
+    out = open(os.path.join(HERE, "results", name), "w")
 
     def emit(r):
         out.write(json.dumps(r) + "\n")
         out.flush()
         print(json.dumps(r), flush=True)
 
-    groups = {"no-video": sys.argv[1:], "with-video (E5)": ["e5r1", "e5r2", "e5r3", "e5r1b"]}
+    groups = {"no-video": args, "with-video (E5)": ["e5r1", "e5r2", "e5r3", "e5r1b"]}
     for name, labels in groups.items():
         by = {}
         for lab in labels:
