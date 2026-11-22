@@ -382,3 +382,5 @@ them. Proposed, my choice: 50 (P1), 150, 300 (P2), 600 and 1,000 (P3) kbit/s.
   needed until step 7.
 
 Every lab run creates two Docker networks, as before.
+
+E5b DONE, 2026-11-22 (lab/e5/RESULTS-E5b.md). A, Gate 1's arrangement: P1 fails voice and frozen (direct 16.4 s voice, relayed 1.2 s; frozen 60 s/min both; WhatsApp 0.70 s, 14.2); P2 fails frozen (4.62 direct, 4.22 relayed; WhatsApp 3.4); P3 passes frozen (4.35, 4.73; WhatsApp 6.0); P4 survives 3/3. C reported only: P1 12.1 s / 2.6 s voice, frozen 60; P2-P3 as A. Next: video padding fix, then 60 ms packets, each against A, each on Grey's go.
