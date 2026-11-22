@@ -441,7 +441,26 @@ def run_profile(name):
     if not wait_for(bob, f"{d}/bob.jsonl", "waiting-for-call", 90):
         # P0 is the known negative: Bob cannot reach the server, so no call
         # can be placed. That is a result, logged; calls8 raised here and
-        # left P0 without a summary line.
+        # left P0 without a summary line. Alice still places the call, as
+        # Gate 1's caller did into a dead link (WhatsApp: "Calling" until
+        # ended by hand at 57 s), so what her app does with it is measured:
+        # how long until it gives up, how it ends, and that it exits (E5).
+        t0 = time.time()
+        sh(["docker", "exec", "-d", alice, "sh", "-c",
+            f"{app_cmd('alice', d)} --lab --server {url} --name alice --state /tmp/state --out {d}/alice.jsonl "
+            f"--peer bob --audio {opus_args}--turn '{relay}'{turn_pass} --call-s {call_s} "
+            f"> {d}/alice.stdout 2>&1; echo $? > {d}/alice.exit"])
+        for _ in range(call_s + 240):
+            if dx(alice, "test", "-e", f"{d}/alice.exit", timeout=10).returncode == 0:
+                break
+            time.sleep(1)
+        alice_s = round(time.time() - t0, 1)
+        dx(bob, "touch", stop)
+        alice_summary = None
+        alice_log = os.path.join(host_d, "alice.jsonl")
+        if os.path.exists(alice_log):
+            for line in sh(["python3", "-I", SUMMARY, alice_log]).stdout.splitlines():
+                alice_summary = {k: v for k, v in json.loads(line).items() if k != "log"}
         stop_server(srv, name, port)
         relay_facts = stop_relay(turn, d, host_d)
         media_stop((alice, bob), d)
@@ -450,7 +469,9 @@ def run_profile(name):
         bob_log = os.path.join(host_d, "bob.jsonl")
         first = open(bob_log).readline().strip() if os.path.exists(bob_log) else None
         log({"profile": name, "placed": False, "bob_exit": read(bob, f"{d}/bob.exit"),
-             "bob_first_line": first and json.loads(first), **relay_facts})
+             "bob_first_line": first and json.loads(first), "alice_wall_s": alice_s,
+             "alice_exit": read(alice, f"{d}/alice.exit"), "alice": alice_summary,
+             "alice_last_lines": last_lines(alice_log, 5), **relay_facts})
         return
 
     # Both screens are recorded from before the call to after it: Bob's is
@@ -583,6 +604,13 @@ def run_profile(name):
     rec.update(fingerprint_hunt(host_d))
     rec["outside_pkts"] = outside_packets(host_d, (alice, bob))
     log(rec)
+
+
+def last_lines(path, n):
+    """The last n lines of a phone's log, parsed, or None."""
+    if not os.path.exists(path):
+        return None
+    return [json.loads(l) for l in open(path).read().splitlines()[-n:] if l.strip()]
 
 
 def outside_packets(host_d, phones):
