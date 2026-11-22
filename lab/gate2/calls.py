@@ -63,6 +63,7 @@ import json
 import os
 import re
 import shutil
+import subprocess
 import sys
 import time
 
@@ -838,6 +839,11 @@ def voice_facts(host_d, speech=False):
         return voice_delay(sent, heard, os.path.join(host_d, "voice_delay.jsonl"), speech)
     except RuntimeError as e:
         return {"error": str(e)[:500]}
+    except subprocess.TimeoutExpired as e:
+        # e5r1 P2: one onset-detector run took over 600 s, then 15 s on the
+        # same files after; the call's voice is lost, not the whole pass
+        # (`--reanalyse` measures it again from the files).
+        return {"error": f"timed out: {str(e)[:400]}"}
 
 
 def recording_facts(host_d, who):
