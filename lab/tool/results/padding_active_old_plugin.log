@@ -1,0 +1,47 @@
+00:00 +0: loading /home/grey/dev/fhir/tremulator/packages/tremulator_calls/example/integration_test/calls_test.dart
+Building Linux application...                                   
+CMake Warning at flutter/ephemeral/.plugin_symlinks/flutter_webrtc/linux/CMakeLists.txt:88 (message):
+  flutter_webrtc: libpulse NOT found -- Linux system-audio loopback capture
+  disabled (getDisplayMedia({audio:true}) yields no audio track).  Install
+  the libpulse dev package to enable it.
+
+
+✓ Built build/linux/x64/debug/bundle/tremulator_calls_example
+00:00 +0: video that is not sent sends no packets at all, padding included, before it starts and after it stops
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following StateError was thrown running a test:
+Bad state: setParameters(active: false) did not take: {transactionId:
+0b585cd2-33af-41b4-a22f-8dca30263942, rtcp: {cname: , reducedSize: false}, headerExtensions: [],
+encodings: [{active: true, maxBitrate: 0, maxFramerate: 0, minBitrate: 0, scaleResolutionDownBy:
+1.0, scalabilityMode: , ssrc: 0, priority: low, networkPriority: low}], codecs: [],
+degradationPreference: balanced}
+
+When the exception was thrown, this was the stack:
+#0      _setVideoActive (package:tremulator_calls/src/calls.dart:1263:5)
+<asynchronous suspension>
+#1      Call._open (package:tremulator_calls/src/calls.dart:508:11)
+<asynchronous suspension>
+#2      Calls.start (package:tremulator_calls/src/calls.dart:202:5)
+<asynchronous suspension>
+#3      main.<anonymous closure> (file:///home/grey/dev/fhir/tremulator/packages/tremulator_calls/example/integration_test/calls_test.dart:600:20)
+<asynchronous suspension>
+#4      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#5      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+The test description was:
+  video that is not sent sends no packets at all, padding included, before it starts and after it
+  stops
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:01 +0 -1: video that is not sent sends no packets at all, padding included, before it starts and after it stops [E]
+  Test failed. See exception logs above.
+  The test description was: video that is not sent sends no packets at all, padding included, before it starts and after it stops
+  
+00:01 +0 -1: (tearDownAll)
+00:01 +0 -1: Some tests failed.
+
+Failing tests:
+  /home/grey/dev/fhir/tremulator/packages/tremulator_calls/example/integration_test/calls_test.dart: video that is not sent sends no packets at all, padding included, before it starts and after it stops

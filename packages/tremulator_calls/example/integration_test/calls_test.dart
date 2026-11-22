@@ -565,6 +565,96 @@ void main() {
     },
   );
 
+  testWidgets(
+    'video that is not sent sends no packets at all, padding included, '
+    'before it starts and after it stops',
+    (_) async {
+      // E5 e5r3 P1: Alice's video sent no frames all call but sent
+      // header-only packets at 17-19 kbit/s, on a 50 kbit/s link
+      // (lab/e5/RESULTS.md). A stream that is not sending is silent:
+      // RTCRtpEncodingParameters.active false, "the encoding is not being
+      // sent" (W3C WebRTC 1.0).
+      // The guard holds the video for its start hold of a steady round
+      // trip (VideoGuard.startHold), 20 s here; then a 9 s round trip stops
+      // it, as in the test before.
+      var slow = false;
+      final aliceCalls = Calls(
+        alice,
+        videoGuard: () => VideoGuard(startHold: const Duration(seconds: 20)),
+        guardEvery: const Duration(milliseconds: 200),
+        roundTrip: (_) async => slow ? 9.0 : 0.4,
+      );
+      final bobCalls = Calls(bob, videoGuard: null);
+      final screen = await navigator.mediaDevices.getDisplayMedia({
+        'video': {
+          'deviceId': {'exact': '0'},
+          'mandatory': {'frameRate': 30.0},
+        },
+        'audio': false,
+      });
+      final bobsCall = Completer<Call>();
+      bobCalls.ringing.listen((c) async {
+        await c.answer();
+        bobsCall.complete(c);
+      });
+      final call = await aliceCalls.start(conversation, media: screen);
+      await call.connected.timeout(const Duration(seconds: 30));
+      await (await bobsCall.future).connected.timeout(
+        const Duration(seconds: 30),
+      );
+
+      // Every video packet Alice sent: media, padding and resends.
+      Future<int> videoPackets() async {
+        var n = 0;
+        for (final r in await call.stats()) {
+          if (r.type == 'outbound-rtp' && r.values['kind'] == 'video') {
+            n += (r.values['packetsSent'] as num?)?.toInt() ?? 0;
+          }
+        }
+        return n;
+      }
+
+      Future<int> sentOver10s(String phase) async {
+        final before = await videoPackets();
+        await Future<void>.delayed(const Duration(seconds: 10));
+        final after = await videoPackets();
+        return after - before;
+      }
+
+      expect(await sentOver10s('held'), 0, reason: 'held at the start');
+      expect(
+        aliceLog.where((e) => e['event'] == 'video-sending'),
+        isEmpty,
+        reason: 'still held when measured',
+      );
+
+      await _until(
+        () => aliceLog.any(
+          (e) => e['event'] == 'video-sending' && e['sending'] == true,
+        ),
+      );
+      await Future<void>.delayed(const Duration(seconds: 2));
+      expect(await videoPackets(), greaterThan(0), reason: 'video flowed');
+
+      slow = true;
+      await _until(
+        () =>
+            aliceLog.lastWhere(
+              (e) => e['event'] == 'video-sending',
+            )['sending'] ==
+            false,
+      );
+      await Future<void>.delayed(const Duration(seconds: 1));
+      expect(await sentOver10s('stopped'), 0, reason: 'stopped');
+
+      await aliceCalls.close();
+      await bobCalls.close();
+      for (final t in screen.getTracks()) {
+        await t.stop();
+      }
+    },
+  );
+
   // null: the default, which is two streams (docs/DECISIONS.md D17).
   for (final separate in <bool?>[null, false]) {
     final apart = separate ?? true;

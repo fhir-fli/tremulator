@@ -35,6 +35,8 @@ virtual screen:
     cd example
     DISPLAY=:99 flutter test integration_test/calls_test.dart -d linux
 
-flutter_webrtc is pinned to 1.6.2+hotfix.4: with 1.6.2 the Linux app
-segfaulted at start (null audio device in `FlutterMediaStream`), 3 of 3
-starts, 2026-10-10.
+flutter_webrtc is pinned to 1.6.3. 1.6.2 segfaulted at start on Linux
+(null audio device in `FlutterMediaStream`), 3 of 3 starts, 2026-10-10;
+1.6.2+hotfix.4 fixed that. 1.6.3 is the first release in which a video
+encoding's `active` setting takes effect on Linux (#2211); calls.dart stops
+video with it (calls_test, 2026-11-22).

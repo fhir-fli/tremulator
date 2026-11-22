@@ -368,8 +368,8 @@ class Call {
   int? _framesSeen;
   DateTime? _flatSince;
 
-  /// This phone's video senders and the track each sends while video is on.
-  final Map<RTCRtpSender, MediaStreamTrack> _videoSenders = {};
+  /// This phone's video senders.
+  final List<RTCRtpSender> _videoSenders = [];
   bool _guardBusy = false;
 
   /// Video stops and starts, one after another: a tap can land while the
@@ -501,11 +501,11 @@ class Call {
       for (final t in media.getTracks()) {
         final sender = await pc.addTrack(t, t.kind == 'video' ? video : media);
         if (guarded && t.kind == 'video') {
-          // Sound first: the video track is held back until the guard
-          // starts it (VideoGuard.startSending). The sender, and the video
+          // Sound first: the video is held back until the guard starts it
+          // (VideoGuard.startSending). The sender, its track, and the video
           // in the offer or answer, stay.
-          _videoSenders[sender] = t;
-          await sender.replaceTrack(null);
+          _videoSenders.add(sender);
+          await _setVideoActive(pc, sender, false);
         }
       }
     }
@@ -1182,22 +1182,21 @@ class Call {
   }
 
   /// Stops or starts this phone's video, and tells the other phone.
-  /// replaceTrack with no track: "If sending is true, and withTrack is null,
-  /// have the sender stop sending" (W3C WebRTC 1.0, RTCRtpSender
-  /// replaceTrack(), read 2026-10-18); the same sender is given its track
-  /// back to start again, with no new offer or answer. Not
-  /// RTCRtpEncodingParameters.active: flutter_webrtc 1.6.2+hotfix.4 on Linux
-  /// accepts it and the encoding stays active (calls_test, 2026-10-18; its
-  /// updateRtpParameters changes a copy of the encodings and never sets them
-  /// back).
+  /// Each encoding's `active` (W3C WebRTC 1.0, RTCRtpEncodingParameters:
+  /// false means "the encoding is not being sent"), with no new offer or
+  /// answer. Not replaceTrack(null): that stops the frames but the stream
+  /// stays open and sends header-only padding, 17-19 kbit/s on a 50 kbit/s
+  /// link (lab/e5/RESULTS.md, e5r3 P1), 18 packets in 10 s on loopback
+  /// (calls_test, 2026-11-22). `active` needs flutter_webrtc 1.6.3 on Linux:
+  /// before it, setParameters changed a copy of the encodings and never set
+  /// them back (calls_test 2026-10-18; fixed upstream, #2211).
   ///
   /// [by] is who decided: `start`, `guard` or `tap`; [rtt] is the round trip
   /// the guard decided on, if it did.
   Future<void> _sendVideo(bool sending, double? rtt, String by) =>
       _videoSends = _videoSends.then((_) async {
-        for (final MapEntry(key: sender, value: track)
-            in _videoSenders.entries) {
-          await sender.replaceTrack(sending ? track : null);
+        for (final sender in _videoSenders) {
+          await _setVideoActive(_pc!, sender, sending);
         }
         _calls.report({
           'event': 'video-sending',
@@ -1216,6 +1215,56 @@ class Call {
           );
         }
       });
+}
+
+/// Sets every encoding of [sender] to [active], and reads it back from
+/// [pc]; throws if the plugin refuses, the sender has no encodings, or the
+/// change did not take (flutter_webrtc 1.6.2+hotfix.4 accepted it and kept
+/// the encodings active).
+///
+/// Only `active` (and each encoding's rid, which says which encoding it is)
+/// is sent. flutter_webrtc 1.6.3 on Linux reads back unset values as zeros
+/// and empty strings (maxBitrate 0, maxFramerate 0, scalabilityMode "",
+/// ssrc 0), and sending them all back was refused (calls_test, 2026-11-22;
+/// which field it refused is not known). Its native side changes only the
+/// fields it is given.
+Future<void> _setVideoActive(
+  RTCPeerConnection pc,
+  RTCRtpSender sender,
+  bool active,
+) async {
+  final read = sender.parameters;
+  final encodings = read.encodings;
+  if (encodings == null || encodings.isEmpty) {
+    throw StateError('video sender ${sender.senderId} has no encodings');
+  }
+  final parameters = RTCRtpParameters(
+    transactionId: read.transactionId,
+    encodings: [
+      for (final e in encodings)
+        RTCRtpEncoding(
+          rid: (e.rid?.isEmpty ?? true) ? null : e.rid,
+          active: active,
+          numTemporalLayers: null,
+          scaleResolutionDownBy: null,
+        ),
+    ],
+  );
+  if (!await sender.setParameters(parameters)) {
+    throw StateError(
+      'setParameters(active: $active) refused: ${parameters.toMap()}',
+    );
+  }
+  final now = (await pc.getSenders())
+      .where((s) => s.senderId == sender.senderId)
+      .single
+      .parameters;
+  if (now.encodings?.any((e) => e.active != active) ?? true) {
+    throw StateError(
+      'setParameters(active: $active) did not take: '
+      '${now.toMap()}',
+    );
+  }
 }
 
 /// Video stopped or started, on this phone ([local]) or the other, or held
