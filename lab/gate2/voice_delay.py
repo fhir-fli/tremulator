@@ -217,11 +217,33 @@ def peak(wav):
     return max((abs(s) for s in a), default=0)
 
 
+ONSETS_SRC = os.path.join(TOOL, "bin", "baseline_onsets.dart")
+ONSETS_EXE = os.path.join(TOOL, "build", "baseline_onsets.dill")
+
+
+def onsets_exe():
+    """The detector compiled once to a kernel file (dart compile kernel; exe
+    refuses a package with build hooks, sqlite3's), rebuilt when its source
+    (or the library it uses) is newer. `dart run` per band hung past 600 s twice in E5 (e5r1 P2,
+    e5r2 P3-blocked, both the second band of a call) and took 1.3 s on the
+    same files after; the compiled program leaves out what `dart run` does
+    before the code runs (resolving packages, build hooks)."""
+    lib = os.path.join(TOOL, "lib")
+    newest = max([os.path.getmtime(ONSETS_SRC), os.path.getmtime(os.path.join(TOOL, "pubspec.lock"))] +
+                 [os.path.getmtime(os.path.join(r, f)) for r, _, fs in os.walk(lib) for f in fs])
+    if not os.path.exists(ONSETS_EXE) or os.path.getmtime(ONSETS_EXE) < newest:
+        os.makedirs(os.path.dirname(ONSETS_EXE), exist_ok=True)
+        r = subprocess.run(["dart", "compile", "kernel", ONSETS_SRC, "-o", ONSETS_EXE],
+                           cwd=TOOL, capture_output=True, text=True, timeout=600)
+        if r.returncode != 0:
+            raise RuntimeError(f"dart compile kernel: {r.stderr[-500:]}")
+    return ONSETS_EXE
+
+
 def onsets(wav, threshold=0.5):
     """Onset times (s) in `wav`: where it first passes `threshold` of its own
     peak, at least 150 ms after the last (baseline.dart onsets)."""
-    out = sh(["dart", "run", "bin/baseline_onsets.dart", os.path.abspath(wav),
-              "--threshold", repr(threshold)], cwd=TOOL)
+    out = sh(["dart", onsets_exe(), os.path.abspath(wav), "--threshold", repr(threshold)], cwd=TOOL)
     return [float(m.group(1)) for m in re.finditer(r"^\s+([\d.]+) s", out, re.M)]
 
 
