@@ -84,14 +84,36 @@ def netem(c, rate, delay_ms, loss):
         raise RuntimeError(f"netem on {c}: {r.stderr.strip()}")
 
 
+IFB = "ifb0"
+
+
+def netem_in(c, rate, delay_ms, loss):
+    """The same shaping on what container c receives: its eth0 ingress
+    redirected through an ifb device with netem on it, as Gate 1's hotspot
+    shaped the phone's downlink (lab/baseline/shape.sh). The neighbours'
+    addresses are pinned (pin_neighbours), so ARP through it is harmless.
+    E5b: one phone shaped both ways, the other machines not at all."""
+    n = f"delay {delay_ms}ms loss {loss}%" + (f" rate {rate}kbit" if rate else "")
+    r = dx(c, "sh", "-c",
+           f"ip link show {IFB} >/dev/null 2>&1 || ip link add {IFB} type ifb; ip link set {IFB} up && "
+           f"tc qdisc del dev eth0 ingress 2>/dev/null; tc qdisc add dev eth0 handle ffff: ingress && "
+           f"tc filter add dev eth0 parent ffff: matchall action mirred egress redirect dev {IFB} && "
+           f"tc qdisc replace dev {IFB} root netem {n}", user="0")
+    if r.returncode:
+        raise RuntimeError(f"netem_in on {c}: {r.stderr.strip()}")
+
+
 def clear_shaping(cs):
     """Kills every shaping loop by its recorded pid, removes the shaping, and
     proves it: no netem left on any interface and no loop pid on record."""
     for c in cs:
         dx(c, "sh", "-c", f"[ -f {LOOP_PIDS} ] && kill $(cat {LOOP_PIDS}) 2>/dev/null; "
-                          f"rm -f {LOOP_PIDS}; tc qdisc del dev eth0 root 2>/dev/null; true", user="0")
+                          f"rm -f {LOOP_PIDS}; tc qdisc del dev eth0 root 2>/dev/null; "
+                          f"tc qdisc del dev eth0 ingress 2>/dev/null; ip link del {IFB} 2>/dev/null; true",
+           user="0")
     for c in cs:
-        left = dx(c, "tc", "qdisc", "show", "dev", "eth0", user="0").stdout
+        left = dx(c, "sh", "-c", f"tc qdisc show dev eth0; tc qdisc show dev {IFB} 2>/dev/null; true",
+                  user="0").stdout
         loops = dx(c, "sh", "-c", f"cat {LOOP_PIDS} 2>/dev/null; true", user="0").stdout.strip()
         if "netem" in left or loops:
             raise RuntimeError(f"shaping not cleared on {c}: {left.strip()} loops={loops!r}")
@@ -169,12 +191,15 @@ def stop_server(srv, profile, port=None):
     dx(srv, "chown", "-R", f"{os.getuid()}:{os.getgid()}", "/out", user="0")
 
 
-def start_duty_loop(cs, rate, rtt, loss):
+def start_duty_loop(cs, rate, rtt, loss, both_ways=False):
     """P4: 30 s of link, then 60 s of nothing, over and over, on every
-    container; killed by clear_shaping by its recorded pid."""
-    loop = ("while true; do "
-            f"tc qdisc replace dev eth0 root netem delay {rtt/2}ms loss {loss}% rate {rate}kbit; "
-            f"sleep 30; tc qdisc replace dev eth0 root netem loss 100%; sleep 60; done")
+    container; killed by clear_shaping by its recorded pid. `both_ways`:
+    the received side (netem_in's ifb device) follows the same cycle."""
+    devs = ["eth0"] + ([IFB] if both_ways else [])
+    up = "; ".join(f"tc qdisc replace dev {d} root netem delay {rtt/2}ms loss {loss}% rate {rate}kbit"
+                   for d in devs)
+    down = "; ".join(f"tc qdisc replace dev {d} root netem loss 100%" for d in devs)
+    loop = f"while true; do {up}; sleep 30; {down}; sleep 60; done"
     for c in cs:
         start_loop(c, loop)
 

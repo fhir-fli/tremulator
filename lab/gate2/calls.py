@@ -14,6 +14,7 @@ screen and speaker are recorded.
                                [--browser alice|bob]
                                [--plant-changed-fingerprint alice|bob]
                                [--wrong-relay-password] [--relay-capture]
+                               [--shape-only alice|bob]
     python3 lab/gate2/calls.py --label calls8 --reanalyse   (files on disk only)
 
 Profiles: `none` (no shaping), P1-P5 and P0 from labkit.PROFILES, and
@@ -69,7 +70,7 @@ import time
 
 from labkit import (PORTS, PROFILES, REPO, build_server, clear_shaping, dx,
                     freeze_spans, ip_of,
-                    netem, pin_neighbours, sh, start_duty_loop, start_loop, start_server, stop_server, utc)
+                    netem, netem_in, pin_neighbours, sh, start_duty_loop, start_loop, start_server, stop_server, utc)
 from lip_drift import grab_cmd, picture_filter
 from voice_delay import call_track, measure as voice_delay, record_cmd
 
@@ -157,6 +158,14 @@ speech = "--speech" in sys.argv
 # ground server with good internet. `field` (the default, and every run
 # before calls17): the relay is slowed like the phones, as a ground server
 # behind the field site's own weak link, carrying both directions on it.
+# `--shape-only alice|bob` (E5b): only that phone's link is shaped, both
+# ways (labkit.netem_in for what it receives), and nothing else: alice is a
+# field phone on its own weak link calling out through a cloud server and
+# relay (Gate 1's arrangement); bob is the outside phone behind a ground
+# server's weak uplink, everything else on the clinic's network.
+shape_only = argval("--shape-only", None)
+if shape_only not in (None, "alice", "bob"):
+    raise SystemExit(f"--shape-only {shape_only}: alice or bob")
 relay_link = argval("--relay-link", "field")
 if relay_link not in ("field", "decent"):
     raise SystemExit(f"--relay-link {relay_link}: field or decent")
@@ -407,6 +416,8 @@ def stop_relay(turn, d, host_d):
 
 def run_profile(name):
     base, shape, internal, blocked = parse(name)
+    if shape_only and (improve_to is not None or base in CUTS or base in SETUP_CUTS):
+        raise SystemExit("--shape-only shapes one phone both ways; cuts and --improve-to do not")
     if improve_to is not None and (shape is None or base == "P4"):
         raise SystemExit(f"--improve-to needs a steady shaped profile, not {name}")
     srv, turn, alice, bob = NODES[internal]
@@ -418,12 +429,16 @@ def run_profile(name):
     unblock_direct(alice, bob)
     block = block_direct(alice, bob) if blocked else None
     shaped = nodes if relay_link == "field" else (srv, alice, bob)
+    if shape_only:
+        shaped = (alice if shape_only == "alice" else bob,)
     if shape is not None:
         rate, rtt, loss, _internal = shape
         for c in shaped:
             netem(c, rate, rtt / 2, loss)
+            if shape_only:
+                netem_in(c, rate, rtt / 2, loss)
         if base == "P4":
-            start_duty_loop(shaped, rate, rtt, loss)
+            start_duty_loop(shaped, rate, rtt, loss, both_ways=bool(shape_only))
     qdisc_watch(nodes, d)
     media_capture((alice, bob), d)
     srv_port = start_server(srv, name, port)
@@ -581,7 +596,7 @@ def run_profile(name):
 
     rec = {"profile": name, "browser": browser, "planted_changed_fingerprint": planted,
            "wrong_relay_password": wrong_relay_password, "relay_capture": relay_capture,
-           "chrome": CHROME_VERSION if browser else None, "alice_video": alice_video, "opus": opus, "speech": speech, "lip_drift": lip, "server_kept": "--keep-server" in sys.argv, "relay_link": relay_link, "shaped": list(shaped) if shape else [], "alice_wall_s": alice_s, "pattern_raised": raised,
+           "chrome": CHROME_VERSION if browser else None, "alice_video": alice_video, "opus": opus, "speech": speech, "lip_drift": lip, "server_kept": "--keep-server" in sys.argv, "relay_link": relay_link, "shape_only": shape_only, "shaped": list(shaped) if shape else [], "alice_wall_s": alice_s, "pattern_raised": raised,
            "pattern_on_top_at_connect": on_top_at_connect,
            "direct_blocked": block, "clicks_started": clicked, "bob_call_ended_seen": bob_ended,
            "alice_exit": read(alice, f"{d}/alice.exit"), "bob_exit": read(bob, f"{d}/bob.exit"),
@@ -602,6 +617,8 @@ def run_profile(name):
     if base in SETUP_CUTS:
         rec["cut"] = cut_facts(host_d, SETUP_CUTS[base][0])
     rec["qdisc"] = qdisc_facts(nodes, host_d)
+    if shape_only:
+        rec["qdisc_in"] = qdisc_facts(nodes, host_d, "_qdisc_in")
     rec.update(fingerprint_hunt(host_d))
     rec["outside_pkts"] = outside_packets(host_d, (alice, bob))
     log(rec)
@@ -643,7 +660,9 @@ def qdisc_watch(nodes, d):
     for c in nodes:
         sh(["docker", "exec", "-d", "-u", "0", c, "sh", "-c",
             f"mkdir -p {d}; echo $$ > {d}/{c}_qdisc.pid; while :; do echo t=$(date +%s.%N); "
-            f"tc -s qdisc show dev eth0; sleep 5; done > {d}/{c}_qdisc.log 2>&1"])
+            f"tc -s qdisc show dev eth0; "
+            f"{{ echo t=$(date +%s.%N); tc -s qdisc show dev ifb0; }} >> {d}/{c}_qdisc_in.log 2>&1; "
+            f"sleep 5; done > {d}/{c}_qdisc.log 2>&1"])
 
 
 def media_capture(phones, d):
@@ -698,11 +717,11 @@ def qdisc_stop(nodes, d):
         dx(c, "sh", "-c", f"kill $(cat {d}/{c}_qdisc.pid) 2>/dev/null; true", user="0")
 
 
-def qdisc_facts(nodes, host_d):
+def qdisc_facts(nodes, host_d, stem="_qdisc"):
     """Per machine: the last counters read, and the largest queue seen."""
     out = {}
     for c in nodes:
-        p = os.path.join(host_d, f"{c}_qdisc.log")
+        p = os.path.join(host_d, f"{c}{stem}.log")
         if not os.path.exists(p):
             out[c] = None
             continue
