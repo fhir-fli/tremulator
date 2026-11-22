@@ -34,10 +34,22 @@ Every WhatsApp call was relayed, so the relayed rows are the closer
 comparison; they are worse than the direct ones on every profile.
 
 Derived, not measured separately: the video starts about 12 s after
-connect (the shipped pause-video-below-minimum setting; e4a Bob's
-remote-video 12.1 s after connected). Over a 3-minute call that is about
+connect (e4a Bob's remote-video 12.1 s after connected). Correction
+2026-11-21, after the results went to Grey: this is the E7 decision (the
+call starts with sound only and sends video once the link has been steady
+for 10 s), not the pause-video-below-minimum setting, as the plan's
+amendment said. Over a 3-minute call that is about
 4 s/min of the frozen figure. P2 direct without it would be about 2.2,
 under WhatsApp's 3.4. The rule counts it, so P2 stays a fail.
 
 Not checked: why P1's voice runs 9-23 s behind (recorded, not explained);
 the cause of the `dart run` hang (removed, not found).
+
+Found after, from e5r3 P1's own files (`alice.jsonl` stats, `*_qdisc.log`):
+Alice's video stream sent no frames all call but sent header-only packets
+(padding) at 17-19 kbit/s from about 30 s after connect; her total send
+rose from 27.6 to about 43 kbit/s (payload only, before packet overhead)
+on a 50 kbit/s link; her link queue grew to its 1000-packet limit (135 KB,
+about 21 s at 50 kbit/s) and the round trip from 0.45 s to 23 s. Bob's
+queue stayed at 87 packets or fewer. This is a measured sequence, not yet
+a shown cause: the follow-up plan tests it.
