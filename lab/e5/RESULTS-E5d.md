@@ -39,3 +39,17 @@ here, not yet fixed or tested.
 
 Odd, not explained: e5d1 P2 relayed had the route recorded relay→host and
 18.9 s/min frozen; the other two were 4.2 and 5.8.
+
+Checked after, before changing the guard (`start_signals.py`,
+`results/start_signals.txt`, E5d and E5c F, 48 calls). Neither planned fix
+holds up on this data:
+
+- Stopping video on a hold would kill P2's video. The engine held video at
+  its start in 8 of 12 P2 calls and released every one, 1-6 s later in 7, 40 s
+  later in one (e5d1 P2 relayed). On P1 no hold was ever released.
+- A bandwidth floor at the start would have to be fit to these calls. With
+  sound only, the estimate at the guard's start moment was 39-47 kbit/s on P1
+  and 51-79 on P2: a gap of a few kbit/s, set by what the sound alone sends.
+  (WebRTC's estimate does now follow the link: P1 39-54, P2 about 230, P3
+  about 870 kbit/s medians; the guard's note that it stuck at 84.4 on P1
+  dates from the older library.)
