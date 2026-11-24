@@ -655,6 +655,70 @@ void main() {
     },
   );
 
+  for (final guarded in [true, false]) {
+    testWidgets(
+      'videoMinBitrate is the lowest rate on every video encoding, '
+      '${guarded ? 'held and sent with the guard' : 'with no guard'}',
+      (_) async {
+        // E5e: libwebrtc's own lowest rate (an encoder target of 30,000
+        // bit/s) and the sound overfilled P1's 50 kbit/s link
+        // (lab/e5/RESULTS-E5e.md). Read back from the plugin, fresh.
+        const min = 10000;
+        final aliceCalls = Calls(
+          alice,
+          videoMinBitrate: min,
+          videoGuard: guarded
+              ? () => VideoGuard(startHold: const Duration(seconds: 2))
+              : null,
+          guardEvery: const Duration(milliseconds: 200),
+          roundTrip: (_) async => 0.4,
+        );
+        final bobCalls = Calls(bob, videoGuard: null);
+        final screen = await navigator.mediaDevices.getDisplayMedia({
+          'video': {
+            'deviceId': {'exact': '0'},
+            'mandatory': {'frameRate': 30.0},
+          },
+          'audio': false,
+        });
+        final bobsCall = Completer<Call>();
+        bobCalls.ringing.listen((c) async {
+          await c.answer();
+          bobsCall.complete(c);
+        });
+        final call = await aliceCalls.start(conversation, media: screen);
+        await call.connected.timeout(const Duration(seconds: 30));
+        await (await bobsCall.future).connected.timeout(
+          const Duration(seconds: 30),
+        );
+
+        Future<void> expectMin(String when) async {
+          final encodings = await call.debugVideoEncodings();
+          expect(encodings, isNotEmpty, reason: when);
+          for (final e in encodings) {
+            expect(e.minBitrate, min, reason: when);
+          }
+        }
+
+        if (guarded) {
+          await expectMin('held');
+          await _until(
+            () => aliceLog.any(
+              (e) => e['event'] == 'video-sending' && e['sending'] == true,
+            ),
+          );
+        }
+        await expectMin('sending');
+
+        await aliceCalls.close();
+        await bobCalls.close();
+        for (final t in screen.getTracks()) {
+          await t.stop();
+        }
+      },
+    );
+  }
+
   // null: the default, which is two streams (docs/DECISIONS.md D17).
   for (final separate in <bool?>[null, false]) {
     final apart = separate ?? true;

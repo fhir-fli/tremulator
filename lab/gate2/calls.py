@@ -145,6 +145,13 @@ opus["tap-video-after"] = argval("--tap-video-after", None)
 opus["suspend-video"] = "--no-suspend-video" not in sys.argv
 if not opus["suspend-video"]:
     opus_args += "--no-suspend-video "
+# `--video-min-kbps K`: the video's lowest rate, K kbit/s
+# (Calls.videoMinBitrate; E5f). Unset keeps libwebrtc's own (an encoder
+# target of 30,000 bit/s in E5e). Both phones pass it; only the sender's
+# matters.
+opus["video-min-kbps"] = argval("--video-min-kbps", None)
+if opus["video-min-kbps"] is not None:
+    opus_args += f"--video-min-kbps {opus['video-min-kbps']} "
 if opus["tap-video-after"] is not None:
     opus_args += f"--tap-video-after {opus['tap-video-after']} "
 # `--lip-drift`: a box in Alice's test picture flashes every 10 s and both

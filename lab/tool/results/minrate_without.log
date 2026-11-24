@@ -1,0 +1,73 @@
+/home/grey/dev/fhir/tremulator/lab/tool/quiet_sound.sh: line 34: lab/tool/results/minrate_without.log.sound: No such file or directory
+00:00 +0: loading /home/grey/dev/fhir/tremulator/packages/tremulator_calls/example/integration_test/calls_test.dart
+Building Linux application...                                   
+CMake Warning at flutter/ephemeral/.plugin_symlinks/flutter_webrtc/linux/CMakeLists.txt:88 (message):
+  flutter_webrtc: libpulse NOT found -- Linux system-audio loopback capture
+  disabled (getDisplayMedia({audio:true}) yields no audio track).  Install
+  the libpulse dev package to enable it.
+
+
+✓ Built build/linux/x64/debug/bundle/tremulator_calls_example
+00:00 +0: videoMinBitrate is the lowest rate on every video encoding, held and sent with the guard
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: <10000>
+  Actual: <0>
+held
+
+When the exception was thrown, this was the stack:
+#4      main.<anonymous closure>.expectMin (file:///home/grey/dev/fhir/tremulator/packages/tremulator_calls/example/integration_test/calls_test.dart:699:13)
+<asynchronous suspension>
+#5      main.<anonymous closure> (file:///home/grey/dev/fhir/tremulator/packages/tremulator_calls/example/integration_test/calls_test.dart:704:11)
+<asynchronous suspension>
+#6      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#7      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file:///home/grey/dev/fhir/tremulator/packages/tremulator_calls/example/integration_test/calls_test.dart line 699
+The test description was:
+  videoMinBitrate is the lowest rate on every video encoding, held and sent with the guard
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:01 +0 -1: videoMinBitrate is the lowest rate on every video encoding, held and sent with the guard [E]
+  Test failed. See exception logs above.
+  The test description was: videoMinBitrate is the lowest rate on every video encoding, held and sent with the guard
+  
+00:01 +0 -1: videoMinBitrate is the lowest rate on every video encoding, with no guard
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: <10000>
+  Actual: <0>
+sending
+
+When the exception was thrown, this was the stack:
+#4      main.<anonymous closure>.expectMin (file:///home/grey/dev/fhir/tremulator/packages/tremulator_calls/example/integration_test/calls_test.dart:699:13)
+<asynchronous suspension>
+#5      main.<anonymous closure> (file:///home/grey/dev/fhir/tremulator/packages/tremulator_calls/example/integration_test/calls_test.dart:711:9)
+<asynchronous suspension>
+#6      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#7      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1953:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file:///home/grey/dev/fhir/tremulator/packages/tremulator_calls/example/integration_test/calls_test.dart line 699
+The test description was:
+  videoMinBitrate is the lowest rate on every video encoding, with no guard
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:02 +0 -2: videoMinBitrate is the lowest rate on every video encoding, with no guard [E]
+  Test failed. See exception logs above.
+  The test description was: videoMinBitrate is the lowest rate on every video encoding, with no guard
+  
+00:02 +0 -2: (tearDownAll)
+00:02 +0 -2: Some tests failed.
+
+Failing tests:
+  /home/grey/dev/fhir/tremulator/packages/tremulator_calls/example/integration_test/calls_test.dart: videoMinBitrate is the lowest rate on every video encoding, held and sent with the guard
+  /home/grey/dev/fhir/tremulator/packages/tremulator_calls/example/integration_test/calls_test.dart: videoMinBitrate is the lowest rate on every video encoding, with no guard
+/home/grey/dev/fhir/tremulator/lab/tool/quiet_sound.sh: line 55: lab/tool/results/minrate_without.log.sound: No such file or directory

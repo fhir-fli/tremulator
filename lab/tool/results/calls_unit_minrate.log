@@ -1,0 +1,51 @@
+Resolving dependencies...
+Downloading packages...
+  code_assets 1.0.0 (2.2.0 available)
+  crypto 3.0.7 (3.0.8 available)
+  fhir_at_rest 0.13.0 (0.14.0 available)
+  fhir_r4 0.14.0 (0.14.1 available)
+  hooks 1.0.3 (2.2.0 available)
+  jni 1.1.0 (1.2.1 available)
+  jni_flutter 1.0.4+1 (1.1.0 available)
+  material_color_utilities 0.13.0 (0.13.1 available)
+  native_toolchain_c 0.17.6 (0.19.6 available)
+  objective_c 9.3.0 (9.6.4 available)
+  openmls 3.2.1 (4.0.0 available)
+  record_use 0.6.0 (1.1.1 available)
+  synchronized 3.4.2 (3.6.1+1 available)
+  test_api 0.7.12 (0.7.15 available)
+  vector_math 2.4.3 (2.4.4 available)
+  very_good_analysis 10.3.0 (11.0.0 available)
+  vm_service 15.3.0 (15.4.0 available)
+  web 1.1.1 (1.1.2 available)
+Got dependencies!
+18 packages have newer versions incompatible with dependency constraints.
+Try `flutter pub outdated` for more information.
+Resolving dependencies in `./example`...
+Downloading packages...
+Got dependencies in `./example`.
+00:00 +0: loading /home/grey/dev/fhir/tremulator/packages/tremulator_calls/test/signal_test.dart
+00:00 +0: /home/grey/dev/fhir/tremulator/packages/tremulator_calls/test/signal_test.dart: an offer, an answer and a hang-up survive the round trip
+00:00 +1: /home/grey/dev/fhir/tremulator/packages/tremulator_calls/test/signal_test.dart: malformed setup is a FormatException, never a crash
+00:00 +2: /home/grey/dev/fhir/tremulator/packages/tremulator_calls/test/audio_extensions_test.dart: nothing dropped, nothing changed
+00:00 +3: /home/grey/dev/fhir/tremulator/packages/tremulator_calls/test/audio_extensions_test.dart: the send time and congestion feedback leave the audio section, and stay in the video section
+00:00 +4: /home/grey/dev/fhir/tremulator/packages/tremulator_calls/test/audio_extensions_test.dart: a description written with plain newlines keeps them
+00:00 +5: /home/grey/dev/fhir/tremulator/packages/tremulator_calls/test/video_guard_test.dart: a call starts with sound only and sends video after 10 quiet seconds
+00:00 +6: /home/grey/dev/fhir/tremulator/packages/tremulator_calls/test/video_guard_test.dart: a call that starts on a weak link keeps video off and says so
+00:00 +7: /home/grey/dev/fhir/tremulator/packages/tremulator_calls/test/video_guard_test.dart: a link within 10% of its own round trip never stops video (P2, P3 in calls8)
+00:00 +8: /home/grey/dev/fhir/tremulator/packages/tremulator_calls/test/video_guard_test.dart: a queue building on P1 stops video after five weak samples
+00:00 +9: /home/grey/dev/fhir/tremulator/packages/tremulator_calls/test/video_guard_test.dart: a single slow sample is not a weak link
+00:00 +10: /home/grey/dev/fhir/tremulator/packages/tremulator_calls/test/video_guard_test.dart: both thresholds must be passed: twice a tiny round trip is not weak
+00:00 +11: /home/grey/dev/fhir/tremulator/packages/tremulator_calls/test/video_guard_test.dart: stopped video stays off on a good link until the person taps
+00:00 +12: /home/grey/dev/fhir/tremulator/packages/tremulator_calls/test/video_guard_test.dart: a tap on a link still weak stops video again after five weak samples, and it waits for the next tap
+00:00 +13: /home/grey/dev/fhir/tremulator/packages/tremulator_calls/test/video_guard_test.dart: a tap while video is on changes nothing
+00:00 +14: /home/grey/dev/fhir/tremulator/packages/tremulator_calls/test/video_guard_test.dart: a reconnect on the same route keeps the lowest round trip, so a queue still full after it is still weak
+00:00 +15: /home/grey/dev/fhir/tremulator/packages/tremulator_calls/test/video_guard_test.dart: a new route forgets the old round trip
+00:00 +16: /home/grey/dev/fhir/tremulator/packages/tremulator_calls/test/opus_test.dart: nothing asked, nothing changed
+00:00 +17: /home/grey/dev/fhir/tremulator/packages/tremulator_calls/test/opus_test.dart: the bitrate goes in Opus's fmtp line, other parameters kept
+00:00 +18: /home/grey/dev/fhir/tremulator/packages/tremulator_calls/test/opus_test.dart: a bitrate already there is replaced, not repeated
+00:00 +19: /home/grey/dev/fhir/tremulator/packages/tremulator_calls/test/opus_test.dart: ptime goes in the audio section only, once
+00:00 +20: /home/grey/dev/fhir/tremulator/packages/tremulator_calls/test/opus_test.dart: an Opus section with no fmtp line gets one
+00:00 +21: /home/grey/dev/fhir/tremulator/packages/tremulator_calls/test/opus_test.dart: DTX goes in the same fmtp line, with the bitrate
+00:00 +22: /home/grey/dev/fhir/tremulator/packages/tremulator_calls/test/opus_test.dart: a description without Opus is left alone
+00:00 +23: All tests passed!

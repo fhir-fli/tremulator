@@ -48,6 +48,7 @@ class Calls {
     this.audioExtensions = const AudioExtensions(),
     this.separateStreams = true,
     this.suspendVideoBelowMinimum = true,
+    this.videoMinBitrate,
     this.videoGuard = VideoGuard.new,
     this.guardEvery = const Duration(seconds: 1),
     this.heldAfter = const Duration(seconds: 3),
@@ -158,6 +159,14 @@ class Calls {
   /// says so ([VideoChange.held]). Off: video at its lowest rate whatever
   /// the link, kept for the lab's comparison.
   final bool suspendVideoBelowMinimum;
+
+  /// The video's lowest rate, in bit/s, on each encoding of this phone's
+  /// video (RTCRtpEncodingParameters min_bitrate_bps in libwebrtc, not in
+  /// the W3C dictionary; flutter_webrtc passes it as `minBitrate`). Null
+  /// keeps libwebrtc's own: E5e measured the encoder's target held at
+  /// 30,000 on P1, which with the sound overfilled the 50 kbit/s link
+  /// (lab/e5/RESULTS-E5e.md). The lab's E5f tests a lower one.
+  final int? videoMinBitrate;
 
   /// Makes the guard that stops this phone's video when the link cannot
   /// carry it (one per call); null sends video whatever the link.
@@ -500,12 +509,17 @@ class Call {
           : media;
       for (final t in media.getTracks()) {
         final sender = await pc.addTrack(t, t.kind == 'video' ? video : media);
-        if (guarded && t.kind == 'video') {
+        if (t.kind != 'video') {
+          continue;
+        }
+        _videoSenders.add(sender);
+        if (guarded) {
           // Sound first: the video is held back until the guard starts it
           // (VideoGuard.startSending). The sender, its track, and the video
           // in the offer or answer, stay.
-          _videoSenders.add(sender);
-          await _setVideoActive(pc, sender, false);
+          await _setVideoActive(pc, sender, false, _calls.videoMinBitrate);
+        } else if (_calls.videoMinBitrate != null) {
+          await _setVideoActive(pc, sender, true, _calls.videoMinBitrate);
         }
       }
     }
@@ -843,6 +857,14 @@ class Call {
       _back!.complete();
     }
   }
+
+  /// The encodings of this phone's video senders as the plugin reports them
+  /// now, read fresh from the connection, for tests.
+  @visibleForTesting
+  Future<List<RTCRtpEncoding>> debugVideoEncodings() async => [
+    for (final s in await _pc?.getSenders() ?? <RTCRtpSender>[])
+      if (s.track?.kind == 'video') ...?s.parameters.encodings,
+  ];
 
   /// Acts as if the link had just been lost, so a test on a working
   /// connection can drive a restart.
@@ -1196,7 +1218,7 @@ class Call {
   Future<void> _sendVideo(bool sending, double? rtt, String by) =>
       _videoSends = _videoSends.then((_) async {
         for (final sender in _videoSenders) {
-          await _setVideoActive(_pc!, sender, sending);
+          await _setVideoActive(_pc!, sender, sending, _calls.videoMinBitrate);
         }
         _calls.report({
           'event': 'video-sending',
@@ -1217,14 +1239,17 @@ class Call {
       });
 }
 
-/// Sets every encoding of [sender] to [active], and reads it back from
-/// [pc]; throws if the plugin refuses, the sender has no encodings, or the
-/// change did not take (flutter_webrtc 1.6.2+hotfix.4 accepted it and kept
-/// the encodings active).
+/// Sets every encoding of [sender] to [active] (and its lowest rate to
+/// [minBitrate], unless null), and reads it back from [pc]; throws if the
+/// plugin refuses, the sender has no encodings, or the change did not take
+/// (flutter_webrtc 1.6.2+hotfix.4 accepted `active` and kept the encodings
+/// active: calls_test, 2026-10-18).
 ///
-/// Only `active` (and each encoding's rid, which says which encoding it is)
-/// is sent. flutter_webrtc 1.6.3 on Linux reads back unset values as zeros
-/// and empty strings (maxBitrate 0, maxFramerate 0, scalabilityMode "",
+/// Only `active`, the lowest rate if given, and each encoding's rid (which
+/// says which encoding it is) are sent; flutter_peerconnection.cc in
+/// flutter_webrtc 1.6.3 reads `minBitrate` into set_min_bitrate_bps.
+/// flutter_webrtc 1.6.3 on Linux reads back unset values as zeros and empty
+/// strings (maxBitrate 0, maxFramerate 0, scalabilityMode "",
 /// ssrc 0), and sending them all back was refused (calls_test, 2026-11-22;
 /// which field it refused is not known). Its native side changes only the
 /// fields it is given.
@@ -1232,6 +1257,7 @@ Future<void> _setVideoActive(
   RTCPeerConnection pc,
   RTCRtpSender sender,
   bool active,
+  int? minBitrate,
 ) async {
   final read = sender.parameters;
   final encodings = read.encodings;
@@ -1245,6 +1271,7 @@ Future<void> _setVideoActive(
         RTCRtpEncoding(
           rid: (e.rid?.isEmpty ?? true) ? null : e.rid,
           active: active,
+          minBitrate: minBitrate,
           numTemporalLayers: null,
           scaleResolutionDownBy: null,
         ),
@@ -1259,9 +1286,14 @@ Future<void> _setVideoActive(
       .where((s) => s.senderId == sender.senderId)
       .single
       .parameters;
-  if (now.encodings?.any((e) => e.active != active) ?? true) {
+  if (now.encodings?.any(
+        (e) =>
+            e.active != active ||
+            (minBitrate != null && e.minBitrate != minBitrate),
+      ) ??
+      true) {
     throw StateError(
-      'setParameters(active: $active) did not take: '
+      'setParameters(active: $active, minBitrate: $minBitrate) did not take: '
       '${now.toMap()}',
     );
   }

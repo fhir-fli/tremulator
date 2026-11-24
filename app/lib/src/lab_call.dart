@@ -58,6 +58,12 @@ class LabOptions {
             '--no-suspend-video sends it at its lowest rate whatever the link',
       )
       ..addOption(
+        'video-min-kbps',
+        help:
+            "the video's lowest rate in kbit/s (Calls.videoMinBitrate); "
+            "unset keeps libwebrtc's own",
+      )
+      ..addOption(
         'tap-video-after',
         help:
             "seconds after this phone's video stops to press its "
@@ -147,6 +153,12 @@ class LabOptions {
 
   /// Whether video stops while the link allows less than its lowest rate.
   bool get suspendVideo => _a['suspend-video'] as bool;
+
+  /// The video's lowest rate in bit/s, or null for libwebrtc's own.
+  int? get videoMinBitrate {
+    final v = _a['video-min-kbps'] as String?;
+    return v == null ? null : int.parse(v) * 1000;
+  }
 
   /// How long after this phone's video stops the lab presses its "try
   /// video again", or null for never.
@@ -280,6 +292,7 @@ Future<void> _run(
     'audio-drop': o.audioExtensions.drop.toList(),
     'separate-streams': o.separateStreams,
     'suspend-video': o.suspendVideo,
+    'video-min-bitrate': o.videoMinBitrate,
     'plant-changed-fingerprint': o.plantChangedFingerprint,
   });
   log({'event': 'platform', 'web': kIsWeb});
@@ -297,6 +310,7 @@ Future<void> _run(
     audioExtensions: o.audioExtensions,
     separateStreams: o.separateStreams,
     suspendVideoBelowMinimum: o.suspendVideo,
+    videoMinBitrate: o.videoMinBitrate,
     // ignore: invalid_use_of_visible_for_testing_member, the lab's planted defect is a test; the hook exists for it.
     alterRemoteSdp: o.plantChangedFingerprint ? _changeFingerprint : null,
     report: log.call,
