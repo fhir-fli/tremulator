@@ -152,6 +152,12 @@ if not opus["suspend-video"]:
 opus["video-min-kbps"] = argval("--video-min-kbps", None)
 if opus["video-min-kbps"] is not None:
     opus_args += f"--video-min-kbps {opus['video-min-kbps']} "
+# `--webrtc-field-trial T` (repeatable): a whole libwebrtc field trial,
+# "Key/Value/", given to WebRTC.initialize on both phones (E5g:
+# WebRTC-Bwe-LossBasedBweV2/PaddingDuration:0ms/, lab/e5/PADDING.md).
+opus["webrtc-field-trials"] = [sys.argv[i + 1] for i, a in enumerate(sys.argv[:-1])
+                                if a == "--webrtc-field-trial"]
+opus_args += "".join(f"--webrtc-field-trial '{t}' " for t in opus["webrtc-field-trials"])
 if opus["tap-video-after"] is not None:
     opus_args += f"--tap-video-after {opus['tap-video-after']} "
 # `--lip-drift`: a box in Alice's test picture flashes every 10 s and both

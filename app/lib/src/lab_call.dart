@@ -63,6 +63,13 @@ class LabOptions {
             "the video's lowest rate in kbit/s (Calls.videoMinBitrate); "
             "unset keeps libwebrtc's own",
       )
+      ..addMultiOption(
+        'webrtc-field-trial',
+        help:
+            'a libwebrtc field trial, whole ("Key/Value/"), given to '
+            'WebRTC.initialize before anything else touches the plugin '
+            '(third_party/flutter_webrtc/TREMULATOR-PATCH.md); repeatable',
+      )
       ..addOption(
         'tap-video-after',
         help:
@@ -160,6 +167,9 @@ class LabOptions {
     return v == null ? null : int.parse(v) * 1000;
   }
 
+  /// libwebrtc field trials for this process, each "Key/Value/".
+  List<String> get fieldTrials => _a['webrtc-field-trial'] as List<String>;
+
   /// How long after this phone's video stops the lab presses its "try
   /// video again", or null for never.
   Duration? get tapVideoAfter {
@@ -209,6 +219,13 @@ class _LabCallAppState extends State<LabCallApp> {
   }
 
   Future<void> _start() async {
+    // Field trials are read once, when the plugin makes its factory, which
+    // the first plugin call (the renderer's included) does: so first.
+    if (widget.options.fieldTrials.isNotEmpty) {
+      await WebRTC.initialize(
+        options: {'fieldTrials': widget.options.fieldTrials},
+      );
+    }
     await _remote.initialize();
     if (kIsWeb) {
       await _sound.initialize();
@@ -293,6 +310,7 @@ Future<void> _run(
     'separate-streams': o.separateStreams,
     'suspend-video': o.suspendVideo,
     'video-min-bitrate': o.videoMinBitrate,
+    'webrtc-field-trials': o.fieldTrials,
     'plant-changed-fingerprint': o.plantChangedFingerprint,
   });
   log({'event': 'platform', 'web': kIsWeb});

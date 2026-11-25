@@ -4,6 +4,10 @@
 #
 #     bash lab/tool/call_tests.sh LOG [flutter test options, e.g. --plain-name NAME]
 #
+# CALL_TEST picks the test file (default integration_test/calls_test.dart).
+# field_trials_test.dart runs on its own: field trials are set once per
+# process.
+#
 # DISPLAY=:99 alone is not enough. Grey's session is Wayland and exports
 # GDK_BACKEND=wayland,x11 and WAYLAND_DISPLAY=wayland-0 (seen 2026-11-20), so
 # GTK opened the test window on the live desktop and it took Grey's mouse,
@@ -21,7 +25,7 @@ rm -f "$LOG.desktop"
   cd "$EXAMPLE" &&
   exec env -u WAYLAND_DISPLAY GDK_BACKEND=x11 DISPLAY=:99 \
     bash "$HERE/quiet_sound.sh" "$LOG.sound" -- \
-    flutter test integration_test/calls_test.dart -d linux "$@"
+    flutter test "${CALL_TEST:-integration_test/calls_test.dart}" -d linux "$@"
 ) > "$LOG" 2>&1 &
 RUN=$!
 echo "call_tests.sh: pid $RUN, log $LOG" >&2
