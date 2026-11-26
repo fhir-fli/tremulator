@@ -11,7 +11,8 @@ Two readings per call: the committed freeze file (its crop, if any, is not
 recorded), and a fresh freezedetect cropped to the remote video only
 (CROP: x 0-360, y 60-1040 of the 494x1080 recording, which leaves out the
 status bar with its clock, the self-view in the lower right from x 365, and
-the navigation bar; chosen from stills at 300 s (P1) and 120 s (P2)). The
+the navigation bar; chosen from stills at 300 s (P1), 120 s (P2) and 1560 s (P3; its clock
+reads 11:11, rule gives 11:11:10)). The
 start-time rule is checked by the status-bar clock: P1's still at 300 s
 reads 10:36, start + 300 s = 10:36:29.
 """
@@ -20,7 +21,8 @@ import json, os, re, subprocess
 from datetime import datetime
 R = "results"
 CASES = [("P1", "p1-video2.mkv", "p1-video2.freeze.txt", "android_p1video2_call.jsonl", "android_p1video2_hangup.jsonl"),
-         ("P2", "p2-video.mkv", "p2-video.freeze.txt", "android_p2video_call.jsonl", "android_p2video_hangup.jsonl")]
+         ("P2", "p2-video.mkv", "p2-video.freeze.txt", "android_p2video_call.jsonl", "android_p2video_hangup.jsonl"),
+         ("P3", "p3.mkv", "p3.freeze.txt", "android_p3video_call.jsonl", "android_p3video_hangup.jsonl")]
 def first_t(f):
     return datetime.fromisoformat(json.loads(open(os.path.join(R, f)).readline())["t"]).timestamp()
 def spans(txt):

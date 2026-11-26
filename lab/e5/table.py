@@ -16,9 +16,20 @@ import sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 GATE2 = os.path.join(HERE, "..", "gate2", "results")
 SETUP_DEADLINE_S = 90
-# GATE1.md, WhatsApp baseline results table. None: no WhatsApp number.
-WA = {"P1": {"voice_ms": 696, "frozen": 14.2}, "P2": {"voice_ms": None, "frozen": 3.4},
-      "P3": {"voice_ms": None, "frozen": 6.0}}
+# WhatsApp's numbers, as rechecked by lab/e5/REVIEW-2026-11-25.md. None: no
+# WhatsApp number.
+# - Voice: GATE1.md's P1 690-696 ms is unsupported: its only click pair falls
+#   26 s before the call's first media (lab/baseline/p1_voice_check.py,
+#   results/p1_voice_check.txt). P2 and P3 had none.
+# - Frozen: GATE1.md's 14.2 / 3.4 / 6.0 come from no script and P1's
+#   headline does not match its own minutes. Used here: the recomputation
+#   from the kept recordings, call tap to hang-up, cropped to the remote
+#   picture (lab/baseline/whatsapp_frozen_check.py,
+#   results/whatsapp_frozen_check.txt). Each is ONE call.
+WA = {"P1": {"voice_ms": None, "frozen": 11.68}, "P2": {"voice_ms": None, "frozen": 4.14},
+      "P3": {"voice_ms": None, "frozen": 5.61}}
+WA_VOICE_NOTE = ("no WhatsApp number: GATE1.md's P1 click pair precedes the call's media "
+                 "(lab/baseline/results/p1_voice_check.txt)")
 ORDER = ["P1", "P2", "P3", "P4", "P5", "P0", "P1-blocked", "P2-blocked", "P3-blocked", "P4-blocked"]
 
 
@@ -65,7 +76,12 @@ def row(profile, calls, judge=True):
     verdict = {}
     # Connect time: WhatsApp's is unknown (lab/e5/results/whatsapp_connect.jsonl).
     verdict["connect"] = "no WhatsApp number"
-    wa = WA.get(base) if not profile.endswith("-blocked") else WA.get(base)
+    # WhatsApp relayed every call (GATE1.md), so only the relay-forced rows
+    # are compared; direct rows are reported.
+    relayed = profile.endswith("-blocked")
+    wa = WA.get(base) if relayed else None
+    if base in ("P1", "P2", "P3") and not relayed:
+        verdict["voice"] = verdict["frozen"] = "reported only: WhatsApp relayed every call"
     if wa and base in ("P1", "P2", "P3"):
         # Like for like (lab/e5/REVIEW-2026-11-25.md): Gate 1's clap test put
         # the click at the consultant's iPhone and heard it from the field
@@ -73,10 +89,13 @@ def row(profile, calls, judge=True):
         # with no video. A run is judged only if its clicks went Bob to Alice
         # in a sound-only call; every run up to E5g sent them Alice to Bob in
         # a video call.
+        # Also as Gate 1: only the field phone shaped, and speech into it
+        # throughout (the operator talked; p1_udp_rate_30s.txt).
         voice_matched = all(c.get("voice_direction") == "bob-to-alice" and not c.get("alice_video")
-                            and not c.get("bob_video") for c in calls)
+                            and not c.get("bob_video") and c.get("shape_only") == "alice"
+                            and c.get("alice_speech") is True for c in calls)
         if wa["voice_ms"] is None:
-            verdict["voice"] = "no WhatsApp number"
+            verdict["voice"] = WA_VOICE_NOTE if base == "P1" else "no WhatsApp number"
         elif not voice_matched:
             verdict["voice"] = ("not comparable: WhatsApp's number is consultant to field phone "
                                 "in a sound-only call; this run measured field phone to consultant")
@@ -89,7 +108,13 @@ def row(profile, calls, judge=True):
         # judged only if Bob sent video and the shaped phone's (Alice's)
         # screen was measured; every run up to E5g recorded Bob receiving
         # Alice's video instead, the opposite direction.
+        # Alice's screen is also her own picture source, so her whole-screen
+        # recording reads 0 frozen whatever arrives (all 24 E5g calls): the
+        # run must say it measured only Bob's picture on Alice's screen, over
+        # the window used for WhatsApp (call placed to hang-up).
         matched = [c.get("bob_video") is True and c.get("shape_only") == "alice"
+                   and (c.get("recording_alice") or {}).get("area") == "bob-picture"
+                   and (c.get("recording_alice") or {}).get("window") == "placed-to-hangup"
                    and (c.get("recording_alice") or {}).get("frozen_s_per_min") is not None
                    for c in calls]
         if all(matched):
