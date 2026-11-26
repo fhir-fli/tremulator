@@ -72,8 +72,22 @@ def row(profile, calls, judge=True):
         else:
             verdict["voice"] = (None if r["med_voice_ms"] is None
                                 else ("pass" if r["med_voice_ms"] <= wa["voice_ms"] else "fail"))
-        verdict["frozen"] = (None if r["med_frozen"] is None
-                             else ("pass" if r["med_frozen"] <= wa["frozen"] else "fail"))
+        # Like for like (Grey 2026-11-22, 2026-11-25). GATE1.md: "Video
+        # freeze is the Android side only": WhatsApp's frozen numbers are the
+        # shaped field phone RECEIVING the unshaped phone's video. A run is
+        # judged only if Bob sent video and the shaped phone's (Alice's)
+        # screen was measured; every run up to E5g recorded Bob receiving
+        # Alice's video instead, the opposite direction.
+        matched = [c.get("bob_video") is True and c.get("shape_only") == "alice"
+                   and (c.get("recording_alice") or {}).get("frozen_s_per_min") is not None
+                   for c in calls]
+        if all(matched):
+            r["alice_frozen_s_per_min"] = [c["recording_alice"]["frozen_s_per_min"] for c in calls]
+            r["med_alice_frozen"] = med(r["alice_frozen_s_per_min"])
+            verdict["frozen"] = "pass" if r["med_alice_frozen"] <= wa["frozen"] else "fail"
+        else:
+            verdict["frozen"] = ("not comparable: WhatsApp's number is the shaped phone "
+                                 "receiving; this run measured Bob receiving")
     if base == "P4":
         after = [clicks_after_reconnect(c["_dir"]) for c in calls]
         r["clicks_after_first_reconnect"] = after

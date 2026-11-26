@@ -12,6 +12,11 @@ Hypothesis: idle video packets fall to ~17 per call; P1 relayed voice under
 
 ## Medians of 3 calls (WhatsApp Gate 1 in brackets)
 
+Correction 2026-11-25: the frozen columns are NOT comparable with WhatsApp's.
+Gate 1 measured the shaped phone receiving; these measure Bob (unshaped)
+receiving Alice's video. Same for every run E5 to E5f. table.py now refuses
+that verdict (results/e5g_recheck.md). Voice is like for like.
+
 | Profile | Voice ms E5f | Voice ms E5g | Frozen s/min E5f | Frozen s/min E5g |
 |---|---|---|---|---|
 | P1 direct | 396 | 370 (353/370/484) [696] | 57.85 | 57.63 [14.2] |
