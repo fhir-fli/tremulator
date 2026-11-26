@@ -67,8 +67,19 @@ def row(profile, calls, judge=True):
     verdict["connect"] = "no WhatsApp number"
     wa = WA.get(base) if not profile.endswith("-blocked") else WA.get(base)
     if wa and base in ("P1", "P2", "P3"):
+        # Like for like (lab/e5/REVIEW-2026-11-25.md): Gate 1's clap test put
+        # the click at the consultant's iPhone and heard it from the field
+        # Android's speaker (lab/baseline/README.md, "Clap test"), in a call
+        # with no video. A run is judged only if its clicks went Bob to Alice
+        # in a sound-only call; every run up to E5g sent them Alice to Bob in
+        # a video call.
+        voice_matched = all(c.get("voice_direction") == "bob-to-alice" and not c.get("alice_video")
+                            and not c.get("bob_video") for c in calls)
         if wa["voice_ms"] is None:
             verdict["voice"] = "no WhatsApp number"
+        elif not voice_matched:
+            verdict["voice"] = ("not comparable: WhatsApp's number is consultant to field phone "
+                                "in a sound-only call; this run measured field phone to consultant")
         else:
             verdict["voice"] = (None if r["med_voice_ms"] is None
                                 else ("pass" if r["med_voice_ms"] <= wa["voice_ms"] else "fail"))
