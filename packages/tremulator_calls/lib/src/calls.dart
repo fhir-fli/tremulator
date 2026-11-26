@@ -1204,12 +1204,15 @@ class Call {
   }
 
   /// Stops or starts this phone's video, and tells the other phone.
-  /// Each encoding's `active` (W3C WebRTC 1.0, RTCRtpEncodingParameters:
-  /// false means "the encoding is not being sent"), with no new offer or
-  /// answer. Not replaceTrack(null): that stops the frames but the stream
-  /// stays open and sends header-only padding, 17-19 kbit/s on a 50 kbit/s
-  /// link (lab/e5/RESULTS.md, e5r3 P1), 18 packets in 10 s on loopback
-  /// (calls_test, 2026-11-22). `active` needs flutter_webrtc 1.6.3 on Linux:
+  /// Each encoding's `active` (W3C WebRTC 1.0, RTCRtpEncodingParameters: false
+  /// means "the encoding is not being sent"), with no new offer or answer. Not
+  /// replaceTrack(null): that stops the frames but the stream stays open and
+  /// sends header-only padding, 17-19 kbit/s on a 50 kbit/s link
+  /// (lab/e5/RESULTS.md, e5r3 P1), 18 packets in 10 s on loopback (calls_test,
+  /// 2026-11-22). On a lossy link the inactive stream still carries libwebrtc's
+  /// loss-based padding (lab/e5/PADDING.md; E5g A/B): `active` stops the
+  /// encoder, not the stream's RTP module, so calls_test's no-packets check
+  /// holds on loopback only. `active` needs flutter_webrtc 1.6.3 on Linux:
   /// before it, setParameters changed a copy of the encodings and never set
   /// them back (calls_test 2026-10-18; fixed upstream, #2211).
   ///
